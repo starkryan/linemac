@@ -54,7 +54,7 @@ async function main() {
     await runMigrations();
 
     console.log('🚀 Starting Next.js application...');
-    const next = spawn('npm', ['start'], {
+    const next = spawn('npm', ['run', 'start:next'], {
       stdio: 'inherit'
     });
 

@@ -9,6 +9,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "node scripts/start-with-migrate.js",
+    "start:next": "next start",
     "lint": "eslint",
     "migrate": "node scripts/run-migrations.js"
   },
