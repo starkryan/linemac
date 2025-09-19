@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
       headers: request.headers,
     });
 
-    if (!session) {
+    if (!session?.user?.id) {
       return NextResponse.json({ error: "No session found" }, { status: 401 });
     }
 
@@ -24,19 +24,31 @@ export async function GET(request: NextRequest) {
 
     const userData = userResult.rows[0];
 
-    // Get original session data
-    const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/auth/session`, {
-      headers: request.headers,
+    // Return custom session data with user fields
+    return NextResponse.json({
+      user: {
+        id: session.user.id,
+        name: session.user.name,
+        email: session.user.email,
+        emailVerified: session.user.emailVerified,
+        image: session.user.image,
+        createdAt: session.user.createdAt,
+        updatedAt: session.user.updatedAt,
+        role: userData.role || 'operator',
+        operatorUid: userData.aadhaar_number,
+        operatorName: userData.name
+      },
+      session: {
+        expiresAt: session.session.expiresAt,
+        token: session.session.token,
+        createdAt: session.session.createdAt,
+        updatedAt: session.session.updatedAt,
+        ipAddress: session.session.ipAddress,
+        userAgent: session.session.userAgent,
+        userId: session.session.userId,
+        id: session.session.id
+      }
     });
-
-    const originalSession = await response.json();
-
-    // Add our custom fields to the session
-    originalSession.user.role = userData.role || 'operator';
-    originalSession.user.operatorUid = userData.aadhaar_number;
-    originalSession.user.operatorName = userData.name;
-
-    return NextResponse.json(originalSession);
   } catch (error) {
     console.error("Custom session endpoint error:", error);
     return NextResponse.json({ error: "Failed to get session" }, { status: 500 });

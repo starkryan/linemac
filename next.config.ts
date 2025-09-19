@@ -1,9 +1,14 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // Disable eslint during builds
   eslint: {
     ignoreDuringBuilds: true,
+  },
+
+  // Optimize images for deployment
+  images: {
+    unoptimized: false,
   },
 };
 

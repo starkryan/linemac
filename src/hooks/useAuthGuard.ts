@@ -1,10 +1,37 @@
-import { useSession } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
+interface SessionUser {
+  id: string;
+  name: string;
+  email: string;
+  emailVerified: boolean;
+  image: string | null;
+  createdAt: string;
+  updatedAt: string;
+  role: string;
+  operatorUid: string;
+  operatorName: string;
+}
+
+interface SessionData {
+  user: SessionUser;
+  session: {
+    expiresAt: string;
+    token: string;
+    createdAt: string;
+    updatedAt: string;
+    ipAddress: string;
+    userAgent: string;
+    userId: string;
+    id: string;
+  };
+}
+
 export function useAuthGuard(required = true) {
-  const { data: session, isPending, error } = useSession();
   const router = useRouter();
+  const [session, setSession] = useState<SessionData | null>(null);
+  const [status, setStatus] = useState<'loading' | 'authenticated' | 'unauthenticated'>('loading');
   const [hasMounted, setHasMounted] = useState(false);
 
   useEffect(() => {
@@ -12,33 +39,43 @@ export function useAuthGuard(required = true) {
   }, []);
 
   useEffect(() => {
-    if (!hasMounted || isPending) return;
+    const fetchSession = async () => {
+      try {
+        const response = await fetch('/api/auth-custom-session', {
+          credentials: 'include',
+        });
+
+        if (response.ok) {
+          const sessionData = await response.json();
+          setSession(sessionData);
+          setStatus('authenticated');
+        } else {
+          setStatus('unauthenticated');
+          setSession(null);
+        }
+      } catch (error) {
+        console.error('Error fetching session:', error);
+        setStatus('unauthenticated');
+        setSession(null);
+      }
+    };
+
+    fetchSession();
+  }, []);
+
+  useEffect(() => {
+    if (!hasMounted || status === 'loading') return;
 
     if (!session && required) {
       router.push("/login");
     }
-  }, [session, isPending, required, router, hasMounted]);
-
-  useEffect(() => {
-    if (error) {
-      // Only log meaningful errors, ignore "no session" or network errors
-      if (error && typeof error === 'object' && 'message' in error) {
-        const errorMessage = error.message;
-        // Don't log common non-critical errors
-        if (!errorMessage.includes('Failed to fetch') &&
-            !errorMessage.includes('no session') &&
-            !errorMessage.includes('Network')) {
-          console.error("Authentication error in useAuthGuard:", errorMessage);
-        }
-      }
-    }
-  }, [error]);
+  }, [session, status, required, router, hasMounted]);
 
   return {
     session,
-    isPending,
-    error,
+    isPending: status === 'loading',
+    error: null,
     hasMounted,
-    isAuthenticated: !!session && hasMounted && !isPending
+    isAuthenticated: status === 'authenticated' && !!session
   };
 }

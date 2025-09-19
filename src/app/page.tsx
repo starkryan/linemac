@@ -1,24 +1,43 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useSession } from "@/lib/auth-client";
 
 export default function Home() {
-  const { data: session, isPending } = useSession();
+  const [session, setSession] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
-    if (!isPending) {
-      if (session) {
-        router.push("/aadhaar-correction");
-      } else {
-        router.push("/login");
-      }
-    }
-  }, [session, isPending, router]);
+    const checkSession = async () => {
+      try {
+        const response = await fetch('/api/auth-custom-session', {
+          credentials: 'include',
+        });
 
-  if (isPending) {
+        if (response.ok) {
+          const sessionData = await response.json();
+          setSession(sessionData);
+          if (sessionData?.user) {
+            router.push("/aadhaar-correction");
+          } else {
+            router.push("/login");
+          }
+        } else {
+          router.push("/login");
+        }
+      } catch (error) {
+        console.error("Session check failed:", error);
+        router.push("/login");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkSession();
+  }, [router]);
+
+  if (loading) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
         <div className="text-center">

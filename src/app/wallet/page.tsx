@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -26,31 +26,59 @@ export default function WalletPage() {
   const [loading, setLoading] = useState(false)
   const [paymentLoading, setPaymentLoading] = useState(false)
 
-  useEffect(() => {
-    fetchWalletData()
-  }, [session])
+  // Use refs to prevent infinite loops and race conditions
+  const isFetchingRef = useRef(false)
+  const sessionUserIdRef = useRef<string | null>(null)
 
-  const fetchWalletData = async () => {
-    if (!session?.user?.id) return
+  // Memoize fetchWalletData to prevent recreation on every render
+  const fetchWalletData = useCallback(async () => {
+    if (!session?.user?.id || isFetchingRef.current) return
 
+    // Check if we're already fetching for this user
+    if (sessionUserIdRef.current === session.user.id && isFetchingRef.current) return
+
+    isFetchingRef.current = true
+    sessionUserIdRef.current = session.user.id
+
+    setLoading(true)
     try {
-      // Fetch balance
-      const balanceResponse = await fetch(`/api/wallet/balance`)
+      // Fetch balance and transactions in parallel
+      const [balanceResponse, transactionsResponse] = await Promise.all([
+        fetch(`/api/wallet/balance`),
+        fetch(`/api/wallet/transactions`)
+      ])
+
       if (balanceResponse.ok) {
         const balanceData = await balanceResponse.json()
         setBalance(balanceData.balance || 0)
       }
 
-      // Fetch transactions
-      const transactionsResponse = await fetch(`/api/wallet/transactions`)
       if (transactionsResponse.ok) {
         const transactionsData = await transactionsResponse.json()
         setTransactions(transactionsData.transactions || [])
       }
     } catch (error) {
       console.error('Error fetching wallet data:', error)
+    } finally {
+      setLoading(false)
+      isFetchingRef.current = false
     }
-  }
+  }, [session?.user?.id])
+
+  // Only fetch when user ID actually changes, not on every session object change
+  useEffect(() => {
+    const userId = session?.user?.id
+    if (userId && userId !== sessionUserIdRef.current) {
+      fetchWalletData()
+    }
+  }, [session?.user?.id, fetchWalletData])
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      isFetchingRef.current = false
+    }
+  }, [])
 
   const handleRecharge = async () => {
     const amount = parseFloat(rechargeAmount)
@@ -125,8 +153,21 @@ export default function WalletPage() {
 
         {/* Wallet Balance Card */}
         <div className="mb-6">
-          <div className="bg-gray-200 px-4 py-2 border border-gray-300">
+          <div className="bg-gray-200 px-4 py-2 border border-gray-300 flex justify-between items-center">
             <h2 className="text-base font-semibold text-gray-800">Current Balance</h2>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={fetchWalletData}
+              disabled={loading}
+              className="bg-white border-gray-400 h-8"
+            >
+              {loading ? (
+                <RefreshCw className="w-4 h-4 animate-spin" />
+              ) : (
+                <RefreshCw className="w-4 h-4" />
+              )}
+            </Button>
           </div>
           <div className="bg-white p-6">
             <div className="text-center">
@@ -210,7 +251,12 @@ export default function WalletPage() {
               <h2 className="text-base font-semibold text-gray-800">Transaction History</h2>
             </div>
             <div className="bg-white p-4">
-              {transactions.length === 0 ? (
+              {loading ? (
+                <div className="text-center py-8 text-gray-500">
+                  <RefreshCw className="w-12 h-12 mx-auto mb-4 animate-spin text-gray-300" />
+                  <p className="text-sm">Loading transactions...</p>
+                </div>
+              ) : transactions.length === 0 ? (
                 <div className="text-center py-8 text-gray-500">
                   <History className="w-12 h-12 mx-auto mb-4 text-gray-300" />
                   <p className="text-sm">No transactions yet</p>
