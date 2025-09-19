@@ -1,0 +1,477 @@
+"use client"
+
+import { useState } from "react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Label } from "@/components/ui/label"
+import { AadhaarIcon } from "@/components/ui/AadhaarIcon"
+import { Edit3, Search, FileText, Upload } from "lucide-react"
+import AuthenticatedLayout from "@/app/components/AuthenticatedLayout"
+
+export default function UpdateDataPage() {
+  const [activeStep, setActiveStep] = useState("verify")
+  const [updateType, setUpdateType] = useState("demographic")
+  const [verificationMethod, setVerificationMethod] = useState("aadhaar")
+
+  const steps = [
+    { id: "verify", label: "Verify Identity", icon: Search },
+    { id: "select", label: "Select Update", icon: FileText },
+    { id: "details", label: "Enter Details", icon: Edit3 },
+    { id: "documents", label: "Upload Documents", icon: Upload },
+    { id: "review", label: "Review", icon: FileText },
+  ]
+
+  const getStepIcon = (stepId: string) => {
+    const step = steps.find(s => s.id === stepId)
+    if (!step) return null
+    const Icon = step.icon
+    return <Icon className="w-5 h-5" />
+  }
+
+  return (
+    <AuthenticatedLayout>
+      <div className="min-h-screen bg-gray-100">
+        {/* Progress Steps */}
+        <div className="bg-gray-700 flex overflow-x-auto">
+          {steps.map((step) => (
+            <div
+              key={step.id}
+              className={`px-4 py-3 text-sm font-medium border-l border-gray-600 cursor-pointer flex items-center gap-3 min-w-max ${
+                activeStep === step.id
+                  ? "bg-orange-500 text-white"
+                  : "bg-gray-700 text-white hover:bg-gray-600"
+              }`}
+              onClick={() => setActiveStep(step.id)}
+            >
+              {getStepIcon(step.id)}
+              {step.label}
+            </div>
+          ))}
+        </div>
+
+        <div className="p-6 max-w-7xl mx-auto">
+          {activeStep === "verify" && (
+          <>
+            {/* Identity Verification */}
+            <div className="mb-6">
+              <div className="bg-gray-200 px-4 py-2 border border-gray-300">
+                <h2 className="text-base font-semibold text-gray-800">Verify Your Identity</h2>
+              </div>
+              <div className="bg-white p-4">
+                <div className="space-y-4">
+                  <div>
+                    <Label className="text-sm text-gray-700 mb-2 block">
+                      Verification Method <span className="text-red-600 font-bold text-base">✱</span>
+                    </Label>
+                    <RadioGroup value={verificationMethod} onValueChange={setVerificationMethod} className="space-y-3">
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="aadhaar" id="aadhaar" className="border-gray-400" />
+                        <Label htmlFor="aadhaar" className="text-sm text-gray-700">
+                          Using Aadhaar Number
+                        </Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="enrollment" id="enrollment" className="border-gray-400" />
+                        <Label htmlFor="enrollment" className="text-sm text-gray-700">
+                          Using Enrollment ID (EID)
+                        </Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="virtual" id="virtual" className="border-gray-400" />
+                        <Label htmlFor="virtual" className="text-sm text-gray-700">
+                          Using Virtual ID (VID)
+                        </Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-6">
+                    <div>
+                      <Label className="text-sm text-gray-700 mb-2 block">
+                        {verificationMethod === "aadhaar" ? "Aadhaar Number" :
+                         verificationMethod === "enrollment" ? "Enrollment ID" : "Virtual ID"}
+                        <span className="text-red-600 font-bold text-base">✱</span>
+                      </Label>
+                      <Input
+                        className="bg-white border-gray-400 h-8"
+                        placeholder={verificationMethod === "aadhaar" ? "XXXX-XXXX-XXXX" :
+                                     verificationMethod === "enrollment" ? "Enter EID" : "Enter VID"}
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-sm text-gray-700 mb-2 block">
+                        Mobile Number <span className="text-red-600 font-bold text-base">✱</span>
+                      </Label>
+                      <Input className="bg-white border-gray-400 h-8" placeholder="Enter registered mobile" />
+                    </div>
+                  </div>
+
+                  <div className="bg-blue-50 border border-blue-200 p-4">
+                    <p className="text-sm text-blue-700">
+                      OTP will be sent to your registered mobile number for verification. Please ensure your mobile number is updated and linked with your Aadhaar.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+
+        {activeStep === "select" && (
+          <>
+            {/* Update Type Selection */}
+            <div className="mb-6">
+              <div className="bg-gray-200 px-4 py-2 border border-gray-300">
+                <h2 className="text-base font-semibold text-gray-800">Select Update Type</h2>
+              </div>
+              <div className="bg-white p-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div
+                    className={`border-2 rounded-lg p-4 cursor-pointer ${
+                      updateType === "demographic" ? "border-orange-500 bg-orange-50" : "border-gray-300 hover:border-gray-400"
+                    }`}
+                    onClick={() => setUpdateType("demographic")}
+                  >
+                    <h3 className="font-semibold text-gray-800 mb-2">Demographic Update</h3>
+                    <ul className="text-sm text-gray-600 space-y-1">
+                      <li>• Name</li>
+                      <li>• Date of Birth</li>
+                      <li>• Gender</li>
+                      <li>• Address</li>
+                      <li>• Mobile Number</li>
+                      <li>• Email ID</li>
+                    </ul>
+                  </div>
+
+                  <div
+                    className={`border-2 rounded-lg p-4 cursor-pointer ${
+                      updateType === "biometric" ? "border-orange-500 bg-orange-50" : "border-gray-300 hover:border-gray-400"
+                    }`}
+                    onClick={() => setUpdateType("biometric")}
+                  >
+                    <h3 className="font-semibold text-gray-800 mb-2">Biometric Update</h3>
+                    <ul className="text-sm text-gray-600 space-y-1">
+                      <li>• Photograph</li>
+                      <li>• Fingerprints</li>
+                      <li>• Iris Scan</li>
+                    </ul>
+                    <div className="mt-2 text-xs text-gray-500">
+                      Visit nearest enrollment center for biometric updates
+                    </div>
+                  </div>
+                </div>
+
+                {updateType === "demographic" && (
+                  <div className="mt-4 bg-green-50 border border-green-200 p-4">
+                    <h4 className="font-semibold text-green-800 mb-2">Demographic Update - Online:</h4>
+                    <p className="text-sm text-green-700">
+                      You can update demographic details online. You will need to upload supporting documents for the changes.
+                    </p>
+                  </div>
+                )}
+
+                {updateType === "biometric" && (
+                  <div className="mt-4 bg-yellow-50 border border-yellow-200 p-4">
+                    <h4 className="font-semibold text-yellow-800 mb-2">Biometric Update - Center Visit Required:</h4>
+                    <p className="text-sm text-yellow-700">
+                      Biometric updates require physical presence at an enrollment center. Please book an appointment at your nearest center.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </>
+        )}
+
+        {activeStep === "details" && (
+          <>
+            {/* Update Details */}
+            <div className="mb-6">
+              <div className="bg-gray-200 px-4 py-2 border border-gray-300">
+                <h2 className="text-base font-semibold text-gray-800">Enter Update Details</h2>
+              </div>
+              <div className="bg-white p-4">
+                {updateType === "demographic" && (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-6">
+                      <div>
+                        <Label className="text-sm text-gray-700 mb-2 block">Field to Update</Label>
+                        <Select>
+                          <SelectTrigger className="bg-white border-gray-400 h-8">
+                            <SelectValue placeholder="Select field" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="name">Name</SelectItem>
+                            <SelectItem value="dob">Date of Birth</SelectItem>
+                            <SelectItem value="gender">Gender</SelectItem>
+                            <SelectItem value="address">Address</SelectItem>
+                            <SelectItem value="mobile">Mobile Number</SelectItem>
+                            <SelectItem value="email">Email ID</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label className="text-sm text-gray-700 mb-2 block">Update Type</Label>
+                        <Select>
+                          <SelectTrigger className="bg-white border-gray-400 h-8">
+                            <SelectValue placeholder="Select type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="correct">Correction</SelectItem>
+                            <SelectItem value="update">Update</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-6">
+                      <div>
+                        <Label className="text-sm text-gray-700 mb-2 block">
+                          Current Value
+                        </Label>
+                        <div className="bg-gray-50 border border-gray-300 px-3 py-2 h-8 text-gray-600">
+                          [Current value will be shown]
+                        </div>
+                      </div>
+                      <div>
+                        <Label className="text-sm text-gray-700 mb-2 block">
+                          New Value <span className="text-red-600 font-bold text-base">✱</span>
+                        </Label>
+                        <Input className="bg-white border-gray-400 h-8" placeholder="Enter new value" />
+                      </div>
+                    </div>
+
+                    <div className="bg-blue-50 border border-blue-200 p-4">
+                      <h4 className="font-semibold text-blue-800 mb-2">Important Notes:</h4>
+                      <ul className="text-sm text-blue-700 space-y-1">
+                        <li>• Name can be updated twice in lifetime</li>
+                        <li>• DOB can be updated once with documentary proof</li>
+                        <li>• Gender can be updated once</li>
+                        <li>• Address can be updated anytime</li>
+                        <li>• Valid supporting documents are required</li>
+                      </ul>
+                    </div>
+                  </div>
+                )}
+
+                {updateType === "biometric" && (
+                  <div className="space-y-4">
+                    <div className="bg-yellow-50 border border-yellow-200 p-4">
+                      <h4 className="font-semibold text-yellow-800 mb-2">Biometric Update Process:</h4>
+                      <ol className="text-sm text-yellow-700 space-y-2 list-decimal list-inside">
+                        <li>Book appointment at nearest enrollment center</li>
+                        <li>Carry existing Aadhaar card</li>
+                        <li>Bring required documents for verification</li>
+                        <li>Biometric data will be recaptured</li>
+                        <li> acknowledgment will be provided</li>
+                      </ol>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="text-center p-4 border border-gray-300 rounded">
+                        <FileText className="w-8 h-8 text-gray-600 mx-auto mb-2" />
+                        <div className="text-sm font-medium">Find Center</div>
+                        <div className="text-xs text-gray-600">Locate nearest enrollment center</div>
+                      </div>
+                      <div className="text-center p-4 border border-gray-300 rounded">
+                        <Edit3 className="w-8 h-8 text-gray-600 mx-auto mb-2" />
+                        <div className="text-sm font-medium">Book Appointment</div>
+                        <div className="text-xs text-gray-600">Schedule your visit</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </>
+        )}
+
+        {activeStep === "documents" && (
+          <>
+            {/* Document Upload */}
+            <div className="mb-6">
+              <div className="bg-gray-200 px-4 py-2 border border-gray-300">
+                <h2 className="text-base font-semibold text-gray-800">Upload Supporting Documents</h2>
+              </div>
+              <div className="bg-white p-4">
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <Label className="text-sm text-gray-700 mb-2 block">
+                        Identity Proof <span className="text-red-600 font-bold text-base">✱</span>
+                      </Label>
+                      <Select>
+                        <SelectTrigger className="bg-white border-gray-400 h-8">
+                          <SelectValue placeholder="Select document type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="passport">Passport</SelectItem>
+                          <SelectItem value="pan">PAN Card</SelectItem>
+                          <SelectItem value="voter">Voter ID</SelectItem>
+                          <SelectItem value="driving">Driving License</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label className="text-sm text-gray-700 mb-2 block">Upload Document</Label>
+                      <div className="border-2 border-dashed border-gray-300 rounded p-4 text-center">
+                        <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                        <p className="text-sm text-gray-600">Click to upload or drag and drop</p>
+                        <p className="text-xs text-gray-500">PDF, JPG, PNG up to 2MB</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <Label className="text-sm text-gray-700 mb-2 block">
+                        Address Proof <span className="text-red-600 font-bold text-base">✱</span>
+                      </Label>
+                      <Select>
+                        <SelectTrigger className="bg-white border-gray-400 h-8">
+                          <SelectValue placeholder="Select document type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="utility">Utility Bill</SelectItem>
+                          <SelectItem value="bank">Bank Statement</SelectItem>
+                          <SelectItem value="rent">Rent Agreement</SelectItem>
+                          <SelectItem value="passport">Passport</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label className="text-sm text-gray-700 mb-2 block">Upload Document</Label>
+                      <div className="border-2 border-dashed border-gray-300 rounded p-4 text-center">
+                        <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                        <p className="text-sm text-gray-600">Click to upload or drag and drop</p>
+                        <p className="text-xs text-gray-500">PDF, JPG, PNG up to 2MB</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-green-50 border border-green-200 p-4">
+                    <h4 className="font-semibold text-green-800 mb-2">Document Guidelines:</h4>
+                    <ul className="text-sm text-green-700 space-y-1">
+                      <li>• Documents should be self-attested</li>
+                      <li>• Scan copies should be clear and readable</li>
+                      <li>• File size should not exceed 2MB</li>
+                      <li>• Accepted formats: PDF, JPG, PNG</li>
+                      <li>• Original documents need to be carried for verification</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+
+        {activeStep === "review" && (
+          <>
+            {/* Review Update */}
+            <div className="mb-6">
+              <div className="bg-gray-200 px-4 py-2 border border-gray-300">
+                <h2 className="text-base font-semibold text-gray-800">Review Update Request</h2>
+              </div>
+              <div className="bg-white p-4">
+                <div className="text-sm text-gray-600 mb-4">
+                  Please review your update request before final submission.
+                </div>
+
+                <div className="space-y-4">
+                  <div className="border rounded p-4">
+                    <h3 className="font-semibold mb-2">Update Summary</h3>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>Update Type: {updateType === "demographic" ? "Demographic" : "Biometric"}</div>
+                      <div>Request Date: [Current Date]</div>
+                      <div>Field: [Selected Field]</div>
+                      <div>Status: Pending Submission</div>
+                    </div>
+                  </div>
+
+                  <div className="border rounded p-4">
+                    <h3 className="font-semibold mb-2">Changes Summary</h3>
+                    <div className="text-sm">
+                      <div className="mb-2">
+                        <strong>From:</strong> [Current Value]
+                      </div>
+                      <div>
+                        <strong>To:</strong> [New Value]
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="border rounded p-4">
+                    <h3 className="font-semibold mb-2">Documents Status</h3>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex items-center gap-2">
+                        <span className="text-green-600">✓</span> Identity Proof: Uploaded
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-green-600">✓</span> Address Proof: Uploaded
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-blue-50 border border-blue-200 p-4">
+                    <h4 className="font-semibold text-blue-800 mb-2">Next Steps:</h4>
+                    <ul className="text-sm text-blue-700 space-y-1">
+                      <li>• You will receive SMS confirmation of submission</li>
+                      <li>• Update request will be processed within 30 days</li>
+                      <li>• You can track status using SRN</li>
+                      <li>• Updated Aadhaar will be delivered by post</li>
+                    </ul>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <input type="checkbox" id="confirm" className="border-gray-400" />
+                    <Label htmlFor="confirm" className="text-sm text-gray-700">
+                      I confirm that all information and documents provided are accurate and complete.
+                    </Label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* Navigation Buttons */}
+        <div className="flex justify-end gap-4 mt-8">
+          <Button
+            variant="outline"
+            className="bg-white border-gray-400 px-6 flex items-center gap-2"
+            onClick={() => {
+              const currentIndex = steps.findIndex((step) => step.id === activeStep)
+              if (currentIndex > 0) {
+                setActiveStep(steps[currentIndex - 1].id)
+              }
+            }}
+            disabled={activeStep === "verify"}
+          >
+            <AadhaarIcon mirrored />
+            Previous
+          </Button>
+          {activeStep !== "review" && (
+            <Button className="bg-blue-600 text-white px-6 flex items-center gap-2" onClick={() => {
+              const currentIndex = steps.findIndex((step) => step.id === activeStep)
+              if (currentIndex < steps.length - 1) {
+                setActiveStep(steps[currentIndex + 1].id)
+              }
+            }}>
+              Next
+              <AadhaarIcon />
+            </Button>
+          )}
+          {activeStep === "review" && (
+            <Button className="bg-green-600 text-white px-6 flex items-center gap-2">
+              Submit Update Request
+              <AadhaarIcon />
+            </Button>
+          )}
+          </div>
+        </div>
+      </div>
+    </AuthenticatedLayout>
+    )
+  }
