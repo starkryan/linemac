@@ -25,16 +25,29 @@ interface ProfileData {
 }
 
 export default function ProfilePage() {
-  const { data: session } = useSession()
+  const { data: session, status, refresh } = useSession()
+  const [enhancedSession, setEnhancedSession] = useState<any>(null)
   const [profileData, setProfileData] = useState<ProfileData | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetchProfileData()
-  }, [session])
+    if (status === "authenticated" && !enhancedSession) {
+      refresh().then((sessionData) => {
+        if (sessionData) {
+          setEnhancedSession(sessionData)
+        }
+      })
+    }
+  }, [status, enhancedSession, refresh])
+
+  useEffect(() => {
+    if (enhancedSession) {
+      fetchProfileData()
+    }
+  }, [enhancedSession])
 
   const fetchProfileData = async () => {
-    if (!session?.user?.id) return
+    if (!enhancedSession?.user?.id) return
 
     try {
       const response = await fetch(`/api/user/profile`)
@@ -180,7 +193,7 @@ export default function ProfilePage() {
                 <div>
                   <Label className="text-sm text-gray-700 mb-2 block">Email</Label>
                   <div className="bg-gray-50 border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-700">
-                    {profileData?.email || session?.user?.email || 'Not provided'}
+                    {profileData?.email || enhancedSession?.user?.email || 'Not provided'}
                   </div>
                 </div>
                 <div>

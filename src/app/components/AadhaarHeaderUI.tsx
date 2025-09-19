@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Image from "next/image";
 import { useSession, signOut } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
@@ -10,19 +10,29 @@ import { useEffect } from "react";
 // For now, I'll use placeholders like "/profile.png" etc.
 
 export default function AadhaarHeader() {
-  const { data: session, isPending, error } = useSession();
+  const { data: session, status, isPending, error, refresh } = useSession();
+  const [enhancedSession, setEnhancedSession] = useState<any>(null);
   const router = useRouter();
 
-  // Handle authentication errors
+  // Handle authentication errors and fetch enhanced session
   useEffect(() => {
-    if (error) {
+    if (status === "error" || error) {
       console.error("Session error:", error);
       // Don't redirect immediately to avoid loops, just log the error
     }
-  }, [error]);
+
+    // Fetch enhanced session when authenticated
+    if (status === "authenticated" && !enhancedSession) {
+      refresh().then((sessionData) => {
+        if (sessionData) {
+          setEnhancedSession(sessionData);
+        }
+      });
+    }
+  }, [status, error, refresh, enhancedSession]);
 
   // Only show header if user is authenticated
-  if (isPending) {
+  if (status === "loading") {
     return (
       <header className="w-full bg-gradient-to-b from-blue-100 to-blue-200 border-b flex items-center justify-between px-4 py-2">
         <div className="text-sm text-blue-900">Loading...</div>
@@ -30,7 +40,16 @@ export default function AadhaarHeader() {
     );
   }
 
-  if (!session) {
+  // Show loading while fetching enhanced session data
+  if (status === "authenticated" && !enhancedSession) {
+    return (
+      <header className="w-full bg-gradient-to-b from-blue-100 to-blue-200 border-b flex items-center justify-between px-4 py-2">
+        <div className="text-sm text-blue-900">Loading session data...</div>
+      </header>
+    );
+  }
+
+  if (!enhancedSession) {
     return null;
   }
 

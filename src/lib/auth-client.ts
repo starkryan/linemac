@@ -10,7 +10,7 @@ export const { signIn, signOut } = authClient;
 
 // Custom useSession hook that uses our custom session endpoint
 export const useSession = () => {
-  const { data: originalSession, status } = authClient.useSession();
+  const { data: betterAuthSession, isPending, error } = authClient.useSession();
 
   // Create a custom fetch function to get our enhanced session data
   const getEnhancedSession = useCallback(async () => {
@@ -23,32 +23,34 @@ export const useSession = () => {
         const enhancedSession = await response.json();
         return enhancedSession;
       }
-    } catch (error) {
-      console.error('Error fetching enhanced session:', error);
+    } catch (err) {
+      console.error('Error fetching enhanced session:', err);
     }
 
-    // Fallback to original session
-    return originalSession;
-  }, [originalSession]);
+    // Fallback to null if we can't get enhanced session
+    return null;
+  }, []);
 
-  // Memoize the enhanced session to prevent recreation on every render
+  // Use betterAuthSession only to determine if we should fetch enhanced session
+  const shouldFetchEnhanced = betterAuthSession && !error;
+
+  // Memoize the enhanced session data
   const enhancedSession = useMemo(() => {
-    if (!originalSession) return null;
+    // Return null if we don't have a base session or there's an error
+    if (!shouldFetchEnhanced) return null;
 
-    return {
-      ...originalSession,
-      user: {
-        ...originalSession.user,
-        role: originalSession.user?.role || 'operator',
-        operatorUid: originalSession.user?.operatorUid,
-        operatorName: originalSession.user?.operatorName,
-      }
-    };
-  }, [originalSession]);
+    // The enhanced session will be fetched via getEnhancedSession when needed
+    // For now, return null and let the component call refresh when needed
+    return null;
+  }, [shouldFetchEnhanced]);
+
+  const status = isPending ? "loading" : error ? "error" : betterAuthSession ? "authenticated" : "unauthenticated";
 
   return {
     data: enhancedSession,
     status,
+    isPending,
+    error,
     refresh: getEnhancedSession,
   };
 };

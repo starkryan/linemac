@@ -19,7 +19,8 @@ interface Transaction {
 }
 
 export default function WalletPage() {
-  const { data: session } = useSession()
+  const { data: session, status, refresh } = useSession()
+  const [enhancedSession, setEnhancedSession] = useState<any>(null)
   const [balance, setBalance] = useState(0)
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [rechargeAmount, setRechargeAmount] = useState("")
@@ -30,15 +31,26 @@ export default function WalletPage() {
   const isFetchingRef = useRef(false)
   const sessionUserIdRef = useRef<string | null>(null)
 
+  // Fetch enhanced session when authenticated
+  useEffect(() => {
+    if (status === "authenticated" && !enhancedSession) {
+      refresh().then((sessionData) => {
+        if (sessionData) {
+          setEnhancedSession(sessionData)
+        }
+      })
+    }
+  }, [status, enhancedSession, refresh])
+
   // Memoize fetchWalletData to prevent recreation on every render
   const fetchWalletData = useCallback(async () => {
-    if (!session?.user?.id || isFetchingRef.current) return
+    if (!enhancedSession?.user?.id || isFetchingRef.current) return
 
     // Check if we're already fetching for this user
-    if (sessionUserIdRef.current === session.user.id && isFetchingRef.current) return
+    if (sessionUserIdRef.current === enhancedSession.user.id && isFetchingRef.current) return
 
     isFetchingRef.current = true
-    sessionUserIdRef.current = session.user.id
+    sessionUserIdRef.current = enhancedSession.user.id
 
     setLoading(true)
     try {
@@ -63,15 +75,15 @@ export default function WalletPage() {
       setLoading(false)
       isFetchingRef.current = false
     }
-  }, [session?.user?.id])
+  }, [enhancedSession?.user?.id])
 
   // Only fetch when user ID actually changes, not on every session object change
   useEffect(() => {
-    const userId = session?.user?.id
+    const userId = enhancedSession?.user?.id
     if (userId && userId !== sessionUserIdRef.current) {
       fetchWalletData()
     }
-  }, [session?.user?.id, fetchWalletData])
+  }, [enhancedSession?.user?.id, fetchWalletData])
 
   // Cleanup on unmount
   useEffect(() => {

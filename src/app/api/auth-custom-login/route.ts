@@ -77,8 +77,13 @@ export async function POST(request: NextRequest) {
 
       if ('error' in sessionResponse) {
         console.error("Better Auth session creation error:", sessionResponse.error);
+        const errorMessage = sessionResponse.error instanceof Error
+          ? sessionResponse.error.message
+          : typeof sessionResponse.error === 'string'
+            ? sessionResponse.error
+            : "Unknown error";
         return NextResponse.json(
-          { error: "Failed to create session: " + (sessionResponse.error.message || "Unknown error") },
+          { error: "Failed to create session: " + errorMessage },
           { status: 500 }
         );
       }
