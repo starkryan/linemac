@@ -9,8 +9,15 @@ const pool = new Pool({
 
 export const auth = betterAuth({
   database: pool,
-  databaseHooks: {
-    disableMigrations: true,
+  advanced: {
+    database: {
+      generateId: false,
+    },
+    cookiePrefix: "better-auth",
+    useSecureCookies: process.env.NODE_ENV === "production",
+    crossSubDomainCookies: {
+      enabled: false,
+    },
   },
   emailAndPassword: {
     enabled: true,
@@ -30,13 +37,6 @@ export const auth = betterAuth({
     cookieCache: {
       enabled: true,
       maxAge: 5 * 60, // 5 minutes cache for performance
-    },
-  },
-  advanced: {
-    cookiePrefix: "better-auth",
-    useSecureCookies: process.env.NODE_ENV === "production",
-    crossSubDomainCookies: {
-      enabled: false,
     },
   },
   plugins: [nextCookies()],
