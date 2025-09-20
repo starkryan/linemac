@@ -1,0 +1,25 @@
+{
+  "name": "UCL - Aadhaar Update Client Portal",
+  "short_name": "UCL Portal",
+  "description": "Secure portal for Aadhaar card correction and update requests with Better Auth authentication",
+  "icons": [
+    {
+      "src": "/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "theme_color": "#ffffff",
+  "background_color": "#ffffff",
+  "display": "standalone",
+  "start_url": "/",
+  "scope": "/",
+  "orientation": "portrait",
+  "categories": ["business", "utilities"],
+  "lang": "en-IN"
+}
