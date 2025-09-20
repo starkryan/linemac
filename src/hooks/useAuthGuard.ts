@@ -1,5 +1,5 @@
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 interface SessionUser {
   id: string;
@@ -12,6 +12,8 @@ interface SessionUser {
   role: string;
   operatorUid: string;
   operatorName: string;
+  machineId?: string;
+  location?: string;
 }
 
 interface SessionData {
@@ -33,6 +35,7 @@ export function useAuthGuard(required = true) {
   const [session, setSession] = useState<SessionData | null>(null);
   const [status, setStatus] = useState<'loading' | 'authenticated' | 'unauthenticated'>('loading');
   const [hasMounted, setHasMounted] = useState(false);
+  const fetchAttemptedRef = useRef(false);
 
   useEffect(() => {
     setHasMounted(true);
@@ -40,15 +43,39 @@ export function useAuthGuard(required = true) {
 
   useEffect(() => {
     const fetchSession = async () => {
+      if (fetchAttemptedRef.current) return;
+      fetchAttemptedRef.current = true;
+
       try {
-        const response = await fetch('/api/auth-custom-session', {
+        /* Use Better Auth's built-in session endpoint directly */
+        const response = await fetch('/api/auth/session', {
           credentials: 'include',
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+          },
         });
 
         if (response.ok) {
           const sessionData = await response.json();
-          setSession(sessionData);
-          setStatus('authenticated');
+          if (sessionData.user) {
+            // Transform the data to match our expected format
+            const transformedSession = {
+              user: {
+                ...sessionData.user,
+                operatorUid: sessionData.user.operatorUid || sessionData.user.aadhaarNumber,
+                operatorName: sessionData.user.name,
+                machineId: sessionData.user.machineId || 'MP_0515_ML_NSS42224',
+                location: sessionData.user.location || '22°28\'1.391579 N,80°6\'49.42383" E',
+              },
+              session: sessionData.session
+            };
+            setSession(transformedSession);
+            setStatus('authenticated');
+          } else {
+            setStatus('unauthenticated');
+            setSession(null);
+          }
         } else {
           setStatus('unauthenticated');
           setSession(null);
@@ -60,8 +87,10 @@ export function useAuthGuard(required = true) {
       }
     };
 
-    fetchSession();
-  }, []);
+    if (hasMounted) {
+      fetchSession();
+    }
+  }, [hasMounted]);
 
   useEffect(() => {
     if (!hasMounted || status === 'loading') return;

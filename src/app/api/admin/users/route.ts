@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { auth } from "@/lib/auth-server";
 import { query } from "@/lib/db";
 import { createUser } from "@/lib/user-management";
 import { hasPermission } from "@/lib/user-management";

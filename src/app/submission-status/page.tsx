@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import AadhaarHeader from "@/app/components/AadhaarHeaderUI";
-import { auth } from "@/lib/auth";
+import Header from "@/app/components/Header";
+import { auth } from "@/lib/auth-server";
 import { query } from "@/lib/db";
 
 export const dynamic = 'force-dynamic'; // Ensure this page is dynamic
@@ -54,7 +54,7 @@ export default async function SubmissionStatusPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      <AadhaarHeader />
+      <Header />
       
       <div className="container mx-auto p-6">
         <Card className="max-w-4xl mx-auto shadow-lg border-2 border-black">

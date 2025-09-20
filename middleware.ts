@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getCookieCache } from "better-auth/cookies";
-import { auth } from "@/lib/auth";
+import { auth } from "@/lib/auth-server";
 import { hasPermission } from "@/lib/user-management";
 
 export async function middleware(request: NextRequest) {

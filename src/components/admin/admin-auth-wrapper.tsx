@@ -42,7 +42,7 @@ export default function AdminAuthWrapper({ children }: { children: React.ReactNo
   useEffect(() => {
     const fetchSession = async () => {
       try {
-        const response = await fetch('/api/auth-custom-session', {
+        const response = await fetch('/api/auth/session', {
           credentials: 'include',
         })
 

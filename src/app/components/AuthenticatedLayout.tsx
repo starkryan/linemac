@@ -1,6 +1,6 @@
 "use client";
 
-import AadhaarHeaderUI from "@/app/components/AadhaarHeaderUI";
+import Header from "@/app/components/Header";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
 
 interface AuthenticatedLayoutProps {
@@ -44,7 +44,7 @@ export default function AuthenticatedLayout({ children, required = true }: Authe
 
   return (
     <div className="min-h-screen bg-gray-100">
-      <AadhaarHeaderUI />
+      <Header />
       {children}
     </div>
   );

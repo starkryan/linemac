@@ -1,4 +1,4 @@
-import { auth } from "@/lib/auth"
+import { auth } from "@/lib/auth-server"
 import { redirect } from "next/navigation"
 import { headers as getHeaders } from "next/headers"
 import { query } from "@/lib/db"

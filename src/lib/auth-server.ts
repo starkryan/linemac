@@ -30,7 +30,7 @@ export const auth = betterAuth({
     },
   },
   plugins: [nextCookies()],
-  baseURL: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+  baseURL: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3001",
   callbacks: {
     session: async ({ session, user }: any) => {
       // Include user role in the session

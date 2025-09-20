@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { auth } from "@/lib/auth-server";
 import { query } from "@/lib/db";
 import { hasPermission, getUserStats } from "@/lib/user-management";
 

@@ -53,7 +53,7 @@ export default function AadhaarRegisterUI() {
 
   const checkCurrentUser = async () => {
     try {
-      const response = await fetch('/api/auth-custom-session');
+      const response = await fetch('/api/auth/session');
       if (response.ok) {
         const session = await response.json();
         setCurrentUser(session.user);

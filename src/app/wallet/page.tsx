@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { useSession } from "@/lib/auth-client"
+import { useAuth } from "@/hooks/useAuth"
 import { IndianRupee, History, RefreshCw } from "lucide-react"
 import AuthenticatedLayout from "@/app/components/AuthenticatedLayout"
 
@@ -19,28 +19,27 @@ interface Transaction {
 }
 
 export default function WalletPage() {
-  const { data: session, status, refresh } = useSession()
+  const { user, session: authSession, loading, isAuthenticated } = useAuth()
   const [enhancedSession, setEnhancedSession] = useState<any>(null)
   const [balance, setBalance] = useState(0)
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [rechargeAmount, setRechargeAmount] = useState("")
-  const [loading, setLoading] = useState(false)
+  const [dataLoading, setDataLoading] = useState(false)
   const [paymentLoading, setPaymentLoading] = useState(false)
 
   // Use refs to prevent infinite loops and race conditions
   const isFetchingRef = useRef(false)
   const sessionUserIdRef = useRef<string | null>(null)
 
-  // Fetch enhanced session when authenticated
+  // Set enhanced session when authenticated
   useEffect(() => {
-    if (status === "authenticated" && !enhancedSession) {
-      refresh().then((sessionData) => {
-        if (sessionData) {
-          setEnhancedSession(sessionData)
-        }
+    if (isAuthenticated && user && !enhancedSession) {
+      setEnhancedSession({
+        user: user,
+        session: authSession
       })
     }
-  }, [status, enhancedSession, refresh])
+  }, [isAuthenticated, user, authSession, enhancedSession])
 
   // Memoize fetchWalletData to prevent recreation on every render
   const fetchWalletData = useCallback(async () => {
@@ -52,7 +51,7 @@ export default function WalletPage() {
     isFetchingRef.current = true
     sessionUserIdRef.current = enhancedSession.user.id
 
-    setLoading(true)
+    setDataLoading(true)
     try {
       // Fetch balance and transactions in parallel
       const [balanceResponse, transactionsResponse] = await Promise.all([
@@ -72,7 +71,7 @@ export default function WalletPage() {
     } catch (error) {
       console.error('Error fetching wallet data:', error)
     } finally {
-      setLoading(false)
+      setDataLoading(false)
       isFetchingRef.current = false
     }
   }, [enhancedSession?.user?.id])
@@ -94,8 +93,8 @@ export default function WalletPage() {
 
   const handleRecharge = async () => {
     const amount = parseFloat(rechargeAmount)
-    if (!amount || amount < 10) {
-      alert('Minimum recharge amount is ₹10')
+    if (!amount || amount < 100) {
+      alert('Minimum recharge amount is ₹100\n\nAmounts below ₹100 are not supported by the payment gateway.')
       return
     }
 
@@ -171,10 +170,10 @@ export default function WalletPage() {
               variant="outline"
               size="sm"
               onClick={fetchWalletData}
-              disabled={loading}
+              disabled={dataLoading}
               className="bg-white border-gray-400 h-8"
             >
-              {loading ? (
+              {dataLoading ? (
                 <RefreshCw className="w-4 h-4 animate-spin" />
               ) : (
                 <RefreshCw className="w-4 h-4" />
@@ -206,13 +205,18 @@ export default function WalletPage() {
                   </label>
                   <Input
                     type="number"
-                    placeholder="Enter amount (min. ₹10)"
+                    placeholder="Enter amount (min. ₹100)"
                     value={rechargeAmount}
                     onChange={(e) => setRechargeAmount(e.target.value)}
-                    min="10"
+                    min="100"
                     step="1"
                     className="bg-white border-gray-400 h-8"
                   />
+                  {rechargeAmount && parseFloat(rechargeAmount) < 100 && (
+                    <p className="text-red-600 text-xs mt-1">
+                      Minimum recharge amount is ₹100.
+                    </p>
+                  )}
                 </div>
 
                 {/* Quick Amount Buttons */}
@@ -232,7 +236,7 @@ export default function WalletPage() {
                 <Button
                   className="bg-blue-600 hover:bg-blue-700 text-white h-8 text-sm"
                   onClick={handleRecharge}
-                  disabled={paymentLoading || !rechargeAmount || parseFloat(rechargeAmount) < 10}
+                  disabled={paymentLoading || !rechargeAmount || parseFloat(rechargeAmount) < 100}
                 >
                   {paymentLoading ? (
                     <>
@@ -263,7 +267,7 @@ export default function WalletPage() {
               <h2 className="text-base font-semibold text-gray-800">Transaction History</h2>
             </div>
             <div className="bg-white p-4">
-              {loading ? (
+              {dataLoading ? (
                 <div className="text-center py-8 text-gray-500">
                   <RefreshCw className="w-12 h-12 mx-auto mb-4 animate-spin text-gray-300" />
                   <p className="text-sm">Loading transactions...</p>

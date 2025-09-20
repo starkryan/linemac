@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import AadhaarHeaderUI from '@/app/components/AadhaarHeaderUI';
+import Header from '@/app/components/Header';
 
 export default function ProtectedLayout({
   children,
@@ -10,7 +10,7 @@ export default function ProtectedLayout({
   // In a real app, you'd check authentication here
   return (
     <div className="min-h-screen bg-gray-100">
-      <AadhaarHeaderUI />
+      <Header />
       {children}
     </div>
   );

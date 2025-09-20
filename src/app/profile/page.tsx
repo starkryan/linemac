@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { IndianRupee } from "lucide-react"
 import { Label } from "@/components/ui/label"
 import AuthenticatedLayout from "@/app/components/AuthenticatedLayout"
-import { useSession } from "@/lib/auth-client"
+import { useAuth } from "@/hooks/useAuth"
 
 interface ProfileData {
   fullName: string
@@ -25,29 +25,18 @@ interface ProfileData {
 }
 
 export default function ProfilePage() {
-  const { data: session, status, refresh } = useSession()
-  const [enhancedSession, setEnhancedSession] = useState<any>(null)
+  const { user, session: authSession, loading, isAuthenticated } = useAuth()
   const [profileData, setProfileData] = useState<ProfileData | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [profileLoading, setProfileLoading] = useState(true)
 
   useEffect(() => {
-    if (status === "authenticated" && !enhancedSession) {
-      refresh().then((sessionData) => {
-        if (sessionData) {
-          setEnhancedSession(sessionData)
-        }
-      })
-    }
-  }, [status, enhancedSession, refresh])
-
-  useEffect(() => {
-    if (enhancedSession) {
+    if (isAuthenticated && user) {
       fetchProfileData()
     }
-  }, [enhancedSession])
+  }, [isAuthenticated, user])
 
   const fetchProfileData = async () => {
-    if (!enhancedSession?.user?.id) return
+    if (!user?.id) return
 
     try {
       const response = await fetch(`/api/user/profile`)
@@ -58,11 +47,11 @@ export default function ProfilePage() {
     } catch (error) {
       console.error('Error fetching profile data:', error)
     } finally {
-      setLoading(false)
+      setProfileLoading(false)
     }
   }
 
-  if (loading) {
+  if (loading || profileLoading) {
     return (
       <AuthenticatedLayout>
         <div className="min-h-screen bg-gray-100 flex items-center justify-center">
@@ -193,7 +182,7 @@ export default function ProfilePage() {
                 <div>
                   <Label className="text-sm text-gray-700 mb-2 block">Email</Label>
                   <div className="bg-gray-50 border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-700">
-                    {profileData?.email || enhancedSession?.user?.email || 'Not provided'}
+                    {profileData?.email || user?.email || 'Not provided'}
                   </div>
                 </div>
                 <div>

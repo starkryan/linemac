@@ -31,7 +31,7 @@ export default function AadhaarLoginUI() {
 
     try {
       // First, validate with our custom endpoint
-      const validationResponse = await fetch('/api/auth-custom-login', {
+      const validationResponse = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -117,7 +117,7 @@ export default function AadhaarLoginUI() {
                       <Input
                         id="operatorUid"
                         type="text"
-                        placeholder="Enter Operator UID"
+                        placeholder="0000 0000 0000"
                         className="mt-1"
                         {...register('operatorUid', { required: 'Operator UID is required' })}
                       />

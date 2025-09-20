@@ -2,37 +2,22 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
-import { useSession, signOut } from "@/lib/auth-client";
+import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
-// Example icons: you can replace with lucide-react or your own PNG/SVGs in public/
-// For now, I'll use placeholders like "/profile.png" etc.
+/*
+ * Header component for authenticated users
+ * Icons can be replaced with lucide-react or custom PNG/SVGs in public/
+ * Currently using placeholder images like "/profile.png"
+ */
 
-export default function AadhaarHeader() {
-  const { data: session, status, isPending, error, refresh } = useSession();
-  const [enhancedSession, setEnhancedSession] = useState<any>(null);
+export default function Header() {
+  const { user, session, loading, isAuthenticated, logout } = useAuth();
   const router = useRouter();
 
-  // Handle authentication errors and fetch enhanced session
-  useEffect(() => {
-    if (status === "error" || error) {
-      console.error("Session error:", error);
-      // Don't redirect immediately to avoid loops, just log the error
-    }
-
-    // Fetch enhanced session when authenticated
-    if (status === "authenticated" && !enhancedSession) {
-      refresh().then((sessionData) => {
-        if (sessionData) {
-          setEnhancedSession(sessionData);
-        }
-      });
-    }
-  }, [status, error, refresh, enhancedSession]);
-
   // Only show header if user is authenticated
-  if (status === "loading") {
+  if (loading) {
     return (
       <header className="w-full bg-gradient-to-b from-blue-100 to-blue-200 border-b flex items-center justify-between px-4 py-2">
         <div className="text-sm text-blue-900">Loading...</div>
@@ -40,32 +25,12 @@ export default function AadhaarHeader() {
     );
   }
 
-  // Show loading while fetching enhanced session data
-  if (status === "authenticated" && !enhancedSession) {
-    return (
-      <header className="w-full bg-gradient-to-b from-blue-100 to-blue-200 border-b flex items-center justify-between px-4 py-2">
-        <div className="text-sm text-blue-900">Loading session data...</div>
-      </header>
-    );
-  }
-
-  if (!enhancedSession) {
+  if (!isAuthenticated || !user) {
     return null;
   }
 
   const handleLogout = async () => {
-    try {
-      await signOut();
-      // Better Auth will handle the redirect automatically
-      // but we'll add a fallback redirect
-      setTimeout(() => {
-        window.location.href = "/";
-      }, 100);
-    } catch (error) {
-      console.error("Logout failed:", error);
-      // Fallback to manual redirect if signOut fails
-      window.location.href = "/";
-    }
+    await logout();
   };
 
   return (
