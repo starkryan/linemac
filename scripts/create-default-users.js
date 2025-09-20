@@ -1,7 +1,15 @@
 require('dotenv').config();
 const { Pool } = require('pg');
 const bcrypt = require('bcrypt');
-const { v4: uuidv4 } = require('uuid');
+
+// Simple UUID v4 generator function
+function generateUUID() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
 
 async function createDefaultUsers() {
   console.log('🔧 Creating default users...');
@@ -43,7 +51,7 @@ async function createDefaultUsers() {
       console.log('📝 Creating admin user...');
 
       // Create admin user
-      const adminId = uuidv4();
+      const adminId = generateUUID();
       const adminPassword = await bcrypt.hash('admin123', 12);
 
       // Build user insert query dynamically
@@ -96,7 +104,7 @@ async function createDefaultUsers() {
       );
 
       // Create account for admin
-      const accountId = uuidv4();
+      const accountId = generateUUID();
       const accountInsertCols = ['id', 'userId', 'password', 'createdAt', 'updatedAt'];
       const accountInsertVals = [accountId, adminId, adminPassword, new Date(), new Date()];
       const accountPlaceholders = [];
@@ -149,7 +157,7 @@ async function createDefaultUsers() {
       console.log('📝 Creating default operator user...');
 
       // Create operator user
-      const operatorId = uuidv4();
+      const operatorId = generateUUID();
       const operatorPassword = await bcrypt.hash('operator123', 12);
 
       // Build user insert query dynamically
@@ -202,7 +210,7 @@ async function createDefaultUsers() {
       );
 
       // Create account for operator
-      const accountId = uuidv4();
+      const accountId = generateUUID();
       const accountInsertCols = ['id', 'userId', 'password', 'createdAt', 'updatedAt'];
       const accountInsertVals = [accountId, operatorId, operatorPassword, new Date(), new Date()];
       const accountPlaceholders = [];
