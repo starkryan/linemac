@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -49,20 +49,11 @@ import {
 
 interface CorrectionRequest {
   id: string;
-  userId: string;
-  userName: string;
-  userAvatar?: string;
-  aadhaarNumber: string;
-  requestType: "name" | "address" | "dob" | "phone" | "photo";
-  currentData: string;
-  requestedData: string;
-  status: "pending" | "approved" | "rejected" | "in_review";
-  priority: "low" | "medium" | "high" | "urgent";
-  submittedDate: string;
-  lastUpdated: string;
-  assignedTo?: string;
-  documents: number;
-  notes?: string;
+  aadhaar_number: string;
+  name: string;
+  status: "pending" | "approved" | "rejected";
+  created_at: string;
+  operator_name?: string;
 }
 
 interface RequestsTableProps {
@@ -72,94 +63,53 @@ interface RequestsTableProps {
 export default function RequestsTable({ className }: RequestsTableProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [priorityFilter, setPriorityFilter] = useState("all");
-  const [typeFilter, setTypeFilter] = useState("all");
+  const [requests, setRequests] = useState<CorrectionRequest[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const requests: CorrectionRequest[] = [
-    {
-      id: "REQ-001",
-      userId: "USR-001",
-      userName: "Rahul Kumar",
-      userAvatar: "/placeholder-avatar.jpg",
-      aadhaarNumber: "XXXX-XXXX-1234",
-      requestType: "name",
-      currentData: "Rahul Kumar",
-      requestedData: "Rahul Kumar Singh",
-      status: "pending",
-      priority: "high",
-      submittedDate: "2024-01-20",
-      lastUpdated: "2024-01-20 10:30 AM",
-      assignedTo: "Admin User",
-      documents: 2,
-      notes: "User wants to add surname Singh"
-    },
-    {
-      id: "REQ-002",
-      userId: "USR-002",
-      userName: "Priya Sharma",
-      userAvatar: "/placeholder-avatar.jpg",
-      aadhaarNumber: "XXXX-XXXX-5678",
-      requestType: "address",
-      currentData: "123 Old Street, Mumbai",
-      requestedData: "456 New Road, Delhi",
-      status: "in_review",
-      priority: "medium",
-      submittedDate: "2024-01-19",
-      lastUpdated: "2024-01-19 02:45 PM",
-      assignedTo: "Admin User",
-      documents: 3,
-      notes: "Address change due to relocation"
-    },
-    {
-      id: "REQ-003",
-      userId: "USR-003",
-      userName: "Amit Patel",
-      userAvatar: "/placeholder-avatar.jpg",
-      aadhaarNumber: "XXXX-XXXX-9012",
-      requestType: "dob",
-      currentData: "15/01/1990",
-      requestedData: "15/01/1989",
-      status: "approved",
-      priority: "low",
-      submittedDate: "2024-01-18",
-      lastUpdated: "2024-01-18 04:20 PM",
-      assignedTo: "Admin User",
-      documents: 1
-    },
-    {
-      id: "REQ-004",
-      userId: "USR-004",
-      userName: "Sunita Reddy",
-      userAvatar: "/placeholder-avatar.jpg",
-      aadhaarNumber: "XXXX-XXXX-7890",
-      requestType: "phone",
-      currentData: "98765 43214",
-      requestedData: "98765 43215",
-      status: "rejected",
-      priority: "medium",
-      submittedDate: "2024-01-17",
-      lastUpdated: "2024-01-17 11:15 AM",
-      assignedTo: "Admin User",
-      documents: 1,
-      notes: "Phone number update rejected due to invalid proof"
-    },
-    {
-      id: "REQ-005",
-      userId: "USR-005",
-      userName: "Vikram Singh",
-      userAvatar: "/placeholder-avatar.jpg",
-      aadhaarNumber: "XXXX-XXXX-3456",
-      requestType: "photo",
-      currentData: "Old photo",
-      requestedData: "New photo",
-      status: "pending",
-      priority: "urgent",
-      submittedDate: "2024-01-20",
-      lastUpdated: "2024-01-20 09:00 AM",
-      documents: 1,
-      notes: "Urgent photo update for passport application"
+  useEffect(() => {
+    fetchRequests();
+  }, [statusFilter]);
+
+  const fetchRequests = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(`/api/correction-requests/list?status=${statusFilter === 'all' ? '' : statusFilter}`);
+      const result = await response.json();
+
+      if (result.success) {
+        setRequests(result.requests);
+      }
+    } catch (error) {
+      console.error('Error fetching requests:', error);
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
+
+  const updateRequestStatus = async (requestId: string, status: 'approved' | 'rejected') => {
+    try {
+      const response = await fetch(`/api/correction-requests/${requestId}/update`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        // Refresh the requests list
+        fetchRequests();
+        alert(`Request ${status} successfully!`);
+      } else {
+        alert(result.error || 'Failed to update request status');
+      }
+    } catch (error) {
+      console.error('Error updating request:', error);
+      alert('Failed to update request status. Please try again.');
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -171,36 +121,14 @@ export default function RequestsTable({ className }: RequestsTableProps) {
     }
   };
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case "urgent": return "bg-red-100 text-red-800";
-      case "high": return "bg-orange-100 text-orange-800";
-      case "medium": return "bg-orange-100 text-orange-800";
-      case "low": return "bg-green-100 text-green-800";
-      default: return "bg-gray-100 text-gray-800";
-    }
-  };
-
-  const getRequestTypeIcon = (type: string) => {
-    switch (type) {
-      case "name": return <User className="h-4 w-4" />;
-      case "address": return "📍";
-      case "dob": return "📅";
-      case "phone": return "📞";
-      case "photo": return "📷";
-      default: return <FileText className="h-4 w-4" />;
-    }
-  };
-
+  
   const filteredRequests = requests.filter(request => {
-    const matchesSearch = request.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         request.aadhaarNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    const matchesSearch = request.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         request.aadhaar_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          request.id.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === "all" || request.status === statusFilter;
-    const matchesPriority = priorityFilter === "all" || request.priority === priorityFilter;
-    const matchesType = typeFilter === "all" || request.requestType === typeFilter;
 
-    return matchesSearch && matchesStatus && matchesPriority && matchesType;
+    return matchesSearch && matchesStatus;
   });
 
   const getStatusCounts = () => {
@@ -233,12 +161,12 @@ export default function RequestsTable({ className }: RequestsTableProps) {
                   <span>Pending: {statusCounts.pending || 0}</span>
                 </div>
                 <div className="flex items-center space-x-1">
-                  <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                  <span>In Review: {statusCounts.in_review || 0}</span>
-                </div>
-                <div className="flex items-center space-x-1">
                   <div className="w-2 h-2 rounded-full bg-green-500"></div>
                   <span>Approved: {statusCounts.approved || 0}</span>
+                </div>
+                <div className="flex items-center space-x-1">
+                  <div className="w-2 h-2 rounded-full bg-red-500"></div>
+                  <span>Rejected: {statusCounts.rejected || 0}</span>
                 </div>
               </div>
               <Button variant="outline">
@@ -253,7 +181,7 @@ export default function RequestsTable({ className }: RequestsTableProps) {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
-                placeholder="Search by user name, Aadhaar, or request ID..."
+                placeholder="Search by name, Aadhaar, or request ID..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
@@ -267,36 +195,8 @@ export default function RequestsTable({ className }: RequestsTableProps) {
                 <SelectContent>
                   <SelectItem value="all">All Status</SelectItem>
                   <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="in_review">In Review</SelectItem>
                   <SelectItem value="approved">Approved</SelectItem>
                   <SelectItem value="rejected">Rejected</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-                <SelectTrigger className="w-32">
-                  <SelectValue placeholder="Priority" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Priority</SelectItem>
-                  <SelectItem value="urgent">Urgent</SelectItem>
-                  <SelectItem value="high">High</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="low">Low</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Select value={typeFilter} onValueChange={setTypeFilter}>
-                <SelectTrigger className="w-32">
-                  <SelectValue placeholder="Type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Types</SelectItem>
-                  <SelectItem value="name">Name</SelectItem>
-                  <SelectItem value="address">Address</SelectItem>
-                  <SelectItem value="dob">Date of Birth</SelectItem>
-                  <SelectItem value="phone">Phone</SelectItem>
-                  <SelectItem value="photo">Photo</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -304,116 +204,97 @@ export default function RequestsTable({ className }: RequestsTableProps) {
         </CardHeader>
 
         <CardContent>
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Request ID</TableHead>
-                  <TableHead>User</TableHead>
-                  <TableHead>Request Type</TableHead>
-                  <TableHead>Current Data</TableHead>
-                  <TableHead>Requested Data</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Priority</TableHead>
-                  <TableHead>Submitted</TableHead>
-                  <TableHead>Assigned To</TableHead>
-                  <TableHead className="w-[100px]">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredRequests.map((request) => (
-                  <TableRow key={request.id}>
-                    <TableCell className="font-medium">{request.id}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-medium">
-                          {request.userName.split(' ').map(n => n[0]).join('')}
-                        </div>
-                        <div>
-                          <div className="font-medium">{request.userName}</div>
-                          <div className="text-xs text-gray-500">{request.aadhaarNumber}</div>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center space-x-2">
-                        {getRequestTypeIcon(request.requestType)}
-                        <span className="capitalize">{request.requestType}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="max-w-xs truncate">
-                      <div className="text-sm" title={request.currentData}>
-                        {request.currentData}
-                      </div>
-                    </TableCell>
-                    <TableCell className="max-w-xs truncate">
-                      <div className="text-sm font-medium" title={request.requestedData}>
-                        {request.requestedData}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={getStatusColor(request.status)}>
-                        {request.status.replace('_', ' ')}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={getPriorityColor(request.priority)}>
-                        {request.priority}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center space-x-1 text-sm">
-                        <Calendar className="h-3 w-3 text-gray-400" />
-                        <span>{request.submittedDate}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="text-sm">{request.assignedTo || "Unassigned"}</div>
-                    </TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="h-8 w-8 p-0">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem>
-                            <Eye className="mr-2 h-4 w-4" />
-                            View Details
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            <Edit className="mr-2 h-4 w-4" />
-                            Edit Request
-                          </DropdownMenuItem>
-                          {request.status === "pending" && (
-                            <>
-                              <DropdownMenuItem className="text-green-600">
-                                <Check className="mr-2 h-4 w-4" />
-                                Approve
-                              </DropdownMenuItem>
-                              <DropdownMenuItem className="text-red-600">
-                                <X className="mr-2 h-4 w-4" />
-                                Reject
-                              </DropdownMenuItem>
-                            </>
-                          )}
-                          {request.priority === "urgent" && (
-                            <DropdownMenuItem className="text-orange-600">
-                              <AlertTriangle className="mr-2 h-4 w-4" />
-                              Mark as Urgent
-                            </DropdownMenuItem>
-                          )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
+          {loading ? (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
+              <p className="mt-4 text-gray-600">Loading requests...</p>
+            </div>
+          ) : (
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Request ID</TableHead>
+                    <TableHead>Applicant</TableHead>
+                    <TableHead>Aadhaar Number</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Submitted On</TableHead>
+                    <TableHead>Operator</TableHead>
+                    <TableHead className="w-[100px]">Actions</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+                </TableHeader>
+                <TableBody>
+                  {filteredRequests.map((request) => (
+                    <TableRow key={request.id}>
+                      <TableCell className="font-medium">{request.id}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center space-x-3">
+                          <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-medium">
+                            {request.name.split(' ').map(n => n[0]).join('')}
+                          </div>
+                          <div>
+                            <div className="font-medium">{request.name}</div>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="font-mono text-sm">{request.aadhaar_number}</div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={getStatusColor(request.status)}>
+                          {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center space-x-1 text-sm">
+                          <Calendar className="h-3 w-3 text-gray-400" />
+                          <span>{new Date(request.created_at).toLocaleDateString()}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-sm">{request.operator_name || "System"}</div>
+                      </TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-8 w-8 p-0">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem>
+                              <Eye className="mr-2 h-4 w-4" />
+                              View Details
+                            </DropdownMenuItem>
+                            {request.status === "pending" && (
+                              <>
+                                <DropdownMenuItem
+                                  className="text-green-600"
+                                  onClick={() => updateRequestStatus(request.id, 'approved')}
+                                >
+                                  <Check className="mr-2 h-4 w-4" />
+                                  Approve
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  className="text-red-600"
+                                  onClick={() => updateRequestStatus(request.id, 'rejected')}
+                                >
+                                  <X className="mr-2 h-4 w-4" />
+                                  Reject
+                                </DropdownMenuItem>
+                              </>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
 
-          {filteredRequests.length === 0 && (
+          {!loading && filteredRequests.length === 0 && (
             <div className="text-center py-8">
               <FileText className="mx-auto h-12 w-12 text-gray-400" />
               <h3 className="mt-2 text-sm font-medium text-gray-900">No requests found</h3>

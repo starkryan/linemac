@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -17,6 +18,7 @@ import { RDFingerprintCapture } from "@/components/rd-fingerprint-capture"
 import { CaptureResponse } from "@/lib/rd-service"
 
 export default function GovernmentForm() {
+  const router = useRouter()
   const [activeTab, setActiveTab] = useState("demographics")
   const [verificationMethod, setVerificationMethod] = useState("documents")
   const [completedSteps, setCompletedSteps] = useState<string[]>([])
@@ -28,6 +30,68 @@ export default function GovernmentForm() {
     right?: CaptureResponse;
     thumbs?: CaptureResponse;
   }>({})
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [confirmationChecked, setConfirmationChecked] = useState(false)
+
+  // Form state
+  const [formData, setFormData] = useState({
+    aadhaar_number: '',
+    mobile_number: '',
+    name: '',
+    gender: '',
+    dob: '',
+    email: '',
+    co: '',
+    house_no: '',
+    street: '',
+    landmark: '',
+    area: '',
+    city: '',
+    post_office: '',
+    district: '',
+    sub_district: '',
+    state: '',
+    pin_code: ''
+  })
+
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }))
+  }
+
+  const handleSubmit = async () => {
+    if (!confirmationChecked) {
+      alert('Please confirm the information is accurate before submitting.')
+      return
+    }
+
+    setIsSubmitting(true)
+    try {
+      const response = await fetch('/api/correction-requests/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        alert('Application submitted successfully!')
+        router.push('/submission-status?requestId=' + result.request.id)
+      } else {
+        alert(result.error || 'Failed to submit application')
+      }
+    } catch (error) {
+      console.error('Submission error:', error)
+      alert('Failed to submit application. Please try again.')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
 
   // File upload states
   const [uploadedFiles, setUploadedFiles] = useState<{
@@ -924,13 +988,25 @@ export default function GovernmentForm() {
                   complete.
                 </div>
                 <div className="flex items-center space-x-2 mb-4">
-                  <input type="checkbox" id="confirm" className="border-gray-400" />
+                  <input
+                    type="checkbox"
+                    id="confirm"
+                    className="border-gray-400"
+                    checked={confirmationChecked}
+                    onChange={(e) => setConfirmationChecked(e.target.checked)}
+                  />
                   <Label htmlFor="confirm" className="text-sm text-gray-700">
                     I confirm that all information provided is accurate and I understand that providing false
                     information is a punishable offense.
                   </Label>
                 </div>
-                <Button className="bg-green-600 text-white px-8 py-2">Submit Application</Button>
+                <Button
+                  className="bg-green-600 text-white px-8 py-2"
+                  onClick={handleSubmit}
+                  disabled={isSubmitting || !confirmationChecked}
+                >
+                  {isSubmitting ? 'Submitting...' : 'Submit Application'}
+                </Button>
               </div>
             </div>
           </>

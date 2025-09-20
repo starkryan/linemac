@@ -13,7 +13,7 @@ export default function ListPage() {
   const [searchType, setSearchType] = useState("aadhaar")
   const [searchValue, setSearchValue] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
-  const [applications, setApplications] = useState<any[]>([])
+  const [applications, setApplications] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -51,69 +51,69 @@ export default function ListPage() {
     <AuthenticatedLayout>
       <div className="min-h-screen bg-gray-100">
         <div className="p-6 max-w-7xl mx-auto">
-          {/* Search and Filters */}
-          <div className="mb-6">
-            <div className="bg-gray-200 px-4 py-2 border border-gray-300">
-              <h2 className="text-base font-semibold text-gray-800">Search Applications</h2>
-            </div>
-            <div className="bg-white p-4">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div>
-                  <Label className="text-sm text-gray-700 mb-2 block">Search By</Label>
-                  <Select value={searchType} onValueChange={setSearchType}>
-                    <SelectTrigger className="bg-white border-gray-400 h-8">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="aadhaar">Aadhaar Number</SelectItem>
-                      <SelectItem value="name">Name</SelectItem>
-                      <SelectItem value="enrollment">Enrollment ID</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label className="text-sm text-gray-700 mb-2 block">Search Value</Label>
-                  <Input
-                    className="bg-white border-gray-400 h-8"
-                    placeholder="Enter search value..."
-                    value={searchValue}
-                    onChange={(e) => setSearchValue(e.target.value)}
-                  />
-                </div>
-                <div>
-                  <Label className="text-sm text-gray-700 mb-2 block">Status</Label>
-                  <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger className="bg-white border-gray-400 h-8">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Status</SelectItem>
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="approved">Approved</SelectItem>
-                      <SelectItem value="rejected">Rejected</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex items-end">
-                  <Button className="bg-blue-600 text-white px-6 flex items-center gap-2 w-full">
-                    <Search className="w-4 h-4" />
-                    Search
-                  </Button>
-                </div>
+        {/* Search and Filters */}
+        <div className="mb-6">
+          <div className="bg-gray-200 px-4 py-2 border border-gray-300">
+            <h2 className="text-base font-semibold text-gray-800">Search Applications</h2>
+          </div>
+          <div className="bg-white p-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div>
+                <Label className="text-sm text-gray-700 mb-2 block">Search By</Label>
+                <Select value={searchType} onValueChange={setSearchType}>
+                  <SelectTrigger className="bg-white border-gray-400 h-8">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="aadhaar">Aadhaar Number</SelectItem>
+                    <SelectItem value="name">Name</SelectItem>
+                    <SelectItem value="enrollment">Enrollment ID</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-sm text-gray-700 mb-2 block">Search Value</Label>
+                <Input
+                  className="bg-white border-gray-400 h-8"
+                  placeholder="Enter search value..."
+                  value={searchValue}
+                  onChange={(e) => setSearchValue(e.target.value)}
+                />
+              </div>
+              <div>
+                <Label className="text-sm text-gray-700 mb-2 block">Status</Label>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="bg-white border-gray-400 h-8">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Status</SelectItem>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="approved">Approved</SelectItem>
+                    <SelectItem value="rejected">Rejected</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-end">
+                <Button className="bg-blue-600 text-white px-6 flex items-center gap-2 w-full">
+                  <Search className="w-4 h-4" />
+                  Search
+                </Button>
               </div>
             </div>
           </div>
+        </div>
 
-          {/* Applications Table */}
-          <div className="mb-6">
-            <div className="bg-gray-200 px-4 py-2 border border-gray-300 flex justify-between items-center">
-              <h2 className="text-base font-semibold text-gray-800">Applications ({filteredApplications.length})</h2>
-              <Button variant="outline" size="sm" className="bg-white border-gray-400 h-8 px-3 text-xs flex items-center gap-2">
-                <Download className="w-3 h-3" />
-                Export All
-              </Button>
-            </div>
-            <div className="bg-white">
+        {/* Applications Table */}
+        <div className="mb-6">
+          <div className="bg-gray-200 px-4 py-2 border border-gray-300 flex justify-between items-center">
+            <h2 className="text-base font-semibold text-gray-800">Applications ({filteredApplications.length})</h2>
+            <Button variant="outline" size="sm" className="bg-white border-gray-400 h-8 px-3 text-xs flex items-center gap-2">
+              <Download className="w-3 h-3" />
+              Export All
+            </Button>
+          </div>
+          <div className="bg-white">
               {loading ? (
                 <div className="text-center py-8">
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
@@ -174,49 +174,47 @@ export default function ListPage() {
                           </td>
                         </tr>
                       ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
+                </tbody>
+              </table>
             </div>
           </div>
+        </div>
 
-          {/* Summary Statistics */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <div className="bg-white p-4 border border-gray-300">
-              <div className="text-2xl font-bold text-blue-600">{applications.length}</div>
-              <div className="text-sm text-gray-600">Total Applications</div>
-            </div>
-            <div className="bg-white p-4 border border-gray-300">
-              <div className="text-2xl font-bold text-green-600">
-                {applications.filter(a => a.status === "approved").length}
-              </div>
-              <div className="text-sm text-gray-600">Approved</div>
-            </div>
-            <div className="bg-white p-4 border border-gray-300">
-              <div className="text-2xl font-bold text-yellow-600">
-                {applications.filter(a => a.status === "pending").length}
-              </div>
-              <div className="text-sm text-gray-600">Pending</div>
-            </div>
-            <div className="bg-white p-4 border border-gray-300">
-              <div className="text-2xl font-bold text-red-600">
-                {applications.filter(a => a.status === "rejected").length}
-              </div>
-              <div className="text-sm text-gray-600">Rejected</div>
-            </div>
+        {/* Summary Statistics */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <div className="bg-white p-4 border border-gray-300">
+            <div className="text-2xl font-bold text-blue-600">{applications.length}</div>
+            <div className="text-sm text-gray-600">Total Applications</div>
           </div>
+          <div className="bg-white p-4 border border-gray-300">
+            <div className="text-2xl font-bold text-green-600">
+              {applications.filter(a => a.status === "approved").length}
+            </div>
+            <div className="text-sm text-gray-600">Approved</div>
+          </div>
+          <div className="bg-white p-4 border border-gray-300">
+            <div className="text-2xl font-bold text-yellow-600">
+              {applications.filter(a => a.status === "pending").length}
+            </div>
+            <div className="text-sm text-gray-600">Pending</div>
+          </div>
+          <div className="bg-white p-4 border border-gray-300">
+            <div className="text-2xl font-bold text-red-600">
+              {applications.filter(a => a.status === "rejected").length}
+            </div>
+            <div className="text-sm text-gray-600">Rejected</div>
+          </div>
+        </div>
 
-          {/* Navigation */}
-          <div className="flex justify-end gap-4 mt-8">
-            <Button
-              variant="outline"
-              className="bg-white border-gray-400 px-6 flex items-center gap-2"
-            >
-              <AadhaarIcon mirrored />
-              Back
-            </Button>
-          </div>
+        {/* Navigation */}
+        <div className="flex justify-end gap-4 mt-8">
+          <Button
+            variant="outline"
+            className="bg-white border-gray-400 px-6 flex items-center gap-2"
+          >
+            <AadhaarIcon mirrored />
+            Back
+          </Button>
         </div>
       </div>
     </AuthenticatedLayout>
