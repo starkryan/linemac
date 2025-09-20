@@ -11,9 +11,9 @@
     "start": "node scripts/start-with-migrate.js",
     "start:next": "next start",
     "lint": "eslint",
-    "migrate": "node scripts/run-migrations.js",
+    "migrate": "tsx scripts/run-migrations.js",
     "create-admin": "tsx scripts/create-admin-user.js",
-    "reset-admin": "node scripts/reset-admin-user.js"
+    "reset-admin": "tsx scripts/reset-admin-user.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

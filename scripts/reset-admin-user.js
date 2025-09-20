@@ -1,7 +1,7 @@
-require('dotenv').config();
-const { Pool } = require('pg');
-const bcrypt = require('bcryptjs');
-const { v4: uuidv4 } = require('uuid');
+import 'dotenv/config';
+import { Pool } from 'pg';
+import bcrypt from 'bcryptjs';
+import { v4 as uuidv4 } from 'uuid';
 
 async function resetAdminUser() {
   const pool = new Pool({
@@ -89,7 +89,7 @@ async function resetAdminUser() {
 }
 
 // Only run if this script is executed directly
-if (require.main === module) {
+if (import.meta.url === `file://${process.argv[1]}`) {
   resetAdminUser()
     .then(() => {
       console.log('🎉 Admin user reset process completed');
@@ -101,4 +101,4 @@ if (require.main === module) {
     });
 }
 
-module.exports = { resetAdminUser };
+export { resetAdminUser };
