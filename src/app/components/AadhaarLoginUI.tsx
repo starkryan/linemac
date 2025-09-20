@@ -154,8 +154,8 @@ export default function AadhaarLoginUI() {
                       )}
                     </div>
 
-                    <div className="flex justify-end">
-                      <Button type="submit" disabled={isSubmitting}>
+                    <div className="flex justify-center">
+                      <Button variant="secondary" className="border " type="submit" disabled={isSubmitting}>
                         {isSubmitting ? 'Logging in...' : 'Submit'}
                       </Button>
                     </div>

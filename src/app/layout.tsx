@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { StatusFooter } from "./components/AadhaarFooterUI";
+import { ConditionalFooter } from "./components/ConditionalFooter";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -14,6 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'),
   title: "UCL - Aadhaar Update Client Portal",
   description: "Secure portal for Aadhaar card correction and update requests with Better Auth authentication",
   openGraph: {
@@ -66,7 +67,7 @@ export default function RootLayout({
           <div className="flex-1">
             {children}
           </div>
-          <StatusFooter />
+          <ConditionalFooter />
         </div>
       </body>
     </html>
