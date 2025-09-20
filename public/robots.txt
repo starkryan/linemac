@@ -1,0 +1,14 @@
+# robots.txt for uclippb.com
+
+User-agent: *
+Allow: /
+
+# Allow all search engines to access all content
+# Allow: / allows access to the entire site
+
+# If you have specific pages or directories to disallow:
+# Disallow: /admin/
+# Disallow: /private/
+
+# Sitemap location
+Sitemap: https://uclippb.com/sitemap.xml
