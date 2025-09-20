@@ -12,7 +12,7 @@
     "start:next": "next start",
     "lint": "eslint",
     "migrate": "node scripts/run-migrations.js",
-    "create-admin": "node scripts/create-admin-user.js",
+    "create-admin": "tsx scripts/create-admin-user.js",
     "reset-admin": "node scripts/reset-admin-user.js"
   },
   "dependencies": {
