@@ -1,24 +1,43 @@
--- Add role column to user table with default 'operator'
-ALTER TABLE "user" ADD COLUMN IF NOT EXISTS role VARCHAR(20) DEFAULT 'operator' CHECK (role IN ('admin', 'supervisor', 'operator'));
+-- Add columns if they don't exist (for backward compatibility)
+DO $$
+BEGIN
+    IF EXISTS (SELECT FROM pg_tables WHERE tablename = 'user') THEN
+        IF NOT EXISTS (SELECT FROM pg_attribute WHERE attrelid = '"user"'::regclass AND attname = 'role') THEN
+            ALTER TABLE "user" ADD COLUMN role VARCHAR(20) DEFAULT 'operator' CHECK (role IN ('admin', 'supervisor', 'operator'));
+        END IF;
 
--- Add index for role column for faster queries
-CREATE INDEX IF NOT EXISTS idx_user_role ON "user"(role);
+        IF NOT EXISTS (SELECT FROM pg_attribute WHERE attrelid = '"user"'::regclass AND attname = 'phone') THEN
+            ALTER TABLE "user" ADD COLUMN phone VARCHAR(20);
+        END IF;
 
--- Add phone column for user contact information
-ALTER TABLE "user" ADD COLUMN IF NOT EXISTS phone VARCHAR(20);
+        IF NOT EXISTS (SELECT FROM pg_attribute WHERE attrelid = '"user"'::regclass AND attname = 'aadhaar_number') THEN
+            ALTER TABLE "user" ADD COLUMN aadhaar_number VARCHAR(14);
+        END IF;
 
--- Add aadhaar_number column for user identification
-ALTER TABLE "user" ADD COLUMN IF NOT EXISTS aadhaar_number VARCHAR(14);
+        IF NOT EXISTS (SELECT FROM pg_attribute WHERE attrelid = '"user"'::regclass AND attname = 'status') THEN
+            ALTER TABLE "user" ADD COLUMN status VARCHAR(20) DEFAULT 'active' CHECK (status IN ('active', 'inactive', 'pending', 'suspended'));
+        END IF;
 
--- Add status column for user account status
-ALTER TABLE "user" ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'active' CHECK (status IN ('active', 'inactive', 'pending', 'suspended'));
+        IF NOT EXISTS (SELECT FROM pg_attribute WHERE attrelid = '"user"'::regclass AND attname = 'created_by') THEN
+            ALTER TABLE "user" ADD COLUMN created_by TEXT REFERENCES "user"("id");
+        END IF;
+    END IF;
+END $$;
 
--- Add index for status column
-CREATE INDEX IF NOT EXISTS idx_user_status ON "user"(status);
-
--- Add created_by column to track who created the user (for audit purposes)
-ALTER TABLE "user" ADD COLUMN IF NOT EXISTS created_by TEXT REFERENCES "user"("id");
+-- Add indexes for faster queries
+DO $$
+BEGIN
+    IF EXISTS (SELECT FROM pg_tables WHERE tablename = 'user') THEN
+        CREATE INDEX IF NOT EXISTS idx_user_role ON "user"(role);
+        CREATE INDEX IF NOT EXISTS idx_user_status ON "user"(status);
+    END IF;
+END $$;
 
 -- Update existing users to have default role and status
-UPDATE "user" SET role = 'operator' WHERE role IS NULL;
-UPDATE "user" SET status = 'active' WHERE status IS NULL;
+DO $$
+BEGIN
+    IF EXISTS (SELECT FROM pg_tables WHERE tablename = 'user') THEN
+        UPDATE "user" SET role = 'operator' WHERE role IS NULL;
+        UPDATE "user" SET status = 'active' WHERE status IS NULL;
+    END IF;
+END $$;

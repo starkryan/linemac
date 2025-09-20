@@ -13,7 +13,8 @@
     "lint": "eslint",
     "migrate": "tsx scripts/run-migrations.js",
     "create-admin": "tsx scripts/create-admin-user.js",
-    "reset-admin": "tsx scripts/reset-admin-user.js"
+    "reset-admin": "tsx scripts/reset-admin-user.js",
+    "create-default-users": "node scripts/create-default-users.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

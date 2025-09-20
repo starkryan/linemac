@@ -24,6 +24,28 @@ async function runMigrations() {
   });
 }
 
+async function createDefaultUsers() {
+  console.log('🔧 Creating default users...');
+
+  return new Promise((resolve, reject) => {
+    const createUsers = spawn('node', ['scripts/create-default-users.js'], {
+      stdio: 'inherit'
+    });
+
+    createUsers.on('close', (code) => {
+      if (code === 0) {
+        console.log('✅ Default users created');
+        resolve();
+      } else {
+        console.error('❌ Default users creation failed');
+        reject(new Error('Default users creation failed'));
+      }
+    });
+
+    createUsers.on('error', reject);
+  });
+}
+
 async function waitForDatabase() {
   const client = new Client({
     connectionString: process.env.DATABASE_URL,
@@ -53,6 +75,7 @@ async function main() {
   try {
     await waitForDatabase();
     await runMigrations();
+    await createDefaultUsers();
 
     console.log('🚀 Starting Next.js application...');
     const next = spawn('npm', ['run', 'start:next'], {
