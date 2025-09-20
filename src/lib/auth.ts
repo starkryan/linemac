@@ -9,6 +9,9 @@ const pool = new Pool({
 
 export const auth = betterAuth({
   database: pool,
+  databaseHooks: {
+    disableMigrations: true,
+  },
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: false,

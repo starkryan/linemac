@@ -1,3 +1,4 @@
+require('dotenv').config();
 const { Client } = require('pg');
 const fs = require('fs');
 const path = require('path');
@@ -56,7 +57,7 @@ async function runMigrations() {
 
         // Record the migration as executed
         await client.query(
-          'INSERT INTO schema_migrations (migration_name) VALUES ($1)',
+          'INSERT INTO schema_migrations (migration_name) VALUES ($1) ON CONFLICT (migration_name) DO NOTHING',
           [file]
         );
 
@@ -68,7 +69,8 @@ async function runMigrations() {
         // Check if the error is about existing relations
         if (error.message.includes('already exists') ||
             error.code === '42P07' ||
-            error.message.includes('duplicate column')) {
+            error.message.includes('duplicate column') ||
+            error.message.includes('duplicate relation')) {
           console.log(`⚠️  Migration ${file} already applied (tables exist), recording as executed...`);
 
           // Still record it as executed to avoid future conflicts
