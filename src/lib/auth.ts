@@ -9,16 +9,6 @@ const pool = new Pool({
 
 export const auth = betterAuth({
   database: pool,
-  advanced: {
-    database: {
-      generateId: false,
-    },
-    cookiePrefix: "better-auth",
-    useSecureCookies: process.env.NODE_ENV === "production",
-    crossSubDomainCookies: {
-      enabled: false,
-    },
-  },
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: false,

@@ -90,6 +90,15 @@ async function runMigrations() {
     }
 
     console.log('🎉 All migrations completed successfully!');
+
+    // Run admin user creation after migrations
+    try {
+      const { createAdminUser } = require('./create-admin-user');
+      await createAdminUser();
+    } catch (adminError) {
+      console.log('⚠️  Admin user creation failed, but migrations completed:', adminError.message);
+      // Don't exit with error code, as migrations were successful
+    }
   } catch (error) {
     console.error('Migration failed:', error);
     process.exit(1);

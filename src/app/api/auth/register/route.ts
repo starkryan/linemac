@@ -12,6 +12,8 @@ interface RegisterRequestBody {
   role?: 'admin' | 'supervisor' | 'operator';
   phone?: string;
   aadhaar_number?: string;
+  operator_uid?: string;
+  operator_name?: string;
   createdBy?: string;
 }
 
@@ -25,12 +27,28 @@ export async function POST(request: NextRequest) {
 
     const adminUser = authResult;
     const body = await request.json() as RegisterRequestBody;
-    const { email, name, password, username, role, phone, aadhaar_number } = body;
+    const { email, name, password, username, role, phone, aadhaar_number, operator_uid, operator_name } = body;
 
     // Validate required fields
     if (!email || !name || !password) {
       return NextResponse.json(
         { error: "Email, name, and password are required" },
+        { status: 400 }
+      );
+    }
+
+    // Validate operator UID for operator role
+    if (role === 'operator' && !operator_uid) {
+      return NextResponse.json(
+        { error: "Operator UID is required for operator role" },
+        { status: 400 }
+      );
+    }
+
+    // Validate operator name format
+    if (operator_name && operator_name.length < 2) {
+      return NextResponse.json(
+        { error: "Operator name must be at least 2 characters long" },
         { status: 400 }
       );
     }
@@ -44,10 +62,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate password length (minimum 8 characters)
-    if (password.length < 8) {
+    // Validate password strength
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    if (!passwordRegex.test(password)) {
       return NextResponse.json(
-        { error: "Password must be at least 8 characters long" },
+        { error: "Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character" },
         { status: 400 }
       );
     }
@@ -93,9 +112,9 @@ export async function POST(request: NextRequest) {
       // Update the existing user record created by Better Auth
       await query(
         `UPDATE "user"
-         SET name = $1, role = $2, phone = $3, aadhaar_number = $4, created_by = $5, status = 'active'
-         WHERE id = $6`,
-        [name, userRole, phone || null, aadhaar_number || null, adminUser.id, response.user.id]
+         SET name = $1, role = $2, phone = $3, aadhaar_number = $4, operator_uid = $5, operator_name = $6, created_by = $7, status = 'active'
+         WHERE id = $8`,
+        [name, userRole, phone || null, aadhaar_number || null, operator_uid || null, operator_name || null, adminUser.id, response.user.id]
       );
 
     } catch (updateError) {
@@ -118,6 +137,8 @@ export async function POST(request: NextRequest) {
         role: userRole,
         phone,
         aadhaar_number,
+        operator_uid,
+        operator_name,
         createdBy: adminUser.id
       },
     });

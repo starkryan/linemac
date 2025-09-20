@@ -25,6 +25,8 @@ interface RegisterFormData {
   role?: 'admin' | 'supervisor' | 'operator';
   phone?: string;
   aadhaar_number?: string;
+  operator_uid?: string;
+  operator_name?: string;
 }
 
 export default function AadhaarRegisterUI() {
@@ -88,6 +90,12 @@ export default function AadhaarRegisterUI() {
       }
       if (data.aadhaar_number) {
         requestBody.aadhaar_number = data.aadhaar_number;
+      }
+      if (data.operator_uid) {
+        requestBody.operator_uid = data.operator_uid;
+      }
+      if (data.operator_name) {
+        requestBody.operator_name = data.operator_name;
       }
 
       const response = await fetch('/api/auth/register', {
@@ -241,9 +249,9 @@ export default function AadhaarRegisterUI() {
                         className="mt-1"
                         {...register('password', {
                           required: 'Password is required',
-                          minLength: {
-                            value: 8,
-                            message: 'Password must be at least 8 characters long'
+                          pattern: {
+                            value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
+                            message: 'Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character'
                           }
                         })}
                       />
@@ -338,6 +346,47 @@ export default function AadhaarRegisterUI() {
                           />
                           {errors.aadhaar_number && (
                             <p className="text-red-500 text-xs mt-1">{errors.aadhaar_number.message as string}</p>
+                          )}
+                        </div>
+
+                        {/* Operator UID - Required for operator role */}
+                        <div>
+                          <Label htmlFor="operator_uid" className="text-sm">
+                            Operator UID {watch('role') === 'operator' && <span className="text-red-500">*</span>}
+                          </Label>
+                          <Input
+                            id="operator_uid"
+                            placeholder="Enter Operator UID"
+                            className="mt-1"
+                            {...register('operator_uid', {
+                              required: watch('role') === 'operator' ? 'Operator UID is required for operator role' : false,
+                              minLength: {
+                                value: 3,
+                                message: 'Operator UID must be at least 3 characters long'
+                              }
+                            })}
+                          />
+                          {errors.operator_uid && (
+                            <p className="text-red-500 text-xs mt-1">{errors.operator_uid.message as string}</p>
+                          )}
+                        </div>
+
+                        {/* Operator Name */}
+                        <div>
+                          <Label htmlFor="operator_name" className="text-sm">Operator Name</Label>
+                          <Input
+                            id="operator_name"
+                            placeholder="Enter Operator Name"
+                            className="mt-1"
+                            {...register('operator_name', {
+                              minLength: {
+                                value: 2,
+                                message: 'Operator name must be at least 2 characters long'
+                              }
+                            })}
+                          />
+                          {errors.operator_name && (
+                            <p className="text-red-500 text-xs mt-1">{errors.operator_name.message as string}</p>
                           )}
                         </div>
                       </div>
