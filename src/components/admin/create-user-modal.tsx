@@ -422,7 +422,13 @@ export default function CreateUserModal({ open, onOpenChange, onUserCreated }: C
             >
               {isSubmitting ? (
                 <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  <img
+                    src="/loader.gif"
+                    alt="Creating..."
+                    width={16}
+                    height={16}
+                    className="animate-pulse mr-2"
+                  />
                   Creating...
                 </>
               ) : (

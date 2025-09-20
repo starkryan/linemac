@@ -53,7 +53,13 @@ export function RDServiceLoader({ onServiceLoaded }: RDServiceLoaderProps) {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-4">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <img
+          src="/loader.gif"
+          alt="Loading RD Service..."
+          width={32}
+          height={32}
+          className="animate-pulse"
+        />
         <span className="ml-3 text-gray-600">Loading RD Service...</span>
       </div>
     );

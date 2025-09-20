@@ -118,7 +118,13 @@ export default function DeviceDetector({ onDeviceSelect, selectedDevice }: Devic
 
       {isLoading && (
         <div className="text-center py-4 text-gray-500">
-          <div className="text-2xl mb-2 animate-spin">⏳</div>
+          <img
+            src="/loader.gif"
+            alt="Scanning for devices..."
+            width={32}
+            height={32}
+            className="mx-auto mb-2 animate-pulse"
+          />
           <p className="text-sm">Scanning for devices...</p>
         </div>
       )}

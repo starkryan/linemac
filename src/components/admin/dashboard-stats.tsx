@@ -184,7 +184,13 @@ export default function DashboardStats({ className }: DashboardStatsProps) {
             <Card key={i}>
               <CardContent className="p-6">
                 <div className="flex items-center justify-center">
-                  <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+                  <img
+                    src="/loader.gif"
+                    alt="Loading..."
+                    width={24}
+                    height={24}
+                    className="animate-pulse"
+                  />
                 </div>
               </CardContent>
             </Card>

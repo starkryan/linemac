@@ -645,3 +645,64 @@ Kukupay response body: {
  GET /api/auth/session 200 in 13ms
  ✓ Compiled /api/user/profile in 145ms (1207 modules)
  GET /api/user/profile 200 in 231ms
+ ⨯ Error: Cannot find module './873.js'
+Require stack:
+- /home/neo/ucl/.next/server/webpack-runtime.js
+- /home/neo/ucl/.next/server/app/api/user/profile/route.js
+- /home/neo/ucl/node_modules/next/dist/server/require.js
+- /home/neo/ucl/node_modules/next/dist/server/load-components.js
+- /home/neo/ucl/node_modules/next/dist/build/utils.js
+- /home/neo/ucl/node_modules/next/dist/build/swc/options.js
+- /home/neo/ucl/node_modules/next/dist/build/swc/index.js
+- /home/neo/ucl/node_modules/next/dist/build/next-config-ts/transpile-config.js
+- /home/neo/ucl/node_modules/next/dist/server/config.js
+- /home/neo/ucl/node_modules/next/dist/server/next.js
+- /home/neo/ucl/node_modules/next/dist/server/lib/start-server.js
+    at <unknown> (.next/server/app/profile/page.js:2:8771)
+    at Object.<anonymous> (.next/server/app/profile/page.js:2:8841) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array],
+  page: '/profile'
+}
+ ○ Compiling /_error ...
+ ✓ Compiled /_error in 922ms (1051 modules)
+ GET /profile 500 in 1252ms
+ GET /profile 200 in 54ms
+ GET /profile 200 in 11ms
+ GET /profile 200 in 97ms
+ ○ Compiling /aadhaar-correction ...
+ ✓ Compiled /aadhaar-correction in 979ms (1247 modules)
+ GET /profile 200 in 75ms
+ ✓ Compiled in 436ms (1072 modules)
+ ✓ Compiled in 184ms (1072 modules)
+ ✓ Compiled in 182ms (1072 modules)
+ ✓ Compiled in 173ms (1072 modules)
+ GET /wallet 200 in 130ms
+ GET /wallet 200 in 26ms
+ GET /wallet 200 in 23ms
+ ✓ Compiled in 111ms (571 modules)
+ ✓ Compiled in 324ms (1074 modules)
+ ✓ Compiled in 260ms (1061 modules)
+ ✓ Compiled in 222ms (1076 modules)
+ ✓ Compiled in 169ms (1076 modules)
+ GET /profile 200 in 97ms
+ ✓ Compiled /aadhaar-correction in 331ms (1159 modules)
+ GET /aadhaar-correction 200 in 424ms
+ ✓ Compiled /report in 348ms (1171 modules)
+ GET /report 200 in 444ms
+ ✓ Compiled in 250ms (1185 modules)
+ ✓ Compiled in 293ms (1185 modules)
+ ✓ Compiled /life-cycle in 302ms (1179 modules)
+ GET /life-cycle 200 in 395ms
+ ✓ Compiled / in 245ms (1081 modules)
+ GET / 200 in 333ms
+ ✓ Compiled in 182ms (579 modules)
+ ✓ Compiled in 124ms (579 modules)
+ ✓ Compiled in 290ms (1084 modules)
+ ✓ Compiled in 317ms (1084 modules)
+ ✓ Compiled in 199ms (1084 modules)
+ ✓ Compiled in 115ms (579 modules)
+ ✓ Compiled in 118ms (579 modules)
+ ✓ Compiled in 163ms (579 modules)
+ ✓ Compiled in 166ms (579 modules)
+ ✓ Compiled in 253ms (1084 modules)

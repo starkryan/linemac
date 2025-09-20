@@ -19,7 +19,7 @@ interface Transaction {
 }
 
 export default function WalletPage() {
-  const { user, session: authSession, loading, isAuthenticated } = useAuth()
+  const { user, session: authSession, isAuthenticated } = useAuth()
   const [enhancedSession, setEnhancedSession] = useState<any>(null)
   const [balance, setBalance] = useState(0)
   const [transactions, setTransactions] = useState<Transaction[]>([])
@@ -174,7 +174,13 @@ export default function WalletPage() {
               className="bg-white border-gray-400 h-8"
             >
               {dataLoading ? (
-                <RefreshCw className="w-4 h-4 animate-spin" />
+                <img
+                  src="/loader.gif"
+                  alt="Loading..."
+                  width={16}
+                  height={16}
+                  className="animate-spin"
+                />
               ) : (
                 <RefreshCw className="w-4 h-4" />
               )}
@@ -240,7 +246,13 @@ export default function WalletPage() {
                 >
                   {paymentLoading ? (
                     <>
-                      <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                      <img
+                        src="/loader.gif"
+                        alt="Processing..."
+                        width={16}
+                        height={16}
+                        className="mr-2 animate-spin"
+                      />
                       Processing...
                     </>
                   ) : (
@@ -269,7 +281,13 @@ export default function WalletPage() {
             <div className="bg-white p-4">
               {dataLoading ? (
                 <div className="text-center py-8 text-gray-500">
-                  <RefreshCw className="w-12 h-12 mx-auto mb-4 animate-spin text-gray-300" />
+                  <img
+                    src="/loader.gif"
+                    alt="Loading..."
+                    width={48}
+                    height={48}
+                    className="mx-auto mb-4"
+                  />
                   <p className="text-sm">Loading transactions...</p>
                 </div>
               ) : transactions.length === 0 ? (

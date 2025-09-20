@@ -99,7 +99,13 @@ export default function AdminAuthWrapper({ children }: { children: React.ReactNo
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <img
+            src="/loader.gif"
+            alt="Loading..."
+            width={64}
+            height={64}
+            className="mx-auto animate-pulse mb-4"
+          />
           <p className="text-gray-600">Loading...</p>
         </div>
       </div>

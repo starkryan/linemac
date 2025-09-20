@@ -20,7 +20,16 @@ export default function Header() {
   if (loading) {
     return (
       <header className="w-full bg-gradient-to-b from-blue-100 to-blue-200 border-b flex items-center justify-between px-4 py-2">
-        <div className="text-sm text-blue-900">Loading...</div>
+        <div className="flex items-center gap-2">
+          <img
+            src="/loader.gif"
+            alt="Loading..."
+            width={20}
+            height={20}
+            className="animate-pulse"
+          />
+          <div className="text-sm text-blue-900">Loading...</div>
+        </div>
       </header>
     );
   }

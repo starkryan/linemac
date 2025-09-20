@@ -227,7 +227,13 @@ export default function UsersTable({ className }: UsersTableProps) {
         <CardContent>
           {loading ? (
             <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+              <img
+                src="/loader.gif"
+                alt="Loading users..."
+                width={32}
+                height={32}
+                className="animate-pulse"
+              />
               <span className="ml-2 text-sm text-gray-500">Loading users...</span>
             </div>
           ) : error ? (
