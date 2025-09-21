@@ -20,10 +20,10 @@ export async function POST(request: NextRequest) {
     const { amount } = await request.json()
 
     // Validate amount
-    if (!amount || typeof amount !== 'number' || amount < 100) {
+    if (!amount || typeof amount !== 'number' || amount < 500) {
       return NextResponse.json({
-        error: 'Invalid amount. Minimum recharge amount is ₹100',
-        warning: 'Amounts below ₹100 are not supported by the payment gateway'
+        error: 'Invalid amount. Minimum recharge amount is ₹500',
+        warning: 'Amounts below ₹500 are not supported by the payment gateway'
       }, { status: 400 })
     }
 
