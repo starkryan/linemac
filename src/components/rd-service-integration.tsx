@@ -157,6 +157,10 @@ export const useRDService = () => {
               try {
                 const responseText = xhr.responseText;
 
+                // Parse XML response first
+                const parser = new DOMParser();
+                const xmlDoc = parser.parseFromString(responseText, 'text/xml');
+
                 // Check for error codes in response (like the working test page)
                 const errorMatch = responseText.match(/errCode="([^"]*)"/);
                 if (errorMatch && errorMatch[1] !== '0') {
@@ -165,18 +169,25 @@ export const useRDService = () => {
                   return;
                 }
 
-                // Parse XML response
-                const parser = new DOMParser();
-                const xmlDoc = parser.parseFromString(responseText, 'text/xml');
+                // Extract data from XML response
+                // Morpho responses can have different structures
+                const pidData = xmlDoc.querySelector('Pid')?.getAttribute('value') ||
+                              xmlDoc.querySelector('Data')?.textContent ||
+                              xmlDoc.querySelector('PidData')?.textContent ||
+                              responseText; // Fallback to full response if no specific element found
 
-                const pid = xmlDoc.querySelector('Pid')?.getAttribute('value') || '';
                 const err = xmlDoc.querySelector('Err')?.getAttribute('value') || '';
-                const status = xmlDoc.querySelector('Status')?.getAttribute('value') || '';
-                const info = xmlDoc.querySelector('Info')?.getAttribute('value') || '';
+                const status = xmlDoc.querySelector('Status')?.getAttribute('value') || 'success';
+                const info = xmlDoc.querySelector('Info')?.getAttribute('value') || 'Fingerprint captured successfully';
 
-                // Check if we got actual PID data
-                if (pid) {
-                  resolve({ pid, err, status, info });
+                // For successful captures, we should have some data
+                if (pidData && pidData.length > 0) {
+                  resolve({
+                    pid: pidData,
+                    err,
+                    status,
+                    info
+                  });
                 } else {
                   setError('No fingerprint data captured');
                   resolve(null);

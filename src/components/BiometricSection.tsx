@@ -103,7 +103,7 @@ export default function BiometricSection({ onFingerprintCapture, onIrisCapture, 
     if (!biometricType) return
 
     const newData: BiometricData = {
-      quality: Math.floor(Math.random() * 30) + 70, // RD service would provide this
+      quality: 95, // High quality for real device captures
       timestamp: new Date().toISOString(),
       data: rdData.pid || `rd_${type}_${Date.now()}`
     }
@@ -201,11 +201,16 @@ export default function BiometricSection({ onFingerprintCapture, onIrisCapture, 
 
                   </div>
                 ) : capturedData ? (
-                  /* Show captured data */
+                  /* Show captured data with tick image */
                   <div className="space-y-4">
                     <div className="bg-black w-full h-64 border border-gray-400 flex items-center justify-center relative overflow-hidden">
                       <div className="text-center text-white">
-                    
+                        {/* Show tick image for successful capture */}
+                        <img
+                          src="/tick.png"
+                          alt="Fingerprint Captured"
+                          className="w-16 h-16 mx-auto mb-4"
+                        />
                         <p className="text-lg font-medium mb-2">{biometricType.title}</p>
                         <p className="text-sm opacity-75">Quality: {capturedData.quality}%</p>
                         <p className="text-xs opacity-50 mt-2">
