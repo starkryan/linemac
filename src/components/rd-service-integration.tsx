@@ -130,7 +130,6 @@ export const useRDService = () => {
         xhr.send();
       });
     } catch (error) {
-      console.error('Device info error:', error);
       return null;
     }
   };
@@ -153,8 +152,6 @@ export const useRDService = () => {
       // Try each configuration until one works
       for (let i = 0; i < pidOptionsList.length; i++) {
         const pidOptions = pidOptionsList[i];
-        console.log(`Trying PID configuration ${i + 1}:`, pidOptions);
-
         const result = await tryCaptureWithParams(url, pidOptions);
         if (result) {
           return result;
@@ -166,7 +163,6 @@ export const useRDService = () => {
 
     } catch (error) {
       setIsScanning(false);
-      console.error('Capture error:', error);
       setError('Failed to capture fingerprint');
       return null;
     }
@@ -184,7 +180,6 @@ export const useRDService = () => {
           if (xhr.status === 200) {
             try {
               const responseText = xhr.responseText;
-              console.log('RD Service Response:', responseText);
 
               // Parse XML response first
               const parser = new DOMParser();
@@ -196,8 +191,7 @@ export const useRDService = () => {
                 // Extract error info if available
                 const errorInfoMatch = responseText.match(/errInfo="([^"]*)"/);
                 const errorInfo = errorInfoMatch ? errorInfoMatch[1] : '';
-                console.log(`Error Code: ${errorMatch[1]}, Error Info: ${errorInfo}`);
-
+  
                 // For error 730, we'll try the next configuration
                 if (errorMatch[1] === '730') {
                   resolve(null); // Try next configuration
@@ -234,7 +228,6 @@ export const useRDService = () => {
                 resolve(null);
               }
             } catch (parseError) {
-              console.error('XML parsing error:', parseError);
               setIsScanning(false);
               setError('Failed to parse device response');
               resolve(null);
@@ -297,7 +290,7 @@ export const RDServiceIntegration: React.FC<RDServiceIntegrationProps> = ({
         onCapture(type, result);
       }
     } catch {
-      console.error('Capture error');
+      // Capture error handled silently
     }
   };
 
