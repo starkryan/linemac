@@ -1,5 +1,5 @@
 -- Create password change log table
-CREATE TABLE IF NOT EXISTS password_change_log (
+CREATE TABLE password_change_log (
     id SERIAL PRIMARY KEY,
     user_id TEXT NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
     changed_by TEXT NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
@@ -9,9 +9,9 @@ CREATE TABLE IF NOT EXISTS password_change_log (
 );
 
 -- Create index for faster queries
-CREATE INDEX IF NOT EXISTS idx_password_change_log_user_id ON password_change_log(user_id);
-CREATE INDEX IF NOT EXISTS idx_password_change_log_changed_by ON password_change_log(changed_by);
-CREATE INDEX IF NOT EXISTS idx_password_change_log_changed_at ON password_change_log(changed_at);
+CREATE INDEX idx_password_change_log_user_id ON password_change_log(user_id);
+CREATE INDEX idx_password_change_log_changed_by ON password_change_log(changed_by);
+CREATE INDEX idx_password_change_log_changed_at ON password_change_log(changed_at);
 
 -- Add comments
 COMMENT ON TABLE password_change_log IS 'Audit log for password changes';

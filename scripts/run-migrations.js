@@ -51,7 +51,10 @@ async function runMigrations() {
         await client.query('BEGIN');
 
         // Handle the case where tables might already exist
-        const modifiedSql = sql.replace(/create table (\w+)/gi, 'CREATE TABLE IF NOT EXISTS $1');
+        // Only add IF NOT EXISTS to CREATE TABLE statements that don't already have it
+        let modifiedSql = sql.replace(/create table (\w+)/gi, 'CREATE TABLE IF NOT EXISTS $1');
+        // Handle CREATE INDEX IF NOT EXISTS by removing IF NOT EXISTS for compatibility
+        modifiedSql = modifiedSql.replace(/create index if not exists (\w+)/gi, 'CREATE INDEX $1');
 
         await client.query(modifiedSql);
 
@@ -66,11 +69,14 @@ async function runMigrations() {
       } catch (error) {
         await client.query('ROLLBACK');
 
-        // Check if the error is about existing relations
+        // Check if the error is about existing relations or indexes
         if (error.message.includes('already exists') ||
-            error.code === '42P07' ||
+            error.code === '42P07' || // relation already exists
+            error.code === '42710' || // duplicate_object (includes indexes)
             error.message.includes('duplicate column') ||
-            error.message.includes('duplicate relation')) {
+            error.message.includes('duplicate relation') ||
+            error.message.includes('duplicate index') ||
+            error.message.includes('index already exists')) {
           console.log(`⚠️  Migration ${file} already applied (tables exist), recording as executed...`);
 
           // Still record it as executed to avoid future conflicts
