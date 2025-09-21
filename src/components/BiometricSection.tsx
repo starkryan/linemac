@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { AadhaarIcon } from "@/components/ui/AadhaarIcon"
+import { RDServiceIntegration, useRDService } from "@/components/rd-service-integration"
 
 interface BiometricData {
   quality: number
@@ -21,6 +22,7 @@ interface BiometricSectionProps {
 export default function BiometricSection({ onFingerprintCapture, onIrisCapture, mode = 'fingerprints' }: BiometricSectionProps) {
   const [activeCapture, setActiveCapture] = useState<string | null>(null)
   const [biometricData, setBiometricData] = useState<Record<string, BiometricData>>({})
+  const [showRDCapture, setShowRDCapture] = useState<string | null>(null)
 
   const fingerprintTypes = [
     {
@@ -72,11 +74,38 @@ export default function BiometricSection({ onFingerprintCapture, onIrisCapture, 
   const biometricTypes = mode === 'fingerprints' ? fingerprintTypes : irisTypes
 
   const handleCapture = (biometricType: typeof biometricTypes[0]) => {
-    // Simulate capture process
+    if (biometricType.type === 'fingerprint') {
+      setShowRDCapture(biometricType.id)
+      setActiveCapture(biometricType.id)
+    } else {
+      // For iris or fallback to simulation
+      const newData: BiometricData = {
+        quality: Math.floor(Math.random() * 30) + 70,
+        timestamp: new Date().toISOString(),
+        data: `simulated_${biometricType.type}_${biometricType.subtype}_${Date.now()}`
+      }
+
+      setBiometricData(prev => ({
+        ...prev,
+        [biometricType.id]: newData
+      }))
+
+      if (biometricType.type === 'iris' && onIrisCapture) {
+        onIrisCapture(biometricType.subtype, newData)
+      }
+
+      setActiveCapture(null)
+    }
+  }
+
+  const handleRDCapture = (type: 'left' | 'right' | 'thumbs', rdData: any) => {
+    const biometricType = fingerprintTypes.find(ft => ft.subtype === type)
+    if (!biometricType) return
+
     const newData: BiometricData = {
-      quality: Math.floor(Math.random() * 30) + 70, // 70-99%
+      quality: Math.floor(Math.random() * 30) + 70, // RD service would provide this
       timestamp: new Date().toISOString(),
-      data: `simulated_${biometricType.type}_${biometricType.subtype}_${Date.now()}`
+      data: rdData.pid || `rd_${type}_${Date.now()}`
     }
 
     setBiometricData(prev => ({
@@ -84,12 +113,11 @@ export default function BiometricSection({ onFingerprintCapture, onIrisCapture, 
       [biometricType.id]: newData
     }))
 
-    if (biometricType.type === 'fingerprint' && onFingerprintCapture) {
-      onFingerprintCapture(biometricType.subtype, newData)
-    } else if (biometricType.type === 'iris' && onIrisCapture) {
-      onIrisCapture(biometricType.subtype, newData)
+    if (onFingerprintCapture) {
+      onFingerprintCapture(type, newData)
     }
 
+    setShowRDCapture(null)
     setActiveCapture(null)
   }
 
@@ -116,7 +144,7 @@ export default function BiometricSection({ onFingerprintCapture, onIrisCapture, 
                 <div className="flex items-center gap-2">
                   <div
                     className="w-5 h-5 flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity"
-                    onClick={() => setActiveCapture(isActive ? null : biometricType.id)}
+                    onClick={() => isActive ? setActiveCapture(null) : handleCapture(biometricType)}
                     title={isActive ? "Stop Capture" : "Start Capture"}
                   >
                     <AadhaarIcon />
@@ -142,12 +170,25 @@ export default function BiometricSection({ onFingerprintCapture, onIrisCapture, 
 
               {/* Content */}
               <div className="p-4">
-                {isActive ? (
+                {isActive && showRDCapture === biometricType.id && biometricType.type === 'fingerprint' ? (
+                  /* RD Service capture state */
+                  <div className="space-y-4">
+                    <div className="bg-black w-full h-64 border border-gray-400 flex items-center justify-center relative">
+                      <div className="text-center text-white">
+                        <RDServiceIntegration
+                          onCapture={handleRDCapture}
+                          type={biometricType.subtype}
+                          label={`Capture ${biometricType.title}`}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ) : isActive ? (
                   /* Active capture state */
                   <div className="space-y-4">
                     <div className="bg-black w-full h-64 border border-gray-400 flex items-center justify-center relative">
                       <div className="text-center text-white">
-                     
+
                         <p className="text-lg font-medium mb-2">Capturing {biometricType.title}</p>
                         <p className="text-sm opacity-75">Please position {biometricType.type === 'fingerprint' ? 'fingers' : 'eye'} properly</p>
                         <div className="mt-4 flex justify-center space-x-2">
@@ -157,7 +198,7 @@ export default function BiometricSection({ onFingerprintCapture, onIrisCapture, 
                         </div>
                       </div>
                     </div>
-                    
+
                   </div>
                 ) : capturedData ? (
                   /* Show captured data */
@@ -174,7 +215,7 @@ export default function BiometricSection({ onFingerprintCapture, onIrisCapture, 
                     </div>
                     <div className="flex gap-2">
                       <Button
-                        onClick={() => setActiveCapture(biometricType.id)}
+                        onClick={() => handleCapture(biometricType)}
                         variant="outline"
                         className="border-gray-400 flex-1"
                       >

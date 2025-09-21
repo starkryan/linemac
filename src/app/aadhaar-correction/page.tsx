@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -107,6 +107,33 @@ export default function GovernmentForm() {
     appointment_id: '',
     residential_status: 'indian'
   })
+
+  // Initialize form with session data
+  useEffect(() => {
+    const loadSessionData = async () => {
+      try {
+        const response = await fetch('/api/auth/session', {
+          credentials: 'include',
+        })
+
+        if (response.ok) {
+          const sessionData = await response.json()
+          if (sessionData?.user) {
+            // Auto-populate aadhaar number from session
+            setFormData(prev => ({
+              ...prev,
+              aadhaar_number: sessionData.user.operatorUid || '',
+              mobile_number: prev.mobile_number || sessionData.user.mobile || '',
+            }))
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load session data:', error)
+      }
+    }
+
+    loadSessionData()
+  }, [])
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
@@ -1114,16 +1141,19 @@ export default function GovernmentForm() {
                       <strong>Residential Status:</strong> Indian Resident
                     </div>
                     <div className="mb-2">
-                      <strong>Name:</strong> [To be filled]
+                      <strong>Aadhaar Number:</strong> {formData.aadhaar_number || '[To be filled]'}
                     </div>
                     <div className="mb-2">
-                      <strong>Gender:</strong> [To be selected]
+                      <strong>Name:</strong> {formData.name || '[To be filled]'}
                     </div>
                     <div className="mb-2">
-                      <strong>Age/DOB:</strong> [To be filled] {isDOBVerified && <span className="text-green-600 ml-2">✓ Verified</span>}
+                      <strong>Gender:</strong> {formData.gender || '[To be selected]'}
                     </div>
                     <div className="mb-2">
-                      <strong>NPR Receipt/TIN No.:</strong> [To be filled]
+                      <strong>Age/DOB:</strong> {formData.dob || '[To be filled]'} {isDOBVerified && <span className="text-green-600 ml-2">✓ Verified</span>}
+                    </div>
+                    <div className="mb-2">
+                      <strong>NPR Receipt/TIN No.:</strong> {formData.npr_receipt || '[To be filled]'}
                     </div>
                   </div>
                   <div>
@@ -1131,16 +1161,19 @@ export default function GovernmentForm() {
                       <strong>निवासी प्रकार:</strong> भारतीय निवासी
                     </div>
                     <div className="mb-2">
-                      <strong>नाम:</strong> [भरा जाना है]
+                      <strong>आधार संख्या:</strong> {formData.aadhaar_number || '[भरा जाना है]'}
                     </div>
                     <div className="mb-2">
-                      <strong>लिंग:</strong> [चुना जाना है]
+                      <strong>नाम:</strong> {formData.name_hindi || '[भरा जाना है]'}
                     </div>
                     <div className="mb-2">
-                      <strong>आयु या जन्म तिथि:</strong> [भरा जाना है]
+                      <strong>लिंग:</strong> {formData.gender ? (formData.gender === 'Male' ? 'पुरुष' : formData.gender === 'Female' ? 'महिला' : 'अन्य') : '[चुना जाना है]'}
                     </div>
                     <div className="mb-2">
-                      <strong>गांव/कस्बा/शहर:</strong> [भरा जाना है]
+                      <strong>आयु या जन्म तिथि:</strong> {formData.dob || '[भरा जाना है]'}
+                    </div>
+                    <div className="mb-2">
+                      <strong>गांव/कस्बा/शहर:</strong> {formData.city_hindi || '[भरा जाना है]'}
                     </div>
                   </div>
                 </div>
@@ -1164,42 +1197,42 @@ export default function GovernmentForm() {
                 <div className="grid grid-cols-2 gap-6 text-sm">
                   <div>
                     <div className="mb-2">
-                      <strong>C/O:</strong> [To be filled]
+                      <strong>C/O:</strong> {formData.co || '[To be filled]'}
                     </div>
                     <div className="mb-2">
-                      <strong>House/Bldg/Apt:</strong> [To be filled]
+                      <strong>House/Bldg/Apt:</strong> {formData.house_no || '[To be filled]'}
                     </div>
                     <div className="mb-2">
-                      <strong>Street/Road/Lane:</strong> [To be filled]
+                      <strong>Street/Road/Lane:</strong> {formData.street || '[To be filled]'}
                     </div>
                     <div className="mb-2">
-                      <strong>Landmark:</strong> [To be filled]
+                      <strong>Landmark:</strong> {formData.landmark || '[To be filled]'}
                     </div>
                     <div className="mb-2">
-                      <strong>Area/Locality/Sector:</strong> [To be filled]
+                      <strong>Area/Locality/Sector:</strong> {formData.area || '[To be filled]'}
                     </div>
                     <div className="mb-2">
-                      <strong>Village/Town/City:</strong> [To be filled]
+                      <strong>Village/Town/City:</strong> {formData.city || '[To be filled]'}
                     </div>
                   </div>
                   <div>
                     <div className="mb-2">
-                      <strong>द्वारा:</strong> [भरा जाना है]
+                      <strong>द्वारा:</strong> {formData.co_hindi || '[भरा जाना है]'}
                     </div>
                     <div className="mb-2">
-                      <strong>घर/निर्माण:</strong> [भरा जाना है]
+                      <strong>घर/निर्माण:</strong> {formData.house_no_hindi || '[भरा जाना है]'}
                     </div>
                     <div className="mb-2">
-                      <strong>सड़क/मार्ग/गली:</strong> [भरा जाना है]
+                      <strong>सड़क/मार्ग/गली:</strong> {formData.street_hindi || '[भरा जाना है]'}
                     </div>
                     <div className="mb-2">
-                      <strong>स्थान चिह्न:</strong> [भरा जाना है]
+                      <strong>स्थान चिह्न:</strong> {formData.landmark_hindi || '[भरा जाना है]'}
                     </div>
                     <div className="mb-2">
-                      <strong>स्थान:</strong> [भरा जाना है]
+                      <strong>स्थान:</strong> {formData.area_hindi || '[भरा जाना है]'}
                     </div>
                     <div className="mb-2">
-                      <strong>गांव/कस्बा/शहर:</strong> [भरा जाना है]
+                      <strong>गांव/कस्बा/शहर:</strong> {formData.city_hindi || '[भरा जाना है]'}
                     </div>
                   </div>
                 </div>
@@ -1225,7 +1258,7 @@ export default function GovernmentForm() {
                     <strong>Scanner Configuration:</strong> {selectedScanner === 'wia-brother' ? 'WIA-Brother Scanner c1 #2' : selectedScanner} (Color Mode)
                   </div>
                   <div>
-                    <strong>Date of Birth Proof:</strong> [To be selected]
+                    <strong>Date of Birth Proof:</strong> {formData.dob_proof_type || '[To be selected]'}
                   </div>
                   <div>
                     <strong>Verification Method:</strong>{" "}
@@ -1234,16 +1267,16 @@ export default function GovernmentForm() {
                   {verificationMethod === "documents" && (
                     <>
                       <div>
-                        <strong>Identity Proof:</strong> [To be selected]
+                        <strong>Identity Proof:</strong> {formData.identity_proof_type || '[To be selected]'}
                       </div>
                       <div>
-                        <strong>Address Proof:</strong> [To be selected]
+                        <strong>Address Proof:</strong> {formData.address_proof_type || '[To be selected]'}
                       </div>
                     </>
                   )}
                   {verificationMethod === "family-head" && (
                     <div>
-                      <strong>POR Document:</strong> [To be selected]
+                      <strong>POR Document:</strong> {formData.por_document_type || '[To be selected]'}
                     </div>
                   )}
                 </div>
