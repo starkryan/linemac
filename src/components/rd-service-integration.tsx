@@ -44,7 +44,15 @@ export const useRDService = () => {
               xhr.onreadystatechange = () => {
                 if (xhr.readyState === 4) {
                   if (xhr.status === 200) {
-                    resolve(true);
+                    const responseText = xhr.responseText;
+                    // Check for various RD service responses
+                    if (responseText.includes("Morpho_RD_Service") ||
+                        responseText.includes("MORPHO_RD_SERVICE") ||
+                        responseText.includes("IDEMIA_L1_RDSERVICE")) {
+                      resolve(true);
+                    } else {
+                      resolve(false);
+                    }
                   } else {
                     resolve(false);
                   }
@@ -85,14 +93,28 @@ export const useRDService = () => {
       return new Promise((resolve) => {
         const xhr = new XMLHttpRequest();
         xhr.open('DEVICEINFO', url, true);
+        xhr.setRequestHeader("Content-Type", "text/xml");
+        xhr.setRequestHeader("Accept", "text/xml");
 
         xhr.onreadystatechange = () => {
           if (xhr.readyState === 4) {
             if (xhr.status === 200) {
+              const responseText = xhr.responseText;
+              // Try to extract device info from response
+              let deviceInfo = `Morpho Device on ${protocol}://${host}:${port}`;
+
+              if (responseText.includes('Morpho') || responseText.includes('IDEMIA')) {
+                // Extract actual device info if available
+                const infoMatch = responseText.match(/<Info[^>]*>([^<]*)<\/Info>/);
+                if (infoMatch && infoMatch[1]) {
+                  deviceInfo = infoMatch[1];
+                }
+              }
+
               resolve({
                 status: 'success',
                 err: '',
-                info: `Morpho Device on ${protocol}://${host}:${port}`,
+                info: deviceInfo,
                 port: port.toString()
               });
             } else {
@@ -107,7 +129,8 @@ export const useRDService = () => {
 
         xhr.send();
       });
-    } catch {
+    } catch (error) {
+      console.error('Device info error:', error);
       return null;
     }
   };
@@ -123,6 +146,8 @@ export const useRDService = () => {
       return new Promise((resolve) => {
         const xhr = new XMLHttpRequest();
         xhr.open('CAPTURE', url, true);
+        xhr.setRequestHeader("Content-Type", "text/xml");
+        xhr.setRequestHeader("Accept", "text/xml");
 
         xhr.onreadystatechange = () => {
           if (xhr.readyState === 4) {
@@ -130,22 +155,39 @@ export const useRDService = () => {
 
             if (xhr.status === 200) {
               try {
+                const responseText = xhr.responseText;
+
+                // Check for error codes in response (like the working test page)
+                const errorMatch = responseText.match(/errCode="([^"]*)"/);
+                if (errorMatch && errorMatch[1] !== '0') {
+                  setError(`Capture failed with error code: ${errorMatch[1]}`);
+                  resolve(null);
+                  return;
+                }
+
                 // Parse XML response
                 const parser = new DOMParser();
-                const xmlDoc = parser.parseFromString(xhr.responseText, 'text/xml');
+                const xmlDoc = parser.parseFromString(responseText, 'text/xml');
 
                 const pid = xmlDoc.querySelector('Pid')?.getAttribute('value') || '';
                 const err = xmlDoc.querySelector('Err')?.getAttribute('value') || '';
                 const status = xmlDoc.querySelector('Status')?.getAttribute('value') || '';
                 const info = xmlDoc.querySelector('Info')?.getAttribute('value') || '';
 
-                resolve({ pid, err, status, info });
-              } catch {
+                // Check if we got actual PID data
+                if (pid) {
+                  resolve({ pid, err, status, info });
+                } else {
+                  setError('No fingerprint data captured');
+                  resolve(null);
+                }
+              } catch (parseError) {
+                console.error('XML parsing error:', parseError);
                 setError('Failed to parse device response');
                 resolve(null);
               }
             } else {
-              setError(`Capture failed: ${xhr.statusText}`);
+              setError(`Capture failed: ${xhr.statusText || xhr.status}`);
               resolve(null);
             }
           }
@@ -159,8 +201,9 @@ export const useRDService = () => {
 
         xhr.send();
       });
-    } catch {
+    } catch (error) {
       setIsScanning(false);
+      console.error('Capture error:', error);
       setError('Failed to capture fingerprint');
       return null;
     }
