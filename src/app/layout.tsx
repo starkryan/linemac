@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ConditionalFooter } from "./components/ConditionalFooter";
+import OfflineIndicator from "@/components/offline-indicator";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -47,10 +48,18 @@ export const metadata: Metadata = {
       { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
     ],
     other: [
-      { rel: "manifest", url: "/site.webmanifest" },
+      { rel: "manifest", url: "/manifest.json" },
     ],
   },
-  manifest: "/site.webmanifest",
+  manifest: "/manifest.json",
+  other: {
+    "apple-mobile-web-app-capable": "yes",
+    "apple-mobile-web-app-status-bar-style": "default",
+    "apple-mobile-web-app-title": "UCL Portal",
+    "application-name": "UCL Portal",
+    "msapplication-TileColor": "#3b82f6",
+    "msapplication-config": "/browserconfig.xml",
+  },
 };
 
 export default function RootLayout({
@@ -64,6 +73,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased m-0 p-0`}
       >
         <div className="flex flex-col min-h-screen">
+          <OfflineIndicator />
           <div className="flex-1">
             {children}
           </div>

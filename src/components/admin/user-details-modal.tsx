@@ -41,7 +41,7 @@ import {
 interface UserDetailsModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  user: any;
+  user: any | null;
   onPasswordChanged?: () => void;
 }
 
@@ -51,6 +51,10 @@ export default function UserDetailsModal({
   user,
   onPasswordChanged,
 }: UserDetailsModalProps) {
+  // Early return if user is null
+  if (!user) {
+    return null;
+  }
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -78,18 +82,22 @@ export default function UserDetailsModal({
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-IN', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    try {
+      return new Date(dateString).toLocaleDateString('en-IN', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (error) {
+      return 'Invalid date';
+    }
   };
 
-  const maskAadhaar = (aadhaar?: string) => {
+  const formatAadhaar = (aadhaar?: string) => {
     if (!aadhaar || aadhaar.length < 4) return aadhaar || 'N/A';
-    return `XXXX-XXXX-${aadhaar.slice(-4)}`;
+    return aadhaar; // Show full Aadhaar number for admin display
   };
 
   const handlePasswordChange = async () => {
@@ -98,6 +106,11 @@ export default function UserDetailsModal({
     setPasswordSuccess("");
 
     // Validation
+    if (!user?.id) {
+      setPasswordError("User ID is required");
+      return;
+    }
+
     if (newPassword.length < 8) {
       setPasswordError("Password must be at least 8 characters long");
       return;
@@ -161,8 +174,8 @@ export default function UserDetailsModal({
               </AvatarFallback>
             </Avatar>
             <div>
-              <div className="text-lg font-semibold">{user.name}</div>
-              <div className="text-sm text-gray-500">{user.email}</div>
+              <div className="text-lg font-semibold">{user.name || 'Unknown User'}</div>
+              <div className="text-sm text-gray-500">{user.email || 'No email provided'}</div>
             </div>
           </DialogTitle>
           <DialogDescription>
@@ -183,14 +196,14 @@ export default function UserDetailsModal({
               <CardContent className="space-y-4">
                 <div>
                   <Label className="text-sm font-medium text-gray-500">Full Name</Label>
-                  <div className="text-sm font-medium">{user.name}</div>
+                  <div className="text-sm font-medium">{user.name || 'Not provided'}</div>
                 </div>
 
                 <div>
                   <Label className="text-sm font-medium text-gray-500">Email Address</Label>
                   <div className="text-sm font-medium flex items-center space-x-1">
                     <Mail className="h-3 w-3 text-gray-400" />
-                    <span>{user.email}</span>
+                    <span>{user.email || 'Not provided'}</span>
                   </div>
                 </div>
 
@@ -207,8 +220,8 @@ export default function UserDetailsModal({
                 <div>
                   <Label className="text-sm font-medium text-gray-500">Account Status</Label>
                   <div className="flex items-center space-x-2">
-                    <Badge className={getStatusColor(user.status)}>
-                      {user.status}
+                    <Badge className={getStatusColor(user.status || 'unknown')}>
+                      {user.status || 'Unknown'}
                     </Badge>
                     {user.is_blocked && (
                       <Badge variant="destructive">Blocked</Badge>
@@ -232,7 +245,7 @@ export default function UserDetailsModal({
                 <div className="p-3 bg-white rounded-lg border border-blue-200">
                   <Label className="text-sm font-medium text-blue-700">User ID</Label>
                   <div className="text-lg font-mono font-bold text-blue-900">
-                    {user.id}
+                    {user.id || 'Not available'}
                   </div>
                   <div className="text-xs text-blue-600 mt-1">Unique identifier</div>
                 </div>
@@ -358,14 +371,14 @@ export default function UserDetailsModal({
                 <div>
                   <Label className="text-sm font-medium text-gray-500">Role</Label>
                   <Badge className={getRoleColor(user.role)}>
-                    {user.role}
+                    {user.role || 'Unknown'}
                   </Badge>
                 </div>
 
                 {user.aadhaar_number && (
                   <div>
                     <Label className="text-sm font-medium text-gray-500">Aadhaar Number</Label>
-                    <div className="text-sm font-mono">{maskAadhaar(user.aadhaar_number)}</div>
+                    <div className="text-sm font-mono">{formatAadhaar(user.aadhaar_number)}</div>
                   </div>
                 )}
 
@@ -381,7 +394,7 @@ export default function UserDetailsModal({
                     <Calendar className="h-3 w-3" />
                     <span>Member Since</span>
                   </Label>
-                  <div className="text-sm">{formatDate(user.createdAt)}</div>
+                  <div className="text-sm">{user.createdAt ? formatDate(user.createdAt) : 'Not available'}</div>
                 </div>
 
                 {user.updatedAt && (

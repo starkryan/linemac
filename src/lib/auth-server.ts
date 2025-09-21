@@ -28,9 +28,19 @@ export const auth = betterAuth({
       enabled: true,
       maxAge: 5 * 60, // 5 minutes cache for performance
     },
+    cookieAttributes: {
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      httpOnly: true,
+    },
   },
   plugins: [nextCookies()],
-  baseURL: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3001",
+  baseURL: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+  advanced: {
+    crossSubDomainCookies: {
+      enabled: false,
+    },
+  },
   callbacks: {
     session: async ({ session, user }: any) => {
       // Include user role in the session

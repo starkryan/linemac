@@ -41,6 +41,27 @@ export default function AdminLayout({
 }: AdminLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  const handleLogout = async () => {
+    try {
+      const response = await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include',
+      });
+
+      if (response.ok) {
+        window.location.href = '/login';
+      } else {
+        console.error('Logout failed');
+        // Still redirect to login even if logout fails
+        window.location.href = '/login';
+      }
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Still redirect to login even if there's an error
+      window.location.href = '/login';
+    }
+  };
+
   const navigation = [
     {
       name: "Overview",
@@ -304,7 +325,7 @@ export default function AdminLayout({
                     Help & Support
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem className="text-red-600">
+                  <DropdownMenuItem className="text-red-600" onClick={handleLogout}>
                     <LogOut className="mr-2 h-4 w-4" />
                     Log out
                   </DropdownMenuItem>

@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth-server";
 import { query } from "@/lib/db";
-import { createUser } from "@/lib/user-management";
 import { hasPermission } from "@/lib/user-management";
+import bcrypt from "bcrypt";
 
 interface CreateUserRequest {
   email: string;
@@ -11,6 +11,8 @@ interface CreateUserRequest {
   role: 'admin' | 'supervisor' | 'operator';
   phone?: string;
   aadhaar_number?: string;
+  operator_uid?: string;
+  operator_name?: string;
 }
 
 export async function POST(request: NextRequest) {
@@ -29,7 +31,7 @@ export async function POST(request: NextRequest) {
 
     const currentUser = session.user;
     const body = await request.json() as CreateUserRequest;
-    const { email, name, password, role, phone, aadhaar_number } = body;
+    const { email, name, password, role, phone, aadhaar_number, operator_uid, operator_name } = body;
 
     // Validate required fields
     if (!email || !name || !password || !role) {
@@ -46,6 +48,22 @@ export async function POST(request: NextRequest) {
         { error: "Invalid role. Must be admin, supervisor, or operator" },
         { status: 400 }
       );
+    }
+
+    // Validate operator fields for operator role
+    if (role === 'operator') {
+      if (!operator_uid) {
+        return NextResponse.json(
+          { error: "Operator UID is required for operator role" },
+          { status: 400 }
+        );
+      }
+      if (!operator_name || operator_name.length < 2) {
+        return NextResponse.json(
+          { error: "Operator name is required and must be at least 2 characters long" },
+          { status: 400 }
+        );
+      }
     }
 
     // Check permissions based on role being created
@@ -108,56 +126,64 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create user with Better Auth first
-    const authResponse = await auth.api.signUpEmail({
-      body: {
-        email,
-        name,
-        password,
-      },
-      headers: request.headers,
-    });
+    // Create user directly in database to avoid session corruption
+    let userId: string;
+    let accountId: string;
+    try {
+      // Generate UUIDs for the new user and account
+      const uuidResult = await query('SELECT gen_random_uuid() as user_id, gen_random_uuid() as account_id');
+      userId = uuidResult.rows[0].user_id;
+      const accountId = uuidResult.rows[0].account_id;
 
-    if ('error' in authResponse && authResponse.error) {
-      return NextResponse.json(
-        { error: typeof authResponse.error === 'object' && 'message' in authResponse.error ? authResponse.error.message : "Failed to create user account" },
-        { status: 400 }
+      // Hash the password using the same method as Better Auth
+      const hashedPassword = await bcrypt.hash(password, 12);
+
+      // Insert the user record first
+      const userResult = await query(
+        `INSERT INTO "user" (id, email, name, "emailVerified", role, aadhaar_number, operator_uid, operator_name, created_by, "createdAt", "updatedAt")
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW())
+         RETURNING id, email, name, role, "emailVerified", "createdAt"`,
+        [
+          userId,
+          email,
+          name,
+          false, // emailVerified
+          role,
+          aadhaar_number || null,
+          operator_uid || null,
+          operator_name || null,
+          currentUser.id // created_by
+        ]
       );
-    }
 
-    if (!authResponse.user?.id) {
+      if (userResult.rows.length === 0) {
+        throw new Error("Failed to create user record");
+      }
+
+      // Insert the account record with password
+      const accountResult = await query(
+        `INSERT INTO "account" (id, "accountId", "providerId", "userId", password, "createdAt", "updatedAt")
+         VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
+         RETURNING id`,
+        [
+          accountId, // id
+          accountId, // accountId - same as id for Better Auth
+          'credential', // providerId for email/password
+          userId, // userId - references the user
+          hashedPassword
+        ]
+      );
+
+      if (accountResult.rows.length === 0) {
+        // If account creation fails, delete the user to maintain consistency
+        await query(`DELETE FROM "user" WHERE id = $1`, [userId]);
+        throw new Error("Failed to create account record");
+      }
+
+    } catch (createError) {
+      console.error("Error creating user:", createError);
       return NextResponse.json(
         { error: "Failed to create user account" },
-        { status: 500 }
-      );
-    }
-
-    // Update the user with role and additional information
-    try {
-      await createUser({
-        name,
-        email,
-        password,
-        role,
-        phone,
-        aadhaar_number,
-        createdBy: currentUser.id
-      });
-
-      // Update the user record with role and set status to active
-      await query(
-        `UPDATE "user"
-         SET role = $1, phone = $2, aadhaar_number = $3, created_by = $4, status = 'active'
-         WHERE id = $5`,
-        [role, phone || null, aadhaar_number || null, currentUser.id, authResponse.user.id]
-      );
-
-    } catch (updateError) {
-      console.error("Error updating user with role:", updateError);
-      // If role update fails, delete the user to maintain consistency
-      await query(`DELETE FROM "user" WHERE id = $1`, [authResponse.user.id]);
-      return NextResponse.json(
-        { error: "Failed to complete user creation" },
         { status: 500 }
       );
     }
@@ -166,12 +192,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       message: "User created successfully",
       user: {
-        id: authResponse.user.id,
-        email: authResponse.user.email,
-        name: authResponse.user.name,
+        id: userId,
+        email,
+        name,
         role,
         phone,
         aadhaar_number,
+        operator_uid,
+        operator_name,
         status: 'active'
       },
     });

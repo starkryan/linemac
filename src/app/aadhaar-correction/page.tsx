@@ -12,6 +12,7 @@ import Image from "next/image"
 import { AadhaarIcon } from "@/components/ui/AadhaarIcon"
 import AuthenticatedLayout from "@/app/components/AuthenticatedLayout"
 import PhotographSection from "@/components/PhotographSection"
+import BiometricSection from "@/components/BiometricSection"
 import DeviceDetector from "@/components/DeviceDetector"
 import FileUpload from "@/components/FileUpload"
 import { RDFingerprintCapture } from "@/components/rd-fingerprint-capture"
@@ -106,6 +107,7 @@ export default function GovernmentForm() {
     { id: "references", label: "References", enabled: true },
     { id: "photograph", label: "Photograph", enabled: true },
     { id: "fingerprints", label: "Fingerprints", enabled: true },
+    { id: "iris", label: "Iris", enabled: true },
     { id: "review", label: "Review", enabled: true },
   ]
 
@@ -676,13 +678,13 @@ export default function GovernmentForm() {
                       <Label className="text-sm text-gray-700 mb-2 block">
                         Relative's Aadhaar Number
                       </Label>
-                      <Input className="bg-white border-gray-400 h-8" placeholder="XXXX-XXXX-XXXX" />
+                      <Input className="bg-white border-gray-400 h-8" placeholder="Enter 12-digit Aadhaar number" />
                     </div>
                     <div>
                       <Label className="text-sm text-gray-700 mb-2 block">
                         संबंधित की आधार संख्या
                       </Label>
-                      <Input className="bg-white border-gray-400 h-8" placeholder="XXXX-XXXX-XXXX" />
+                      <Input className="bg-white border-gray-400 h-8" placeholder="Enter 12-digit Aadhaar number" />
                     </div>
                   </div>
 
@@ -724,31 +726,28 @@ export default function GovernmentForm() {
         )}
 
         {activeTab === "fingerprints" && (
-          <div className="space-y-6">
-            {/* Fingerprints capture interface with three sections */}
-            <div className="grid grid-cols-3 gap-6">
-              {/* Left Hand Section */}
-              <RDFingerprintCapture
-                captureType="left"
-                title="Left Hand"
-                onCaptureComplete={(data) => handleFingerprintCapture('left', data)}
-              />
+          <BiometricSection
+            mode="fingerprints"
+            onFingerprintCapture={(type, data) => {
+              // Convert the new format to the existing format for compatibility
+              const captureResponse: CaptureResponse = {
+                pidData: data.data,
+                score: data.quality,
+                status: "success"
+              }
+              handleFingerprintCapture(type, captureResponse)
+            }}
+          />
+        )}
 
-              {/* Right Hand Section */}
-              <RDFingerprintCapture
-                captureType="right"
-                title="Right Hand"
-                onCaptureComplete={(data) => handleFingerprintCapture('right', data)}
-              />
-
-              {/* Both Thumbs Section */}
-              <RDFingerprintCapture
-                captureType="thumbs"
-                title="Both Thumbs"
-                onCaptureComplete={(data) => handleFingerprintCapture('thumbs', data)}
-              />
-            </div>
-          </div>
+        {activeTab === "iris" && (
+          <BiometricSection
+            mode="iris"
+            onIrisCapture={(type, data) => {
+              // Handle iris capture (new functionality)
+              console.log('Iris captured:', type, data)
+            }}
+          />
         )}
 
         {activeTab === "review" && (

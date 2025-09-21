@@ -157,10 +157,10 @@ export default function UsersTable({ className }: UsersTableProps) {
     });
   };
 
-  // Mask Aadhaar number for privacy
-  const maskAadhaar = (aadhaar?: string) => {
+  // Show full Aadhaar number for admin display
+  const formatAadhaar = (aadhaar?: string) => {
     if (!aadhaar || aadhaar.length < 4) return aadhaar || 'N/A';
-    return `XXXX-XXXX-${aadhaar.slice(-4)}`;
+    return aadhaar; // Show full Aadhaar number for admin display
   };
 
   return (
@@ -320,7 +320,7 @@ export default function UsersTable({ className }: UsersTableProps) {
                           </div>
                         </TableCell>
                         <TableCell className="font-mono text-sm">
-                          {maskAadhaar(user.aadhaar_number)}
+                          {formatAadhaar(user.aadhaar_number)}
                         </TableCell>
                         <TableCell>
                           <div className="space-y-2">

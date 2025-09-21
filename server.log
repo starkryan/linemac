@@ -1,0 +1,318 @@
+
+> ucl@0.1.0 dev
+> next dev
+
+   ▲ Next.js 15.5.3
+   - Local:        http://localhost:3000
+   - Network:      http://192.168.1.5:3000
+   - Environments: .env
+
+ ✓ Starting...
+ ✓ Ready in 1375ms
+ ○ Compiling /api/auth/login ...
+ ✓ Compiled /api/auth/login in 610ms (767 modules)
+ POST /api/auth/login 400 in 791ms
+Better Auth session created successfully for user: 899bfe1e-acbc-4604-895d-a9b0eecd97f6
+ POST /api/auth/login 200 in 337ms
+ ✓ Compiled /api/auth/session in 356ms (769 modules)
+Session endpoint: Starting session check...
+Session endpoint: Session result: Found
+Session endpoint: User data found, role: admin
+Session endpoint: Returning session data for user: admin@ucl.test
+ GET /api/auth/session 200 in 474ms
+ ✓ Compiled /api/admin/users in 161ms (772 modules)
+ GET /api/admin/users 200 in 262ms
+Error creating user: error: column "email_verified" of relation "user" does not exist
+    at async query (src/lib/db.ts:10:20)
+    at async POST (src/app/api/admin/users/route.ts:142:26)
+   8 |   const client = await pool.connect();
+   9 |   try {
+> 10 |     const result = await client.query(text, params);
+     |                    ^
+  11 |     return result;
+  12 |   } finally {
+  13 |     client.release(); {
+  length: 131,
+  severity: 'ERROR',
+  code: '42703',
+  detail: undefined,
+  hint: undefined,
+  position: '38',
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'parse_target.c',
+  line: '1066',
+  routine: 'checkInsertTargets'
+}
+ POST /api/admin/users 500 in 230ms
+ ✓ Compiled in 146ms (574 modules)
+ POST /api/admin/users 401 in 100ms
+ ✓ Compiled /api/auth/login in 59ms (576 modules)
+ POST /api/auth/login 401 in 158ms
+ POST /api/auth/login 401 in 157ms
+Better Auth session created successfully for user: d70ecc9c-2ddb-4869-b8f3-5380b5a6bfb3
+ POST /api/auth/login 200 in 321ms
+Error creating user: error: column "created_at" of relation "user" does not exist
+    at async query (src/lib/db.ts:10:20)
+    at async POST (src/app/api/admin/users/route.ts:142:26)
+   8 |   const client = await pool.connect();
+   9 |   try {
+> 10 |     const result = await client.query(text, params);
+     |                    ^
+  11 |     return result;
+  12 |   } finally {
+  13 |     client.release(); {
+  length: 128,
+  severity: 'ERROR',
+  code: '42703',
+  detail: undefined,
+  hint: undefined,
+  position: '133',
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'parse_target.c',
+  line: '1066',
+  routine: 'checkInsertTargets'
+}
+ POST /api/admin/users 500 in 201ms
+ ✓ Compiled in 136ms (576 modules)
+Error creating user: error: INSERT has more expressions than target columns
+    at async query (src/lib/db.ts:10:20)
+    at async POST (src/app/api/admin/users/route.ts:142:26)
+   8 |   const client = await pool.connect();
+   9 |   try {
+> 10 |     const result = await client.query(text, params);
+     |                    ^
+  11 |     return result;
+  12 |   } finally {
+  13 |     client.release(); {
+  length: 117,
+  severity: 'ERROR',
+  code: '42601',
+  detail: undefined,
+  hint: undefined,
+  position: '234',
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'analyze.c',
+  line: '1026',
+  routine: 'transformInsertRow'
+}
+ POST /api/admin/users 500 in 232ms
+ ✓ Compiled in 62ms (576 modules)
+ ✓ Compiled in 53ms (576 modules)
+Error creating user: ReferenceError: NOW is not defined
+    at POST (src/app/api/admin/users/route.ts:156:23)
+  154 |           operator_uid || null,
+  155 |           operator_name || null,
+> 156 |           currentUser.id, // created_by
+      |                       ^
+  157 |           'active', // status
+  158 |           NOW(), // createdAt
+  159 |           NOW() // updatedAt
+ POST /api/admin/users 500 in 228ms
+ ✓ Compiled in 66ms (576 modules)
+Error creating user: error: INSERT has more expressions than target columns
+    at async query (src/lib/db.ts:10:20)
+    at async POST (src/app/api/admin/users/route.ts:142:26)
+   8 |   const client = await pool.connect();
+   9 |   try {
+> 10 |     const result = await client.query(text, params);
+     |                    ^
+  11 |     return result;
+  12 |   } finally {
+  13 |     client.release(); {
+  length: 117,
+  severity: 'ERROR',
+  code: '42601',
+  detail: undefined,
+  hint: undefined,
+  position: '234',
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'analyze.c',
+  line: '1026',
+  routine: 'transformInsertRow'
+}
+ POST /api/admin/users 500 in 247ms
+ ✓ Compiled in 67ms (576 modules)
+ ✓ Compiled in 52ms (576 modules)
+Error creating user: error: INSERT has more expressions than target columns
+    at async query (src/lib/db.ts:10:20)
+    at async POST (src/app/api/admin/users/route.ts:142:26)
+   8 |   const client = await pool.connect();
+   9 |   try {
+> 10 |     const result = await client.query(text, params);
+     |                    ^
+  11 |     return result;
+  12 |   } finally {
+  13 |     client.release(); {
+  length: 117,
+  severity: 'ERROR',
+  code: '42601',
+  detail: undefined,
+  hint: undefined,
+  position: '234',
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'analyze.c',
+  line: '1026',
+  routine: 'transformInsertRow'
+}
+ POST /api/admin/users 500 in 227ms
+ POST /api/admin/users 400 in 9ms
+ ✓ Compiled in 133ms (574 modules)
+Error creating user: error: column "created_at" of relation "account" does not exist
+    at async query (src/lib/db.ts:10:20)
+    at async POST (src/app/api/admin/users/route.ts:164:29)
+   8 |   const client = await pool.connect();
+   9 |   try {
+> 10 |     const result = await client.query(text, params);
+     |                    ^
+  11 |     return result;
+  12 |   } finally {
+  13 |     client.release(); {
+  length: 130,
+  severity: 'ERROR',
+  code: '42703',
+  detail: undefined,
+  hint: undefined,
+  position: '75',
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'parse_target.c',
+  line: '1066',
+  routine: 'checkInsertTargets'
+}
+ POST /api/admin/users 500 in 244ms
+ ✓ Compiled in 66ms (574 modules)
+ POST /api/admin/users 409 in 58ms
+ POST /api/admin/users 200 in 155ms
+ GET /api/admin/users 200 in 7ms
+ ✓ Compiled /api/auth/login in 50ms (576 modules)
+Better Auth session created successfully for user: aea7d254-74c2-4ebf-896e-2dc7f9a4fc79
+ POST /api/auth/login 200 in 409ms
+ ✓ Compiled in 57ms (194 modules)
+ ⚠ Found a change in next.config.ts. Restarting the server to apply the changes...
+ ⚠ Found lockfile missing swc dependencies, patching...
+   ▲ Next.js 15.5.3
+   - Local:        http://localhost:3000
+   - Network:      http://192.168.1.5:3000
+   - Environments: .env
+
+ ✓ Starting...
+ ⚠ Lockfile was successfully patched, please run "npm install" to ensure @next/swc dependencies are downloaded
+ ✓ Ready in 1320ms
+ ⚠ Found a change in next.config.ts. Restarting the server to apply the changes...
+   ▲ Next.js 15.5.3
+   - Local:        http://localhost:3000
+   - Network:      http://192.168.1.5:3000
+   - Environments: .env
+
+ ✓ Starting...
+> [PWA] Compile server
+> [PWA] Compile server
+> [PWA] Compile client (static)
+> [PWA] Auto register service worker with: /home/neo/ucl/node_modules/next-pwa/register.js
+> [PWA] Service worker: /home/neo/ucl/.next/sw.js
+> [PWA]   url: /sw.js
+> [PWA]   scope: /
+> [PWA] Build in develop mode, cache and precache are mostly disabled. This means offline support is disabled, but you can continue developing other functions in service worker.
+ ⨯ Please check your GenerateSW plugin configuration:
+[WebpackGenerateSW] 'eslint' property is not expected to be here. Did you mean property 'exclude'?
+ ⨯ Please check your GenerateSW plugin configuration:
+[WebpackGenerateSW] 'eslint' property is not expected to be here. Did you mean property 'exclude'?
+ ✓ Ready in 1434ms
+ ⨯ Please check your GenerateSW plugin configuration:
+[WebpackGenerateSW] 'eslint' property is not expected to be here. Did you mean property 'exclude'?
+ ⚠ Found a change in next.config.ts. Restarting the server to apply the changes...
+   ▲ Next.js 15.5.3
+   - Local:        http://localhost:3000
+   - Network:      http://192.168.1.5:3000
+   - Environments: .env
+
+ ✓ Starting...
+> [PWA] PWA support is disabled
+> [PWA] PWA support is disabled
+ ✓ Ready in 1392ms
+ ⚠ Found a change in next.config.ts. Restarting the server to apply the changes...
+   ▲ Next.js 15.5.3
+   - Local:        http://localhost:3000
+   - Network:      http://192.168.1.5:3000
+   - Environments: .env
+
+ ✓ Starting...
+> [PWA] PWA support is disabled
+> [PWA] PWA support is disabled
+ ✓ Ready in 1419ms
+ ⚠ Found a change in next.config.ts. Restarting the server to apply the changes...
+   ▲ Next.js 15.5.3
+   - Local:        http://localhost:3000
+   - Network:      http://192.168.1.5:3000
+   - Environments: .env
+
+ ✓ Starting...
+> [PWA] PWA support is disabled
+> [PWA] PWA support is disabled
+ ✓ Ready in 1381ms
+ ⚠ Found a change in next.config.ts. Restarting the server to apply the changes...
+   ▲ Next.js 15.5.3
+   - Local:        http://localhost:3000
+   - Network:      http://192.168.1.5:3000
+   - Environments: .env
+
+ ✓ Starting...
+> [PWA] PWA support is disabled
+> [PWA] PWA support is disabled
+ ✓ Ready in 1358ms
+ ⚠ Found a change in next.config.ts. Restarting the server to apply the changes...
+   ▲ Next.js 15.5.3
+   - Local:        http://localhost:3000
+   - Network:      http://192.168.1.5:3000
+   - Environments: .env
+
+ ✓ Starting...
+> [PWA] PWA support is disabled
+> [PWA] PWA support is disabled
+ ✓ Ready in 1335ms
+ ○ Compiling /offline ...
+ ✓ Compiled /offline in 2.2s (663 modules)
+ GET /offline 200 in 2409ms
+ ✓ Compiled in 155ms (274 modules)
+[?25h

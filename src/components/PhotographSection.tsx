@@ -112,8 +112,7 @@ export default function PhotographSection({ onPhotoCountChange }: PhotographSect
             ) : mainPhotos.length === 0 ? (
               <div className="bg-black w-full h-96 border border-gray-400 flex items-center justify-center">
                 <div className="text-center">
-                  <div className="text-6xl mb-4">📷</div>
-                  <p className="text-white mb-4">No photos captured</p>
+                
                 </div>
               </div>
             ) : (
@@ -155,7 +154,7 @@ export default function PhotographSection({ onPhotoCountChange }: PhotographSect
                       onClick={() => setMainCameraActive(true)}
                       className="bg-blue-600 text-white hover:bg-blue-700 flex-1"
                     >
-                      ▶️ Capture Photo
+                      Capture Photo
                     </Button>
                   </div>
                 )}
@@ -198,10 +197,7 @@ export default function PhotographSection({ onPhotoCountChange }: PhotographSect
               />
             ) : exceptionPhotos.length === 0 ? (
               <div className="bg-gray-600 w-full h-96 border border-gray-400 flex items-center justify-center">
-                <div className="text-center">
-                  <div className="text-6xl mb-4">📷</div>
-                  <p className="text-white mb-4">No exception photos captured</p>
-                </div>
+              
               </div>
             ) : (
               <div className="space-y-4">

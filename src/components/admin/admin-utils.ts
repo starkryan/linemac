@@ -126,10 +126,10 @@ export const formatRelativeTime = (date: string | Date): string => {
   return formatDate(date);
 };
 
-// Aadhaar masking utility
-export const maskAadhaarNumber = (aadhaar: string): string => {
+// Aadhaar display utility - show full number for admin
+export const formatAadhaarNumber = (aadhaar: string): string => {
   if (!aadhaar || aadhaar.length !== 12) return aadhaar;
-  return `XXXX-XXXX-${aadhaar.slice(-4)}`;
+  return aadhaar; // Show full Aadhaar number for admin display
 };
 
 // Phone number masking utility

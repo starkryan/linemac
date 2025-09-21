@@ -119,7 +119,7 @@ export default function CreateUserModal({ open, onOpenChange, onUserCreated }: C
     setError(null);
 
     try {
-      const response = await fetch('/api/auth/register', {
+      const response = await fetch('/api/admin/users', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -131,6 +131,8 @@ export default function CreateUserModal({ open, onOpenChange, onUserCreated }: C
           phone: formData.phone || undefined,
           aadhaar_number: formData.aadhaar_number || undefined,
           role: formData.role,
+          operator_uid: formData.role === 'operator' ? formData.operator_uid : undefined,
+          operator_name: formData.role === 'operator' ? formData.operator_name : undefined,
         }),
       });
 

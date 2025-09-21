@@ -146,14 +146,14 @@ export default function CameraComponent({ onPhotoCapture, onClose, showCaptureBu
                 size="sm"
                 className="bg-yellow-600 text-white hover:bg-yellow-700 h-8 px-3 text-xs"
               >
-                🔄 Retake
+                Retake
               </Button>
               <Button
                 onClick={stopCamera}
                 size="sm"
                 className="bg-blue-600 text-white hover:bg-blue-700 h-8 px-3 text-xs"
               >
-                ✓ Done
+                Done
               </Button>
             </>
           )}
@@ -163,7 +163,7 @@ export default function CameraComponent({ onPhotoCapture, onClose, showCaptureBu
               size="sm"
               className="bg-green-600 text-white hover:bg-green-700 h-8 px-3 text-xs"
             >
-              ▶️ Start
+              Start
             </Button>
           )}
         </div>
@@ -183,7 +183,7 @@ export default function CameraComponent({ onPhotoCapture, onClose, showCaptureBu
           variant="outline"
           className="bg-red-600 text-white border-red-600 hover:bg-red-700"
         >
-          ✕ Close
+          Close
         </Button>
 
         {!isCameraActive && !capturedPhoto && (
@@ -202,7 +202,7 @@ export default function CameraComponent({ onPhotoCapture, onClose, showCaptureBu
               variant="outline"
               className="bg-yellow-600 text-white border-yellow-600 hover:bg-yellow-700"
             >
-              🔄 Retake
+           Retake
             </Button>
             {showCaptureButton && (
               <Button

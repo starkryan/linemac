@@ -4,14 +4,17 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import AuthenticatedLayout from "@/app/components/AuthenticatedLayout"
 
 export default function BiometricEnrollmentPage() {
+  const [activeStep, setActiveStep] = useState<'edenoid' | 'demographic'>('edenoid')
   const [enrollmentId, setEnrollmentId] = useState("")
   const [aadhaarNo, setAadhaarNo] = useState("")
   const [dateTime, setDateTime] = useState("")
   const [residentFinger, setResidentFinger] = useState("Place Any Finger")
   const [operatorFinger, setOperatorFinger] = useState("Place Any Finger")
+  const [selectedField, setSelectedField] = useState<'enrollment' | 'aadhaar'>('enrollment')
 
   return (
     <AuthenticatedLayout>
@@ -20,57 +23,84 @@ export default function BiometricEnrollmentPage() {
           {/* Progress Steps */}
           <div className="flex items-center gap-4 mb-8">
             <span className="text-gray-600 text-sm">You have</span>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded-full border-2 border-gray-400 bg-white flex items-center justify-center">
-                <div className="w-2 h-2 rounded-full bg-gray-400"></div>
+            <RadioGroup value={activeStep} onValueChange={(value) => setActiveStep(value as 'edenoid' | 'demographic')} className="flex items-center gap-6">
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="edenoid" id="edenoid" className="border-gray-400" />
+                <Label htmlFor="edenoid" className="text-gray-700 font-medium cursor-pointer">EDENOID</Label>
               </div>
-              <span className="text-gray-700 font-medium">EDENOID</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded-full border-2 border-gray-300 bg-white"></div>
-              <span className="text-gray-400">Demographic Details</span>
-            </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="demographic" id="demographic" className="border-gray-300" />
+                <Label htmlFor="demographic" className="text-gray-700 font-medium cursor-pointer">Demographic Details</Label>
+              </div>
+            </RadioGroup>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Left Section - Input Fields */}
             <div className="space-y-6">
-              {/* Enrollment ID */}
-              <div className="flex items-center gap-4">
-                <div className="w-4 h-4 rounded-full border-2 border-gray-400 bg-white flex items-center justify-center">
-                  <div className="w-2 h-2 rounded-full bg-gray-400"></div>
+              {/* Field Selection Radio Group */}
+              <RadioGroup value={selectedField} onValueChange={(value) => setSelectedField(value as 'enrollment' | 'aadhaar')} className="space-y-4">
+                {/* Enrollment ID Option */}
+                <div className="flex items-center gap-4 p-4  transition-colors">
+                  <RadioGroupItem value="enrollment" id="enrollment" className="border-gray-400" />
+                  <div className="flex-1">
+                    <Label htmlFor="enrollment" className="text-gray-700 font-medium cursor-pointer">
+                      Enrolment ID
+                    </Label>
+                    <div className="mt-2 flex gap-2 items-center">
+                      <Input
+                        id="enrollmentId"
+                        name="enrollmentId"
+                        type="text"
+                        value={enrollmentId}
+                        onChange={(e) => setEnrollmentId(e.target.value)}
+                        placeholder="0000-00000-00000"
+                        autoComplete="off"
+                        tabIndex={0}
+                        aria-label="Enrolment ID"
+                        className="bg-white border-gray-300 text-sm flex-none w-56 text-gray-900 placeholder-gray-400 cursor-text focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      />
+                      <span className="text-gray-500 select-none">:</span>
+                      <Input
+                        id="dateTime"
+                        name="dateTime"
+                        type="text"
+                        value={dateTime}
+                        onChange={(e) => setDateTime(e.target.value)}
+                        placeholder="dd/MM/yyyy:hh:mm:ss"
+                        autoComplete="off"
+                        tabIndex={0}
+                        aria-label="Date and time"
+                        className="bg-white border-gray-300 text-sm flex-1 text-gray-900 placeholder-gray-400 cursor-text focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      />
+                    </div>
+                  </div>
                 </div>
-                <Label className="text-gray-700 font-medium min-w-[100px]">Enrolment ID</Label>
-                <div className="flex gap-2 flex-1">
-                  <Input
-                    value={enrollmentId}
-                    onChange={(e) => setEnrollmentId(e.target.value)}
-                    placeholder="0000-00000-00000"
-                    className="bg-white border-gray-300 text-sm"
-                  />
-                  <span className="text-gray-500">:</span>
-                  <Input
-                    value={dateTime}
-                    onChange={(e) => setDateTime(e.target.value)}
-                    placeholder="dd/MM/yyyy:hh:mm:ss"
-                    className="bg-white border-gray-300 text-sm flex-1"
-                  />
-                </div>
-              </div>
 
-              {/* Aadhaar Number */}
-              <div className="flex items-center gap-4">
-                <div className="w-4 h-4 rounded-full border-2 border-gray-400 bg-white flex items-center justify-center">
-                  <div className="w-2 h-2 rounded-full bg-gray-400"></div>
+                {/* Aadhaar Number Option */}
+                <div className="flex items-center gap-4 p-4 ">
+                  <RadioGroupItem value="aadhaar" id="aadhaar" className="border-gray-400" />
+                  <div className="flex-1">
+                    <Label htmlFor="aadhaar" className="text-gray-700 font-medium cursor-pointer">
+                      Aadhaar No.
+                    </Label>
+                    <div className="mt-2">
+                      <Input
+                        id="aadhaarNo"
+                        name="aadhaarNo"
+                        type="text"
+                        value={aadhaarNo}
+                        onChange={(e) => setAadhaarNo(e.target.value)}
+                        placeholder="0000-0000-0000"
+                        autoComplete="off"
+                        tabIndex={0}
+                        aria-label="Aadhaar number"
+                        className="bg-white border-gray-300 text-sm w-full max-w-md text-gray-900 placeholder-gray-400 cursor-text focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      />
+                    </div>
+                  </div>
                 </div>
-                <Label className="text-gray-700 font-medium min-w-[100px]">Aadhaar No.</Label>
-                <Input
-                  value={aadhaarNo}
-                  onChange={(e) => setAadhaarNo(e.target.value)}
-                  placeholder="0000-0000-0000"
-                  className="bg-white border-gray-300 text-sm flex-1"
-                />
-              </div>
+              </RadioGroup>
             </div>
 
             {/* Right Section - Capture Areas */}
@@ -80,11 +110,24 @@ export default function BiometricEnrollmentPage() {
                 <div className="flex items-center gap-2 mb-4">
                   <div className="w-0 h-0 border-l-[8px] border-l-green-600 border-t-[6px] border-t-transparent border-b-[6px] border-b-transparent"></div>
                   <span className="font-medium text-gray-700">Capture Resident</span>
-                  <span className="ml-auto text-gray-600 text-sm">Place Any Finger</span>
                 </div>
 
-                {/* Black capture area */}
-                <div className="bg-black h-64 rounded mb-4 flex items-center justify-center"></div>
+                {/* Black capture area - make clickable */}
+                <div
+                  className="bg-black h-64 rounded mb-4 flex items-center justify-center cursor-pointer select-none"
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => {
+                    /* placeholder click behavior - open device capture in future */
+                    setResidentFinger("Waiting for finger...")
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") setResidentFinger("Waiting for finger...")
+                  }}
+                  aria-label="Capture resident fingerprint"
+                >
+                  <span className="text-white text-lg">📷</span>
+                </div>
 
                 <div className="flex items-center gap-2">
                   <Label className="text-gray-600 text-sm">Score</Label>
@@ -99,11 +142,21 @@ export default function BiometricEnrollmentPage() {
                 <div className="flex items-center gap-2 mb-4">
                   <div className="w-0 h-0 border-l-[8px] border-l-green-600 border-t-[6px] border-t-transparent border-b-[6px] border-b-transparent"></div>
                   <span className="font-medium text-gray-700">Capture Operator</span>
-                  <span className="ml-auto text-gray-600 text-sm">Place Any Finger</span>
                 </div>
 
-                {/* Black capture area */}
-                <div className="bg-black h-64 rounded mb-4 flex items-center justify-center"></div>
+                {/* Black capture area - make clickable */}
+                <div
+                  className="bg-black h-64 rounded mb-4 flex items-center justify-center cursor-pointer select-none"
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => setOperatorFinger("Waiting for finger...")}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") setOperatorFinger("Waiting for finger...")
+                  }}
+                  aria-label="Capture operator fingerprint"
+                >
+                  <span className="text-white text-lg">📷</span>
+                </div>
 
                 <div className="flex items-center gap-2">
                   <Label className="text-gray-600 text-sm">Score</Label>
@@ -121,9 +174,6 @@ export default function BiometricEnrollmentPage() {
               Find Aadhaar
             </Button>
           </div>
-
-          {/* Bottom watermark */}
-          <div className="fixed bottom-4 right-4 text-gray-400 text-sm">Activate Windows</div>
         </div>
       </div>
     </AuthenticatedLayout>

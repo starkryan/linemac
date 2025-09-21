@@ -110,7 +110,7 @@ export default function ChildEnrollPage() {
                           <Label className="text-sm text-gray-700 mb-2 block">
                             Parent's Aadhaar Number <span className="text-red-600 font-bold text-base">✱</span>
                           </Label>
-                          <Input className="bg-white border-gray-400 h-8" placeholder="XXXX-XXXX-XXXX" />
+                          <Input className="bg-white border-gray-400 h-8" placeholder="Enter 12-digit Aadhaar number" />
                         </div>
                         <div>
                           <Label className="text-sm text-gray-700 mb-2 block">

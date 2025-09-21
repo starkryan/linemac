@@ -30,6 +30,8 @@ export default function AadhaarLoginUI() {
     setError(null);
 
     try {
+      console.log("Login attempt for:", data.operatorName);
+
       // First, validate with our custom endpoint
       const validationResponse = await fetch('/api/auth/login', {
         method: 'POST',
@@ -43,23 +45,43 @@ export default function AadhaarLoginUI() {
         }),
       });
 
+      console.log("Login response status:", validationResponse.status);
+
       if (!validationResponse.ok) {
         const errorData = await validationResponse.json();
-        throw new Error(errorData.message || 'Login failed');
+        console.error("Login failed:", errorData);
+        throw new Error(errorData.error || errorData.message || 'Login failed');
       }
 
       const validationData = await validationResponse.json();
+      console.log("Login successful:", validationData);
 
-      // The custom endpoint already created the Better Auth session
-      // So we can redirect immediately
-      setTimeout(() => {
-        // If admin user, redirect to admin, otherwise to aadhaar correction
-        if (validationData.user.role === 'admin') {
-          window.location.href = '/admin';
-        } else {
-          window.location.href = '/aadhaar-correction';
+      // Verify session was created by checking session endpoint
+      setTimeout(async () => {
+        try {
+          const sessionResponse = await fetch('/api/auth/session', {
+            credentials: 'include',
+          });
+
+          if (sessionResponse.ok) {
+            const sessionData = await sessionResponse.json();
+            console.log("Session verified:", sessionData);
+
+            // If admin user, redirect to admin, otherwise to aadhaar correction
+            if (sessionData.user.role === 'admin') {
+              window.location.href = '/admin';
+            } else {
+              window.location.href = '/aadhaar-correction';
+            }
+          } else {
+            console.error("Session verification failed");
+            setError('Login succeeded but session could not be verified');
+          }
+        } catch (sessionError) {
+          console.error("Session check error:", sessionError);
+          setError('Login succeeded but session verification failed');
         }
-      }, 300);
+      }, 500);
 
     } catch (err: unknown) {
       console.error('Login error:', err);
