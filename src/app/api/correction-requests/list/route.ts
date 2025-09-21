@@ -5,10 +5,11 @@ import { auth } from '@/lib/auth-server';
 export async function GET(request: NextRequest) {
   try {
     // Check authentication
-    const session = await auth.handler(new Request(request.url));
-    const sessionData = await session.json();
+    const session = await auth.api.getSession({
+      headers: request.headers
+    });
 
-    if (!sessionData.user?.id) {
+    if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -29,14 +30,22 @@ export async function GET(request: NextRequest) {
       paramIndex++;
     }
 
+    // Get user data from database to verify role
+    const userResult = await query(
+      'SELECT role FROM "user" WHERE id = $1',
+      [session.user.id]
+    );
+
+    const userData = userResult.rows[0] || { role: 'operator' };
+
     // For regular users, only show their own requests
-    if (sessionData.user.role !== 'admin') {
+    if (userData.role !== 'admin') {
       if (whereClause) {
         whereClause += ` AND user_id = $${paramIndex}`;
       } else {
         whereClause = `WHERE user_id = $${paramIndex}`;
       }
-      params.push(sessionData.user.id);
+      params.push(session.user.id);
       paramIndex++;
     }
 

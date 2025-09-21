@@ -46,13 +46,15 @@ import {
   Calendar,
   AlertTriangle
 } from "lucide-react";
+import CorrectionRequestModal from "@/components/ui/CorrectionRequestModal";
 
 interface CorrectionRequest {
   id: string;
   aadhaar_number: string;
   name: string;
-  status: "pending" | "approved" | "rejected";
+  status: "pending" | "approved" | "rejected" | "in_progress" | "completed";
   created_at: string;
+  updated_at: string;
   operator_name?: string;
 }
 
@@ -65,6 +67,9 @@ export default function RequestsTable({ className }: RequestsTableProps) {
   const [statusFilter, setStatusFilter] = useState("all");
   const [requests, setRequests] = useState<CorrectionRequest[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedRequest, setSelectedRequest] = useState<CorrectionRequest | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
 
   useEffect(() => {
     fetchRequests();
@@ -86,29 +91,36 @@ export default function RequestsTable({ className }: RequestsTableProps) {
     }
   };
 
-  const updateRequestStatus = async (requestId: string, status: 'approved' | 'rejected') => {
+  const updateRequestStatus = async (requestId: string, status: string, notes?: string) => {
+    setIsUpdating(true);
     try {
       const response = await fetch(`/api/correction-requests/${requestId}/update`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ status }),
+        body: JSON.stringify({ status, notes }),
       });
 
       const result = await response.json();
 
       if (result.success) {
         // Refresh the requests list
-        fetchRequests();
-        alert(`Request ${status} successfully!`);
+        await fetchRequests();
       } else {
-        alert(result.error || 'Failed to update request status');
+        throw new Error(result.error || 'Failed to update request status');
       }
     } catch (error) {
       console.error('Error updating request:', error);
-      alert('Failed to update request status. Please try again.');
+      throw error;
+    } finally {
+      setIsUpdating(false);
     }
+  };
+
+  const handleViewDetails = (request: CorrectionRequest) => {
+    setSelectedRequest(request);
+    setIsModalOpen(true);
   };
 
   const getStatusColor = (status: string) => {
@@ -116,7 +128,8 @@ export default function RequestsTable({ className }: RequestsTableProps) {
       case "pending": return "bg-orange-100 text-orange-800";
       case "approved": return "bg-green-100 text-green-800";
       case "rejected": return "bg-red-100 text-red-800";
-      case "in_review": return "bg-blue-100 text-blue-800";
+      case "in_progress": return "bg-blue-100 text-blue-800";
+      case "completed": return "bg-purple-100 text-purple-800";
       default: return "bg-gray-100 text-gray-800";
     }
   };
@@ -195,8 +208,10 @@ export default function RequestsTable({ className }: RequestsTableProps) {
                 <SelectContent>
                   <SelectItem value="all">All Status</SelectItem>
                   <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="in_progress">In Progress</SelectItem>
                   <SelectItem value="approved">Approved</SelectItem>
                   <SelectItem value="rejected">Rejected</SelectItem>
+                  <SelectItem value="completed">Completed</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -262,7 +277,7 @@ export default function RequestsTable({ className }: RequestsTableProps) {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleViewDetails(request)}>
                               <Eye className="mr-2 h-4 w-4" />
                               View Details
                             </DropdownMenuItem>
@@ -305,6 +320,15 @@ export default function RequestsTable({ className }: RequestsTableProps) {
           )}
         </CardContent>
       </Card>
+
+      {/* Correction Request Modal */}
+      <CorrectionRequestModal
+        open={isModalOpen}
+        onOpenChange={setIsModalOpen}
+        request={selectedRequest}
+        onUpdateStatus={updateRequestStatus}
+        isLoading={isUpdating}
+      />
     </div>
   );
 }

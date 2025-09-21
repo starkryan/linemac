@@ -43,13 +43,33 @@ export const auth = betterAuth({
   },
   callbacks: {
     session: async ({ session, user }: any) => {
-      // Include user role in the session
-      if (user) {
-        session.user.role = user.role || 'operator';
-        // Add operator info to session
-        session.user.operatorUid = user.aadhaar_number;
-        session.user.operatorName = user.name;
+      console.log('🔧 SESSION CALLBACK CALLED for user:', user.id);
+      // Fetch complete user data from database to get role and other custom fields
+      try {
+        const result = await pool.query(
+          'SELECT role, aadhaar_number, name FROM "user" WHERE id = $1',
+          [user.id]
+        );
+
+        const dbUser = result.rows[0];
+        console.log('🔧 SESSION CALLBACK - DB User:', dbUser);
+
+        if (dbUser) {
+          // Include user role in the session
+          session.user.role = dbUser.role || 'operator';
+          // Add operator info to session
+          session.user.operatorUid = dbUser.aadhaar_number;
+          session.user.operatorName = dbUser.name;
+          console.log('🔧 SESSION CALLBACK - Updated role:', session.user.role);
+        } else {
+          console.log('🔧 SESSION CALLBACK - No user found, using default role');
+          session.user.role = 'operator'; // Default fallback
+        }
+      } catch (error) {
+        console.error('🔧 SESSION CALLBACK - Error:', error);
+        session.user.role = 'operator'; // Default fallback
       }
+
       return session;
     },
   },

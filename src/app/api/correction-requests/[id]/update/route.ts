@@ -7,12 +7,33 @@ export async function PATCH(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Check authentication and admin role
-    const session = await auth.handler(new Request(request.url));
-    const sessionData = await session.json();
+    // Check authentication
+    const session = await auth.api.getSession({
+      headers: request.headers
+    });
 
-    if (!sessionData.user?.id || sessionData.user.role !== 'admin') {
+    if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Get user data from database to verify admin role
+    const userResult = await query(
+      'SELECT role, aadhaar_number, name, email FROM "user" WHERE id = $1',
+      [session.user.id]
+    );
+
+    if (userResult.rows.length === 0) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    const userData = userResult.rows[0];
+
+    // Check if user has admin role
+    if (userData.role !== 'admin') {
+      return NextResponse.json({
+        error: 'Unauthorized - Admin role required',
+        userRole: userData.role
+      }, { status: 401 });
     }
 
     const { id } = await context.params;

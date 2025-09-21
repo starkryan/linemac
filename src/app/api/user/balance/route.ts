@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
 
     // Get user balance with additional details
     const result = await query(
-      'SELECT balance, currency FROM "user" WHERE id = $1',
+      'SELECT balance FROM "user" WHERE id = $1',
       [session.user.id]
     )
 
@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       balance: parseFloat(userData.balance) || 0,
-      currency: userData.currency || 'INR',
+      currency: 'INR',
       lastUpdated: new Date().toISOString()
     })
 

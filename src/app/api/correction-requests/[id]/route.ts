@@ -9,10 +9,11 @@ export async function GET(
   const { id } = await context.params;
   try {
     // Check authentication
-    const session = await auth.handler(new Request(request.url));
-    const sessionData = await session.json();
+    const session = await auth.api.getSession({
+      headers: request.headers
+    });
 
-    if (!sessionData.user?.id) {
+    if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -34,7 +35,7 @@ export async function GET(
     const requestDetails = result.rows[0];
 
     // Check if user has permission to view this request
-    if (sessionData.user.role !== 'admin' && requestDetails.user_id !== sessionData.user.id) {
+    if (session.user.role !== 'admin' && requestDetails.user_id !== session.user.id) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
