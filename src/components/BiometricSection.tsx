@@ -17,17 +17,25 @@ interface BiometricSectionProps {
   onFingerprintCapture?: (type: 'left' | 'right' | 'thumbs', data: BiometricData) => void
   onIrisCapture?: (type: 'left' | 'right', data: BiometricData) => void
   mode?: 'fingerprints' | 'iris'
+  excludeThumbs?: boolean
+  customTitles?: {
+    left?: string
+    right?: string
+    thumbs?: string
+  }
+  simplifiedMode?: boolean
+  simplifiedTitle?: string
 }
 
-export default function BiometricSection({ onFingerprintCapture, onIrisCapture, mode = 'fingerprints' }: BiometricSectionProps) {
+export default function BiometricSection({ onFingerprintCapture, onIrisCapture, mode = 'fingerprints', excludeThumbs = false, customTitles, simplifiedMode = false, simplifiedTitle }: BiometricSectionProps) {
   const [activeCapture, setActiveCapture] = useState<string | null>(null)
   const [biometricData, setBiometricData] = useState<Record<string, BiometricData>>({})
   const [showRDCapture, setShowRDCapture] = useState<string | null>(null)
 
-  const fingerprintTypes = [
+  const allFingerprintTypes = [
     {
       id: 'left-hand',
-      title: 'Left Hand',
+      title: customTitles?.left || 'Left Hand',
       subtitle: '',
       bgColor: 'bg-blue-100',
       type: 'fingerprint' as const,
@@ -35,7 +43,7 @@ export default function BiometricSection({ onFingerprintCapture, onIrisCapture, 
     },
     {
       id: 'right-hand',
-      title: 'Right Hand',
+      title: customTitles?.right || 'Right Hand',
       subtitle: '',
       bgColor: 'bg-blue-100',
       type: 'fingerprint' as const,
@@ -43,13 +51,17 @@ export default function BiometricSection({ onFingerprintCapture, onIrisCapture, 
     },
     {
       id: 'both-thumbs',
-      title: 'Both Thumbs',
+      title: customTitles?.thumbs || 'Both Thumbs',
       subtitle: '',
       bgColor: 'bg-blue-100',
       type: 'fingerprint' as const,
       subtype: 'thumbs' as const
     }
   ]
+
+  const fingerprintTypes = excludeThumbs
+    ? allFingerprintTypes.filter(type => type.subtype !== 'thumbs')
+    : allFingerprintTypes
 
   const irisTypes = [
     {
@@ -73,7 +85,19 @@ export default function BiometricSection({ onFingerprintCapture, onIrisCapture, 
 
   const biometricTypes = mode === 'fingerprints' ? fingerprintTypes : irisTypes
 
-  const handleCapture = (biometricType: typeof biometricTypes[0]) => {
+  // For simplified mode, create a single biometric type
+  const simplifiedBiometricType = simplifiedMode ? [{
+    id: 'simplified',
+    title: simplifiedTitle || 'Capture',
+    subtitle: '',
+    bgColor: 'bg-blue-100',
+    type: 'fingerprint' as const,
+    subtype: 'left' as const
+  }] : []
+
+  const displayTypes = simplifiedMode ? simplifiedBiometricType : biometricTypes
+
+  const handleCapture = (biometricType: typeof displayTypes[0]) => {
     if (biometricType.type === 'fingerprint') {
       // Directly trigger RD capture without showing intermediate interface
       setActiveCapture(biometricType.id)
@@ -134,8 +158,8 @@ export default function BiometricSection({ onFingerprintCapture, onIrisCapture, 
   return (
     <div className="space-y-6">
       {/* Biometric capture interface */}
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-6">
-        {biometricTypes.map((biometricType) => {
+      <div className={simplifiedMode ? "grid grid-cols-1 gap-6" : "grid grid-cols-2 lg:grid-cols-3 gap-6"}>
+        {displayTypes.map((biometricType) => {
           const capturedData = biometricData[biometricType.id]
           const isActive = activeCapture === biometricType.id
 

@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import AuthenticatedLayout from "@/app/components/AuthenticatedLayout"
+import BiometricSection from "@/components/BiometricSection"
 
 export default function BiometricEnrollmentPage() {
   const [activeStep, setActiveStep] = useState<'edenoid' | 'demographic'>('edenoid')
@@ -15,6 +16,14 @@ export default function BiometricEnrollmentPage() {
   const [residentFinger, setResidentFinger] = useState("Place Any Finger")
   const [operatorFinger, setOperatorFinger] = useState("Place Any Finger")
   const [selectedField, setSelectedField] = useState<'enrollment' | 'aadhaar'>('enrollment')
+
+  const handleResidentCapture = (type: 'left' | 'right' | 'thumbs', data: any) => {
+    setResidentFinger(`Captured ${type} hand - Quality: ${data.quality || 95}%`)
+  }
+
+  const handleOperatorCapture = (type: 'left' | 'right' | 'thumbs', data: any) => {
+    setOperatorFinger(`Captured ${type} hand - Quality: ${data.quality || 95}%`)
+  }
 
   return (
     <AuthenticatedLayout>
@@ -105,66 +114,18 @@ export default function BiometricEnrollmentPage() {
 
             {/* Right Section - Capture Areas */}
             <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Capture Resident */}
-              <div className="border border-gray-300 rounded-lg bg-white p-4">
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="w-0 h-0 border-l-[8px] border-l-green-600 border-t-[6px] border-t-transparent border-b-[6px] border-b-transparent"></div>
-                  <span className="font-medium text-gray-700">Capture Resident</span>
-                </div>
-
-                {/* Black capture area - make clickable */}
-                <div
-                  className="bg-black h-64 rounded mb-4 flex items-center justify-center cursor-pointer select-none"
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => {
-                    /* placeholder click behavior - open device capture in future */
-                    setResidentFinger("Waiting for finger...")
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") setResidentFinger("Waiting for finger...")
-                  }}
-                  aria-label="Capture resident fingerprint"
-                >
-                  
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <Label className="text-gray-600 text-sm">Score</Label>
-                  <div className="flex-1 bg-gray-200 h-6 rounded border border-gray-300 flex items-center px-2">
-                    <span className="text-gray-600 text-sm">0%</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Capture Operator */}
-              <div className="border border-gray-300 rounded-lg bg-white p-4">
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="w-0 h-0 border-l-[8px] border-l-green-600 border-t-[6px] border-t-transparent border-b-[6px] border-b-transparent"></div>
-                  <span className="font-medium text-gray-700">Capture Operator</span>
-                </div>
-
-                {/* Black capture area - make clickable */}
-                <div
-                  className="bg-black h-64 rounded mb-4 flex items-center justify-center cursor-pointer select-none"
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => setOperatorFinger("Waiting for finger...")}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") setOperatorFinger("Waiting for finger...")
-                  }}
-                  aria-label="Capture operator fingerprint"
-                >
-                
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <Label className="text-gray-600 text-sm">Score</Label>
-                  <div className="flex-1 bg-gray-200 h-6 rounded border border-gray-300 flex items-center px-2">
-                    <span className="text-gray-600 text-sm">0%</span>
-                  </div>
-                </div>
-              </div>
+              <BiometricSection
+                onFingerprintCapture={handleResidentCapture}
+                mode="fingerprints"
+                simplifiedMode={true}
+                simplifiedTitle="Capture Resident"
+              />
+              <BiometricSection
+                onFingerprintCapture={handleOperatorCapture}
+                mode="fingerprints"
+                simplifiedMode={true}
+                simplifiedTitle="Capture Operator"
+              />
             </div>
           </div>
 
