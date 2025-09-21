@@ -10,6 +10,7 @@ export interface User {
   aadhaar_number?: string;
   balance?: number;
   is_blocked?: boolean;
+  image?: string;
   createdAt: string;
   updatedAt: string;
   created_by?: string;
@@ -80,6 +81,7 @@ export async function getUsers(
       aadhaar_number,
       balance,
       is_blocked,
+      image,
       "createdAt",
       "updatedAt",
       created_by
@@ -111,7 +113,7 @@ export async function getUserById(id: string): Promise<User | null> {
   const result = await query(
     `SELECT
       id, name, email, role, status, phone, aadhaar_number,
-      balance, is_blocked, "createdAt", "updatedAt", created_by
+      balance, is_blocked, image, "createdAt", "updatedAt", created_by
      FROM "user" WHERE id = $1`,
     [id]
   );
@@ -124,7 +126,7 @@ export async function getUserByEmail(email: string): Promise<User | null> {
   const result = await query(
     `SELECT
       id, name, email, role, status, phone, aadhaar_number,
-      balance, is_blocked, "createdAt", "updatedAt", created_by
+      balance, is_blocked, image, "createdAt", "updatedAt", created_by
      FROM "user" WHERE email = $1`,
     [email]
   );
@@ -139,7 +141,7 @@ export async function createUser(data: CreateUserRequest): Promise<User> {
      VALUES ($1, $2, $3, 'active', $4, $5, $6)
      RETURNING
        id, name, email, role, status, phone, aadhaar_number,
-       balance, is_blocked, "createdAt", "updatedAt", created_by`,
+       balance, is_blocked, image, "createdAt", "updatedAt", created_by`,
     [
       data.name,
       data.email,
@@ -208,7 +210,7 @@ export async function updateUser(id: string, data: UpdateUserRequest): Promise<U
      WHERE id = $${paramIndex}
      RETURNING
        id, name, email, role, status, phone, aadhaar_number,
-       balance, is_blocked, "createdAt", "updatedAt", created_by`,
+       balance, is_blocked, image, "createdAt", "updatedAt", created_by`,
     params
   );
 

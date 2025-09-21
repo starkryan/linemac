@@ -46,9 +46,11 @@ import {
   Users,
   UserPlus,
   Download,
-  Loader2
+  Loader2,
+  Key
 } from "lucide-react";
 import CreateUserModal from "./create-user-modal";
+import UserDetailsModal from "./user-details-modal";
 
 interface User {
   id: string;
@@ -63,7 +65,9 @@ interface User {
   created_by?: string;
   balance?: number;
   is_blocked?: boolean;
-  avatar?: string;
+  image?: string;
+  operator_uid?: string;
+  operator_name?: string;
 }
 
 interface UsersTableProps {
@@ -80,6 +84,7 @@ export default function UsersTable({ className }: UsersTableProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalUsers, setTotalUsers] = useState(0);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
   // Fetch users from API
   useEffect(() => {
@@ -252,11 +257,10 @@ export default function UsersTable({ className }: UsersTableProps) {
                   <TableHeader>
                     <TableRow>
                       <TableHead>User</TableHead>
+                      <TableHead>Important Fields</TableHead>
                       <TableHead>Contact</TableHead>
-                      <TableHead>Aadhaar Number</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Role</TableHead>
-                      <TableHead>Join Date</TableHead>
+                      <TableHead>Aadhaar</TableHead>
+                      <TableHead>Status & Role</TableHead>
                       <TableHead>Balance</TableHead>
                       <TableHead className="w-[100px]">Actions</TableHead>
                     </TableRow>
@@ -267,15 +271,38 @@ export default function UsersTable({ className }: UsersTableProps) {
                         <TableCell>
                           <div className="flex items-center space-x-3">
                             <Avatar className="h-8 w-8">
-                              <AvatarImage src={user.avatar} alt={user.name} />
+                              <AvatarImage src={user.image || undefined} alt={user.name || 'User'} />
                               <AvatarFallback>
-                                {user.name.split(' ').map(n => n[0]).join('')}
+                                {user.name ? user.name.split(' ').map(n => n[0]).join('') : 'U'}
                               </AvatarFallback>
                             </Avatar>
                             <div>
                               <div className="font-medium">{user.name}</div>
                               <div className="text-sm text-gray-500">{user.id}</div>
                             </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="space-y-2">
+                            {/* ID */}
+                            <div className="p-2 bg-blue-50 rounded border border-blue-200">
+                              <div className="text-xs text-blue-600 font-medium">ID</div>
+                              <div className="text-xs font-mono text-blue-900">{user.id}</div>
+                            </div>
+                            {/* Operator Name */}
+                            {user.operator_name && (
+                              <div className="p-2 bg-green-50 rounded border border-green-200">
+                                <div className="text-xs text-green-600 font-medium">Operator</div>
+                                <div className="text-xs font-medium text-green-900 truncate">{user.operator_name}</div>
+                              </div>
+                            )}
+                            {/* Operator UID */}
+                            {user.operator_uid && (
+                              <div className="p-2 bg-purple-50 rounded border border-purple-200">
+                                <div className="text-xs text-purple-600 font-medium">UID</div>
+                                <div className="text-xs font-mono text-purple-900 truncate">{user.operator_uid}</div>
+                              </div>
+                            )}
                           </div>
                         </TableCell>
                         <TableCell>
@@ -296,19 +323,13 @@ export default function UsersTable({ className }: UsersTableProps) {
                           {maskAadhaar(user.aadhaar_number)}
                         </TableCell>
                         <TableCell>
-                          <Badge className={getStatusColor(user.status)}>
-                            {user.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Badge className={getRoleColor(user.role)}>
-                            {user.role}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center space-x-1 text-sm">
-                            <Calendar className="h-3 w-3 text-gray-400" />
-                            <span>{formatDate(user.createdAt)}</span>
+                          <div className="space-y-2">
+                            <Badge className={getStatusColor(user.status)}>
+                              {user.status}
+                            </Badge>
+                            <Badge className={getRoleColor(user.role)}>
+                              {user.role}
+                            </Badge>
                           </div>
                         </TableCell>
                         <TableCell>
@@ -325,9 +346,13 @@ export default function UsersTable({ className }: UsersTableProps) {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              <DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => setSelectedUser(user)}>
                                 <Eye className="mr-2 h-4 w-4" />
                                 View Details
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => setSelectedUser(user)}>
+                                <Key className="mr-2 h-4 w-4" />
+                                Change Password
                               </DropdownMenuItem>
                               <DropdownMenuItem>
                                 <Edit className="mr-2 h-4 w-4" />
@@ -369,6 +394,14 @@ export default function UsersTable({ className }: UsersTableProps) {
         open={isCreateModalOpen}
         onOpenChange={setIsCreateModalOpen}
         onUserCreated={fetchUsers}
+      />
+
+      {/* User Details Modal */}
+      <UserDetailsModal
+        open={!!selectedUser}
+        onOpenChange={(open) => !open && setSelectedUser(null)}
+        user={selectedUser}
+        onPasswordChanged={fetchUsers}
       />
     </div>
   );
