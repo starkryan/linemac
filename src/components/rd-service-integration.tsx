@@ -199,7 +199,11 @@ export const useRDService = () => {
           resolve(null);
         };
 
-        xhr.send();
+        // Generate PID options (required by Morpho RD Service)
+        // Based on the working test page parameters
+        const pidOptions = '<PidOptions ver="1.0"><Opts env="P" fCount="1" fType="0" format="0" pidVer="2.0" timeout="10000" otp="" wadh="" posh=""/></PidOptions>';
+
+        xhr.send(pidOptions);
       });
     } catch (error) {
       setIsScanning(false);
