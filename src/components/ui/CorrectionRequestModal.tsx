@@ -87,9 +87,9 @@ export default function CorrectionRequestModal({
     onOpenChange(false);
   };
 
-  const isUpdateDisabled = !selectedStatus || selectedStatus === request.status || isLoading;
-
   if (!request) return null;
+
+  const isUpdateDisabled = !selectedStatus || selectedStatus === request.status || isLoading;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

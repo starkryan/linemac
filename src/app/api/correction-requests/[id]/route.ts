@@ -35,7 +35,14 @@ export async function GET(
     const requestDetails = result.rows[0];
 
     // Check if user has permission to view this request
-    if (session.user.role !== 'admin' && requestDetails.user_id !== session.user.id) {
+    const userResult = await query(
+      'SELECT role FROM "user" WHERE id = $1',
+      [session.user.id]
+    );
+
+    const userRole = userResult.rows[0]?.role || 'operator';
+
+    if (userRole !== 'admin' && requestDetails.user_id !== session.user.id) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
