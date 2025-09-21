@@ -17,24 +17,50 @@ export async function POST(request: NextRequest) {
       aadhaar_number,
       mobile_number,
       name,
+      name_hindi,
       gender,
       dob,
+      age,
       email,
+      npr_receipt,
       co,
+      co_hindi,
       house_no,
+      house_no_hindi,
       street,
+      street_hindi,
       landmark,
+      landmark_hindi,
       area,
+      area_hindi,
       city,
+      city_hindi,
       post_office,
+      post_office_hindi,
       district,
+      district_hindi,
       sub_district,
+      sub_district_hindi,
       state,
-      pin_code
+      state_hindi,
+      pin_code,
+      head_of_family_name,
+      head_of_family_name_hindi,
+      relationship,
+      relationship_hindi,
+      relative_aadhaar,
+      relative_contact,
+      same_address,
+      dob_proof_type,
+      identity_proof_type,
+      address_proof_type,
+      por_document_type,
+      appointment_id,
+      residential_status
     } = body;
 
     // Validate required fields
-    if (!aadhaar_number || !mobile_number || !name || !gender || !dob || !street || !area || !city || !district || !state || !pin_code) {
+    if (!aadhaar_number || !mobile_number || !name || !gender || !dob || !street || !area || !city || !district || !state || !pin_code || !head_of_family_name || !relationship) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
@@ -56,15 +82,29 @@ export async function POST(request: NextRequest) {
     // Insert correction request
     const result = await query(
       `INSERT INTO correction_requests (
-        aadhaar_number, mobile_number, name, gender, dob, email, co, house_no,
-        street, landmark, area, city, post_office, district, sub_district, state, pin_code,
-        user_id, status
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, 'pending')
+        aadhaar_number, mobile_number, name, name_hindi, gender, dob, age, email, npr_receipt,
+        co, co_hindi, house_no, house_no_hindi, street, street_hindi, landmark, landmark_hindi,
+        area, area_hindi, city, city_hindi, post_office, post_office_hindi, district, district_hindi,
+        sub_district, sub_district_hindi, state, state_hindi, pin_code,
+        head_of_family_name, head_of_family_name_hindi, relationship, relationship_hindi,
+        relative_aadhaar, relative_contact, same_address,
+        dob_proof_type, identity_proof_type, address_proof_type, por_document_type,
+        appointment_id, residential_status, user_id, status
+      ) VALUES (
+        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19,
+        $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36,
+        $37, $38, $39, $40, $41, $42, $43, $44, $45, $46, $47, 'pending'
+      )
       RETURNING id, aadhaar_number, status, created_at`,
       [
-        aadhaar_number, mobile_number, name, gender, dob, email, co, house_no,
-        street, landmark, area, city, post_office, district, sub_district, state, pin_code,
-        sessionData.user.id
+        aadhaar_number, mobile_number, name, name_hindi, gender, dob, age, email, npr_receipt,
+        co, co_hindi, house_no, house_no_hindi, street, street_hindi, landmark, landmark_hindi,
+        area, area_hindi, city, city_hindi, post_office, post_office_hindi, district, district_hindi,
+        sub_district, sub_district_hindi, state, state_hindi, pin_code,
+        head_of_family_name, head_of_family_name_hindi, relationship, relationship_hindi,
+        relative_aadhaar, relative_contact, same_address,
+        dob_proof_type, identity_proof_type, address_proof_type, por_document_type,
+        appointment_id, residential_status, sessionData.user.id
       ]
     );
 

@@ -17,6 +17,9 @@ import DeviceDetector from "@/components/DeviceDetector"
 import FileUpload from "@/components/FileUpload"
 import { RDFingerprintCapture } from "@/components/rd-fingerprint-capture"
 import { CaptureResponse } from "@/lib/rd-service"
+import NotificationModal from "@/components/ui/NotificationModal"
+import { BalanceService } from "@/lib/balance-service"
+import { FormValidation, FormData, FormErrors } from "@/lib/form-validation"
 
 export default function GovernmentForm() {
   const router = useRouter()
@@ -33,26 +36,76 @@ export default function GovernmentForm() {
   }>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [confirmationChecked, setConfirmationChecked] = useState(false)
+  const [formErrors, setFormErrors] = useState<FormErrors>({})
+  const [modalState, setModalState] = useState<{
+    type: "error" | "warning" | "success" | "info" | "low_balance";
+    title: string;
+    message: string;
+    open: boolean;
+    onConfirm?: () => void;
+  }>({
+    type: "info",
+    title: "",
+    message: "",
+    open: false,
+  })
+  const [currentBalance, setCurrentBalance] = useState<number>(0)
+  const [isCheckingBalance, setIsCheckingBalance] = useState(false)
 
   // Form state
   const [formData, setFormData] = useState({
-    aadhaar_number: '',
-    mobile_number: '',
+    // Personal Details
     name: '',
+    name_hindi: '',
     gender: '',
     dob: '',
+    age: '',
+    aadhaar_number: '',
+    mobile_number: '',
     email: '',
+    npr_receipt: '',
+
+    // Address Details
     co: '',
+    co_hindi: '',
     house_no: '',
+    house_no_hindi: '',
     street: '',
+    street_hindi: '',
     landmark: '',
+    landmark_hindi: '',
     area: '',
+    area_hindi: '',
     city: '',
+    city_hindi: '',
     post_office: '',
+    post_office_hindi: '',
     district: '',
+    district_hindi: '',
     sub_district: '',
+    sub_district_hindi: '',
     state: '',
-    pin_code: ''
+    state_hindi: '',
+    pin_code: '',
+
+    // References
+    head_of_family_name: '',
+    head_of_family_name_hindi: '',
+    relationship: '',
+    relationship_hindi: '',
+    relative_aadhaar: '',
+    relative_contact: '',
+    same_address: false,
+
+    // Verification Details
+    dob_proof_type: '',
+    identity_proof_type: '',
+    address_proof_type: '',
+    por_document_type: '',
+
+    // Appointment Details
+    appointment_id: '',
+    residential_status: 'indian'
   })
 
   const handleInputChange = (field: string, value: string) => {
@@ -60,38 +113,123 @@ export default function GovernmentForm() {
       ...prev,
       [field]: value
     }))
+
+    // Clear error for this field when user starts typing
+    if (formErrors[field]) {
+      setFormErrors(prev => ({
+        ...prev,
+        [field]: null
+      }))
+    }
   }
 
-  const handleSubmit = async () => {
-    if (!confirmationChecked) {
-      alert('Please confirm the information is accurate before submitting.')
+  const showModal = (type: "error" | "warning" | "success" | "info" | "low_balance", title: string, message: string, onConfirm?: () => void) => {
+    setModalState({
+      type,
+      title,
+      message,
+      open: true,
+      onConfirm,
+    })
+  }
+
+  const hideModal = () => {
+    setModalState(prev => ({ ...prev, open: false }))
+  }
+
+  const validateAndSubmit = async () => {
+    // Validate form
+    const errors = FormValidation.validateForm(formData)
+    setFormErrors(errors)
+
+    if (FormValidation.hasErrors(errors)) {
+      const firstError = FormValidation.getFirstError(errors)
+      showModal('error', 'Validation Error', FormValidation.formatError(Object.keys(errors)[0], firstError || 'Please check your form'))
       return
     }
 
+    // Check confirmation
+    if (!confirmationChecked) {
+      showModal('warning', 'Confirmation Required', 'Please confirm that all information provided is accurate before submitting.')
+      return
+    }
+
+    // Check balance
+    setIsCheckingBalance(true)
+    try {
+      const balanceCheck = await BalanceService.hasSufficientBalance(100)
+      setCurrentBalance(balanceCheck.currentBalance)
+
+      if (!balanceCheck.hasSufficient) {
+        showModal(
+          'low_balance',
+          'Insufficient Balance',
+          `You need ₹100 to submit this application. Your current balance is ₹${balanceCheck.currentBalance}.`,
+          () => {
+            // Redirect to recharge page
+            router.push('/recharge')
+          }
+        )
+        return
+      }
+
+      // If all checks pass, submit the form
+      await submitForm()
+    } catch (error) {
+      console.error('Balance check error:', error)
+      showModal('error', 'Balance Check Failed', 'Unable to verify your balance. Please try again.')
+    } finally {
+      setIsCheckingBalance(false)
+    }
+  }
+
+  const submitForm = async () => {
     setIsSubmitting(true)
     try {
+      // Deduct balance first
+      const deductionResult = await BalanceService.deductBalance(100)
+
+      if (!deductionResult.success) {
+        showModal('error', 'Payment Failed', deductionResult.error || 'Failed to process payment. Please try again.')
+        return
+      }
+
+      // Submit the form
       const response = await fetch('/api/correction-requests/create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          // Include additional data like files, biometrics, etc.
+          uploadedFiles,
+          fingerprintData,
+          verificationMethod,
+        }),
       })
 
       const result = await response.json()
 
       if (result.success) {
-        alert('Application submitted successfully!')
-        router.push('/submission-status?requestId=' + result.request.id)
+        showModal('success', 'Application Submitted', 'Your Aadhaar correction application has been submitted successfully!', () => {
+          router.push('/submission-status?requestId=' + result.request.id)
+        })
       } else {
-        alert(result.error || 'Failed to submit application')
+        // Refund balance if submission fails
+        await BalanceService.deductBalance(-100) // Negative amount to refund
+        showModal('error', 'Submission Failed', result.error || 'Failed to submit application. Please try again.')
       }
     } catch (error) {
       console.error('Submission error:', error)
-      alert('Failed to submit application. Please try again.')
+      showModal('error', 'Submission Error', 'Failed to submit application. Please try again.')
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  const handleSubmit = async () => {
+    await validateAndSubmit()
   }
 
   // File upload states
@@ -235,7 +373,11 @@ export default function GovernmentForm() {
                 <div className="grid grid-cols-2 gap-6">
                   <div>
                     <Label className="text-sm text-gray-700 mb-2 block">Appointment ID</Label>
-                    <Input className="bg-white border-gray-400 h-8" />
+                    <Input
+                      className="bg-white border-gray-400 h-8"
+                      value={formData.appointment_id}
+                      onChange={(e) => setFormData(prev => ({ ...prev, appointment_id: e.target.value }))}
+                    />
                   </div>
                 </div>
               </div>
@@ -254,13 +396,26 @@ export default function GovernmentForm() {
                       <Label className="text-sm text-gray-700 mb-2 block">
                         Name <span className="text-red-600 font-bold text-base">✱</span>
                       </Label>
-                      <Input className="bg-white border-gray-400 h-8" />
+                      <Input
+                        className="bg-white border-gray-400 h-8"
+                        value={formData.name}
+                        onChange={(e) => handleInputChange("name", e.target.value)}
+                        placeholder="Enter full name"
+                      />
+                      {formErrors.name && (
+                        <p className="text-red-500 text-xs mt-1">{formErrors.name}</p>
+                      )}
                     </div>
                     <div>
                       <Label className="text-sm text-gray-700 mb-2 block">
                         नाम <span className="text-red-600 font-bold text-base">✱</span>
                       </Label>
-                      <Input className="bg-white border-gray-400 h-8" />
+                      <Input
+                        className="bg-white border-gray-400 h-8"
+                        value={formData.name_hindi}
+                        onChange={(e) => handleInputChange("name_hindi", e.target.value)}
+                        placeholder="नाम दर्ज करें"
+                      />
                     </div>
                   </div>
 
@@ -270,7 +425,10 @@ export default function GovernmentForm() {
                       <Label className="text-sm text-gray-700 mb-2 block">
                         Gender <span className="text-red-600 font-bold text-base">✱</span>
                       </Label>
-                      <Select>
+                      <Select
+                        value={formData.gender}
+                        onValueChange={(value) => handleInputChange("gender", value)}
+                      >
                         <SelectTrigger className="bg-white border-gray-400 h-8">
                           <SelectValue placeholder="Select" />
                         </SelectTrigger>
@@ -280,6 +438,9 @@ export default function GovernmentForm() {
                           <SelectItem value="other">Other</SelectItem>
                         </SelectContent>
                       </Select>
+                      {formErrors.gender && (
+                        <p className="text-red-500 text-xs mt-1">{formErrors.gender}</p>
+                      )}
                     </div>
                     <div>
                       <Label className="text-sm text-gray-700 mb-2 block">
@@ -296,11 +457,19 @@ export default function GovernmentForm() {
                         <span className="text-gray-400 text-xs">⊙</span>
                       </Label>
                       <div className="flex items-center gap-2">
-                        <Input className="bg-white border-gray-400 w-16 h-8" placeholder="" />
+                        <Input
+                          className="bg-white border-gray-400 w-16 h-8"
+                          value={formData.age}
+                          onChange={(e) => handleInputChange("age", e.target.value)}
+                          placeholder=""
+                        />
                         <span className="text-gray-500 text-sm">OR</span>
-                        <Input className="bg-white border-gray-400 w-12 h-8" placeholder="DD" />
-                        <Input className="bg-white border-gray-400 w-12 h-8" placeholder="MM" />
-                        <Input className="bg-white border-gray-400 w-16 h-8" placeholder="YYYY" />
+                        <Input
+                          className="bg-white border-gray-400 w-32 h-8"
+                          value={formData.dob}
+                          onChange={(e) => handleInputChange("dob", e.target.value)}
+                          placeholder="DD/MM/YYYY"
+                        />
                         <div className="flex items-center space-x-2">
                           <Checkbox
                             id="dob-verified"
@@ -316,6 +485,9 @@ export default function GovernmentForm() {
                           </Label>
                         </div>
                       </div>
+                      {formErrors.dob && (
+                        <p className="text-red-500 text-xs mt-1">{formErrors.dob}</p>
+                      )}
                     </div>
                     <div>
                       <Label className="text-sm text-gray-700 mb-2 block">
@@ -328,7 +500,12 @@ export default function GovernmentForm() {
                   <div className="grid grid-cols-2 gap-6">
                     <div>
                       <Label className="text-sm text-gray-700 mb-2 block">NPR Receipt/TIN No.</Label>
-                      <Input className="bg-white border-gray-400 h-8" />
+                      <Input
+                        className="bg-white border-gray-400 h-8"
+                        value={formData.npr_receipt}
+                        onChange={(e) => handleInputChange("npr_receipt", e.target.value)}
+                        placeholder="Enter NPR receipt number"
+                      />
                     </div>
                   </div>
                 </div>
@@ -349,11 +526,21 @@ export default function GovernmentForm() {
                   <div className="grid grid-cols-2 gap-6">
                     <div>
                       <Label className="text-sm text-gray-700 mb-2 block">C/O</Label>
-                      <Input className="bg-white border-gray-400 h-8" />
+                      <Input
+                        className="bg-white border-gray-400 h-8"
+                        value={formData.co}
+                        onChange={(e) => handleInputChange("co", e.target.value)}
+                        placeholder="Care of"
+                      />
                     </div>
                     <div>
                       <Label className="text-sm text-gray-700 mb-2 block">द्वारा</Label>
-                      <Input className="bg-white border-gray-400 h-8" />
+                      <Input
+                        className="bg-white border-gray-400 h-8"
+                        value={formData.co_hindi}
+                        onChange={(e) => handleInputChange("co_hindi", e.target.value)}
+                        placeholder="द्वारा"
+                      />
                     </div>
                   </div>
 
@@ -361,11 +548,21 @@ export default function GovernmentForm() {
                   <div className="grid grid-cols-2 gap-6">
                     <div>
                       <Label className="text-sm text-gray-700 mb-2 block">House/Bldg/Apt</Label>
-                      <Input className="bg-white border-gray-400 h-8" />
+                      <Input
+                        className="bg-white border-gray-400 h-8"
+                        value={formData.house_no}
+                        onChange={(e) => handleInputChange("house_no", e.target.value)}
+                        placeholder="House/Building/Apartment number"
+                      />
                     </div>
                     <div>
                       <Label className="text-sm text-gray-700 mb-2 block">घर/निर्माण</Label>
-                      <Input className="bg-white border-gray-400 h-8" />
+                      <Input
+                        className="bg-white border-gray-400 h-8"
+                        value={formData.house_no_hindi}
+                        onChange={(e) => handleInputChange("house_no_hindi", e.target.value)}
+                        placeholder="घर/निर्माण संख्या"
+                      />
                     </div>
                   </div>
 
@@ -373,11 +570,21 @@ export default function GovernmentForm() {
                   <div className="grid grid-cols-2 gap-6">
                     <div>
                       <Label className="text-sm text-gray-700 mb-2 block">Street/Road/Lane</Label>
-                      <Input className="bg-white border-gray-400 h-8" />
+                      <Input
+                        className="bg-white border-gray-400 h-8"
+                        value={formData.street}
+                        onChange={(e) => handleInputChange("street", e.target.value)}
+                        placeholder="Street, Road, or Lane"
+                      />
                     </div>
                     <div>
                       <Label className="text-sm text-gray-700 mb-2 block">सड़क/मार्ग/गली</Label>
-                      <Input className="bg-white border-gray-400 h-8" />
+                      <Input
+                        className="bg-white border-gray-400 h-8"
+                        value={formData.street_hindi}
+                        onChange={(e) => handleInputChange("street_hindi", e.target.value)}
+                        placeholder="सड़क/मार्ग/गली"
+                      />
                     </div>
                   </div>
 
@@ -385,11 +592,21 @@ export default function GovernmentForm() {
                   <div className="grid grid-cols-2 gap-6">
                     <div>
                       <Label className="text-sm text-gray-700 mb-2 block">Landmark</Label>
-                      <Input className="bg-white border-gray-400 h-8" />
+                      <Input
+                        className="bg-white border-gray-400 h-8"
+                        value={formData.landmark}
+                        onChange={(e) => handleInputChange("landmark", e.target.value)}
+                        placeholder="Nearby landmark"
+                      />
                     </div>
                     <div>
                       <Label className="text-sm text-gray-700 mb-2 block">स्थान चिह्न</Label>
-                      <Input className="bg-white border-gray-400 h-8" />
+                      <Input
+                        className="bg-white border-gray-400 h-8"
+                        value={formData.landmark_hindi}
+                        onChange={(e) => handleInputChange("landmark_hindi", e.target.value)}
+                        placeholder="स्थान चिह्न"
+                      />
                     </div>
                   </div>
 
@@ -397,11 +614,21 @@ export default function GovernmentForm() {
                   <div className="grid grid-cols-2 gap-6">
                     <div>
                       <Label className="text-sm text-gray-700 mb-2 block">Area/Locality/Sector</Label>
-                      <Input className="bg-white border-gray-400 h-8" />
+                      <Input
+                        className="bg-white border-gray-400 h-8"
+                        value={formData.area}
+                        onChange={(e) => handleInputChange("area", e.target.value)}
+                        placeholder="Area, Locality, or Sector"
+                      />
                     </div>
                     <div>
                       <Label className="text-sm text-gray-700 mb-2 block">स्थान</Label>
-                      <Input className="bg-white border-gray-400 h-8" />
+                      <Input
+                        className="bg-white border-gray-400 h-8"
+                        value={formData.area_hindi}
+                        onChange={(e) => handleInputChange("area_hindi", e.target.value)}
+                        placeholder="स्थान/क्षेत्र"
+                      />
                     </div>
                   </div>
 
@@ -411,13 +638,87 @@ export default function GovernmentForm() {
                       <Label className="text-sm text-gray-700 mb-2 block">
                         Village/Town/City <span className="text-red-600 font-bold text-base">✱</span>
                       </Label>
-                      <Input className="bg-white border-gray-400 h-8" />
+                      <Input
+                        className="bg-white border-gray-400 h-8"
+                        value={formData.city}
+                        onChange={(e) => handleInputChange("city", e.target.value)}
+                        placeholder="Enter city name"
+                      />
+                      {formErrors.city && (
+                        <p className="text-red-500 text-xs mt-1">{formErrors.city}</p>
+                      )}
                     </div>
                     <div>
                       <Label className="text-sm text-gray-700 mb-2 block">
                         गांव/कस्बा/शहर <span className="text-red-600 font-bold text-base">✱</span>
                       </Label>
-                      <Input className="bg-white border-gray-400 h-8" />
+                      <Input
+                        className="bg-white border-gray-400 h-8"
+                        value={formData.city_hindi}
+                        onChange={(e) => handleInputChange("city_hindi", e.target.value)}
+                        placeholder="गांव/कस्बा/शहर"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Additional address fields */}
+                  <div className="grid grid-cols-2 gap-6">
+                    <div>
+                      <Label className="text-sm text-gray-700 mb-2 block">
+                        District <span className="text-red-600 font-bold text-base">✱</span>
+                      </Label>
+                      <Input
+                        className="bg-white border-gray-400 h-8"
+                        value={formData.district}
+                        onChange={(e) => handleInputChange("district", e.target.value)}
+                        placeholder="Enter district"
+                      />
+                      {formErrors.district && (
+                        <p className="text-red-500 text-xs mt-1">{formErrors.district}</p>
+                      )}
+                    </div>
+                    <div>
+                      <Label className="text-sm text-gray-700 mb-2 block">
+                        State <span className="text-red-600 font-bold text-base">✱</span>
+                      </Label>
+                      <Input
+                        className="bg-white border-gray-400 h-8"
+                        value={formData.state}
+                        onChange={(e) => handleInputChange("state", e.target.value)}
+                        placeholder="Enter state"
+                      />
+                      {formErrors.state && (
+                        <p className="text-red-500 text-xs mt-1">{formErrors.state}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-6">
+                    <div>
+                      <Label className="text-sm text-gray-700 mb-2 block">
+                        PIN Code <span className="text-red-600 font-bold text-base">✱</span>
+                      </Label>
+                      <Input
+                        className="bg-white border-gray-400 h-8"
+                        value={formData.pin_code}
+                        onChange={(e) => handleInputChange("pin_code", e.target.value)}
+                        placeholder="Enter 6-digit PIN code"
+                      />
+                      {formErrors.pin_code && (
+                        <p className="text-red-500 text-xs mt-1">{formErrors.pin_code}</p>
+                      )}
+                    </div>
+                    <div>
+                      <Label className="text-sm text-gray-700 mb-2 block">
+                        पिन कोड <span className="text-red-600 font-bold text-base">✱</span>
+                      </Label>
+                      <Input
+                        className="bg-white border-gray-400 h-8"
+                        value={formData.pin_code}
+                        onChange={(e) => handleInputChange("pin_code", e.target.value)}
+                        placeholder="6 अंकों का पिन कोड"
+                        disabled
+                      />
                     </div>
                   </div>
                 </div>
@@ -616,13 +917,21 @@ export default function GovernmentForm() {
                       <Label className="text-sm text-gray-700 mb-2 block">
                         Head of Family Name <span className="text-red-600 font-bold text-base">✱</span>
                       </Label>
-                      <Input className="bg-white border-gray-400 h-8" />
-                    </div>
+                      <Input
+                        className="bg-white border-gray-400 h-8"
+                        value={formData.head_of_family_name}
+                        onChange={(e) => setFormData(prev => ({ ...prev, head_of_family_name: e.target.value }))}
+                          />
+                      </div>
                     <div>
                       <Label className="text-sm text-gray-700 mb-2 block">
                         परिवार के मुखिया का नाम <span className="text-red-600 font-bold text-base">✱</span>
                       </Label>
-                      <Input className="bg-white border-gray-400 h-8" />
+                      <Input
+                        className="bg-white border-gray-400 h-8"
+                        value={formData.head_of_family_name_hindi}
+                        onChange={(e) => setFormData(prev => ({ ...prev, head_of_family_name_hindi: e.target.value }))}
+                      />
                     </div>
                   </div>
 
@@ -632,7 +941,10 @@ export default function GovernmentForm() {
                       <Label className="text-sm text-gray-700 mb-2 block">
                         Relationship <span className="text-red-600 font-bold text-base">✱</span>
                       </Label>
-                      <Select>
+                      <Select
+                        value={formData.relationship}
+                        onValueChange={(value) => setFormData(prev => ({ ...prev, relationship: value }))}
+                      >
                         <SelectTrigger className="bg-white border-gray-400 h-8">
                           <SelectValue placeholder="Select" />
                         </SelectTrigger>
@@ -648,12 +960,15 @@ export default function GovernmentForm() {
                           <SelectItem value="other">Other</SelectItem>
                         </SelectContent>
                       </Select>
-                    </div>
+                      </div>
                     <div>
                       <Label className="text-sm text-gray-700 mb-2 block">
                         संबंध <span className="text-red-600 font-bold text-base">✱</span>
                       </Label>
-                      <Select>
+                      <Select
+                        value={formData.relationship_hindi}
+                        onValueChange={(value) => setFormData(prev => ({ ...prev, relationship_hindi: value }))}
+                      >
                         <SelectTrigger className="bg-white border-gray-400 h-8">
                           <SelectValue placeholder="चुनें" />
                         </SelectTrigger>
@@ -678,13 +993,18 @@ export default function GovernmentForm() {
                       <Label className="text-sm text-gray-700 mb-2 block">
                         Relative's Aadhaar Number
                       </Label>
-                      <Input className="bg-white border-gray-400 h-8" placeholder="Enter 12-digit Aadhaar number" />
-                    </div>
+                      <Input
+                        className="bg-white border-gray-400 h-8"
+                        placeholder="Enter 12-digit Aadhaar number"
+                        value={formData.relative_aadhaar}
+                        onChange={(e) => setFormData(prev => ({ ...prev, relative_aadhaar: e.target.value }))}
+                        />
+                        </div>
                     <div>
                       <Label className="text-sm text-gray-700 mb-2 block">
                         संबंधित की आधार संख्या
                       </Label>
-                      <Input className="bg-white border-gray-400 h-8" placeholder="Enter 12-digit Aadhaar number" />
+                      <Input className="bg-white border-gray-400 h-8" placeholder="12 अंकों की आधार संख्या दर्ज करें" />
                     </div>
                   </div>
 
@@ -694,8 +1014,13 @@ export default function GovernmentForm() {
                       <Label className="text-sm text-gray-700 mb-2 block">
                         Relative's Contact Number
                       </Label>
-                      <Input className="bg-white border-gray-400 h-8" placeholder="+91 XXXXX XXXXX" />
-                    </div>
+                      <Input
+                        className="bg-white border-gray-400 h-8"
+                        placeholder="+91 XXXXX XXXXX"
+                        value={formData.relative_contact}
+                        onChange={(e) => setFormData(prev => ({ ...prev, relative_contact: e.target.value }))}
+                          />
+                          </div>
                     <div>
                       <Label className="text-sm text-gray-700 mb-2 block">
                         संबंधित का संपर्क नंबर
@@ -706,7 +1031,12 @@ export default function GovernmentForm() {
 
                   {/* Same Address Checkbox */}
                   <div className="flex items-center space-x-2">
-                    <Checkbox id="same-address" className="border-gray-400" />
+                    <Checkbox
+                      id="same-address"
+                      className="border-gray-400"
+                      checked={formData.same_address}
+                      onCheckedChange={(checked) => setFormData(prev => ({ ...prev, same_address: checked as boolean }))}
+                    />
                     <Label htmlFor="same-address" className="text-sm text-gray-700">
                       Relative's address is same as applicant's address
                     </Label>
@@ -1039,6 +1369,18 @@ export default function GovernmentForm() {
         </div>
       </div>
       </div>
+
+      {/* Notification Modal */}
+      <NotificationModal
+        open={modalState.open}
+        onOpenChange={hideModal}
+        type={modalState.type}
+        title={modalState.title}
+        message={modalState.message}
+        onConfirm={modalState.onConfirm}
+        confirmText={modalState.type === 'low_balance' ? 'Recharge Now' : 'OK'}
+        balance={modalState.type === 'low_balance' ? currentBalance : undefined}
+      />
     </AuthenticatedLayout>
   )
 }
