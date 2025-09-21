@@ -28,7 +28,7 @@ export default function BiometricSection({ onFingerprintCapture, onIrisCapture, 
     {
       id: 'left-hand',
       title: 'Left Hand',
-      subtitle: 'Fingerprint Capture',
+      subtitle: '',
       bgColor: 'bg-blue-100',
       type: 'fingerprint' as const,
       subtype: 'left' as const
@@ -36,7 +36,7 @@ export default function BiometricSection({ onFingerprintCapture, onIrisCapture, 
     {
       id: 'right-hand',
       title: 'Right Hand',
-      subtitle: 'Fingerprint Capture',
+      subtitle: '',
       bgColor: 'bg-blue-100',
       type: 'fingerprint' as const,
       subtype: 'right' as const
@@ -44,7 +44,7 @@ export default function BiometricSection({ onFingerprintCapture, onIrisCapture, 
     {
       id: 'both-thumbs',
       title: 'Both Thumbs',
-      subtitle: 'Fingerprint Capture',
+      subtitle: '',
       bgColor: 'bg-blue-100',
       type: 'fingerprint' as const,
       subtype: 'thumbs' as const
@@ -75,8 +75,10 @@ export default function BiometricSection({ onFingerprintCapture, onIrisCapture, 
 
   const handleCapture = (biometricType: typeof biometricTypes[0]) => {
     if (biometricType.type === 'fingerprint') {
-      setShowRDCapture(biometricType.id)
+      // Directly trigger RD capture without showing intermediate interface
       setActiveCapture(biometricType.id)
+      // Set showRDCapture to the same biometric type to trigger immediate capture
+      setShowRDCapture(biometricType.id)
     } else {
       // For iris or fallback to simulation
       const newData: BiometricData = {
@@ -236,12 +238,10 @@ export default function BiometricSection({ onFingerprintCapture, onIrisCapture, 
                     </div>
                   </div>
                 ) : (
-                  /* Empty state */
+                  /* Empty state - just black screen */
                   <div className="space-y-4">
                     <div className="bg-black w-full h-64 border border-gray-400 flex items-center justify-center">
-                     
                     </div>
-                    
                   </div>
                 )}
               </div>

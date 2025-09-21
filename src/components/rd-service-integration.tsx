@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface RDServiceResponse {
   pid: string;
@@ -275,46 +275,32 @@ export const RDServiceIntegration: React.FC<RDServiceIntegrationProps> = ({
   const { scanForService, captureFingerprint, isScanning, deviceInfo, error, workingHost, workingProtocol } = useRDService();
   const [port, setPort] = useState<number | null>(null);
 
-  const handleCapture = async () => {
-    try {
-      let servicePort = port;
+  // Auto-start capture when component mounts
+  useEffect(() => {
+    const startCapture = async () => {
+      try {
+        let servicePort = port;
 
-      if (!servicePort) {
-        servicePort = await scanForService();
-        if (servicePort === -1) return;
-        setPort(servicePort);
-      }
+        if (!servicePort) {
+          servicePort = await scanForService();
+          if (servicePort === -1) return;
+          setPort(servicePort);
+        }
 
-      const result = await captureFingerprint(servicePort, workingHost, workingProtocol);
-      if (result) {
-        onCapture(type, result);
+        const result = await captureFingerprint(servicePort, workingHost, workingProtocol);
+        if (result) {
+          onCapture(type, result);
+        }
+      } catch {
+        // Capture error handled silently
       }
-    } catch {
-      // Capture error handled silently
-    }
-  };
+    };
+
+    startCapture();
+  }, [port, scanForService, captureFingerprint, onCapture, type, workingHost, workingProtocol]);
 
   return (
     <div className="space-y-2">
-      <button
-        onClick={handleCapture}
-        disabled={isScanning}
-        className={`p-2 rounded-lg border transition-colors ${
-          isScanning
-            ? 'bg-gray-100 border-gray-300 cursor-not-allowed'
-            : 'bg-blue-50 border-blue-200 hover:bg-blue-100'
-        }`}
-      >
-        <div className="flex items-center space-x-2">
-          <div className={`w-6 h-6 ${isScanning ? 'animate-pulse' : ''}`}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-6 h-6">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4" />
-            </svg>
-          </div>
-          <span className="text-sm font-medium">{label}</span>
-        </div>
-      </button>
 
       {deviceInfo && (
         <div className="text-xs text-green-600 bg-green-50 p-2 rounded">
