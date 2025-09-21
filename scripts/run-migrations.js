@@ -91,12 +91,12 @@ async function runMigrations() {
 
     console.log('🎉 All migrations completed successfully!');
 
-    // Run admin user creation after migrations
+    // Run default users creation after migrations
     try {
-      const { createAdminUser } = require('./create-admin-user.cjs');
-      await createAdminUser();
+      const { createDefaultUsers } = require('./create-default-users.js');
+      await createDefaultUsers();
     } catch (adminError) {
-      console.log('⚠️  Admin user creation failed, but migrations completed:', adminError.message);
+      console.log('⚠️  Default users creation failed, but migrations completed:', adminError.message);
       // Don't exit with error code, as migrations were successful
     }
   } catch (error) {

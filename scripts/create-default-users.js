@@ -1,6 +1,6 @@
 require('dotenv').config();
 const { Pool } = require('pg');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 
 // Simple UUID v4 generator function
 function generateUUID() {
