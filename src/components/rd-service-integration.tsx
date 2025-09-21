@@ -20,27 +20,57 @@ export const useRDService = () => {
   const [isScanning, setIsScanning] = useState(false);
   const [deviceInfo, setDeviceInfo] = useState<DeviceInfo | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [workingHost, setWorkingHost] = useState<string>('localhost');
+  const [workingProtocol, setWorkingProtocol] = useState<string>('https');
 
   const scanForService = async (): Promise<number> => {
     setError(null);
 
     for (let port = 11100; port <= 11120; port++) {
-      try {
-        const url = `https://localhost:${port}/rd/service`;
-        const response = await fetch(url, {
-          method: 'RDSERVICE',
-          mode: 'no-cors'
-        });
+      // Try both localhost and 127.0.0.1 for each port
+      const hosts = ['localhost', '127.0.0.1'];
+      // Try both HTTP and HTTPS protocols
+      const protocols = ['https', 'http'];
 
-        if (response.ok || response.type === 'opaque') {
-          const info = await getDeviceInfo(port);
-          if (info) {
-            setDeviceInfo(info);
-            return port;
+      for (const host of hosts) {
+        for (const protocol of protocols) {
+          try {
+            const url = `${protocol}://${host}:${port}/rd/service`;
+
+            const serviceFound = await new Promise<boolean>((resolve) => {
+              const xhr = new XMLHttpRequest();
+              xhr.open('RDSERVICE', url, true);
+
+              xhr.onreadystatechange = () => {
+                if (xhr.readyState === 4) {
+                  if (xhr.status === 200) {
+                    resolve(true);
+                  } else {
+                    resolve(false);
+                  }
+                }
+              };
+
+              xhr.onerror = () => {
+                resolve(false);
+              };
+
+              xhr.send();
+            });
+
+            if (serviceFound) {
+              const info = await getDeviceInfo(port, host, protocol);
+              if (info) {
+                setDeviceInfo(info);
+                setWorkingHost(host);
+                setWorkingProtocol(protocol);
+                return port;
+              }
+            }
+          } catch {
+            // Continue to next protocol
           }
         }
-      } catch {
-        // Continue to next port
       }
     }
 
@@ -48,35 +78,46 @@ export const useRDService = () => {
     return -1;
   };
 
-  const getDeviceInfo = async (port: number): Promise<DeviceInfo | null> => {
+  const getDeviceInfo = async (port: number, host: string = 'localhost', protocol: string = 'https'): Promise<DeviceInfo | null> => {
     try {
-      const url = `https://localhost:${port}/rd/info`;
-      const response = await fetch(url, {
-        method: 'DEVICEINFO',
-        mode: 'no-cors'
-      });
+      const url = `${protocol}://${host}:${port}/rd/info`;
 
-      if (response.ok || response.type === 'opaque') {
-        return {
-          status: 'success',
-          err: '',
-          info: `Morpho Device on port ${port}`,
-          port: port.toString()
+      return new Promise((resolve) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('DEVICEINFO', url, true);
+
+        xhr.onreadystatechange = () => {
+          if (xhr.readyState === 4) {
+            if (xhr.status === 200) {
+              resolve({
+                status: 'success',
+                err: '',
+                info: `Morpho Device on ${protocol}://${host}:${port}`,
+                port: port.toString()
+              });
+            } else {
+              resolve(null);
+            }
+          }
         };
-      }
-    } catch {
-      // Handle error
-    }
 
-    return null;
+        xhr.onerror = () => {
+          resolve(null);
+        };
+
+        xhr.send();
+      });
+    } catch {
+      return null;
+    }
   };
 
-  const captureFingerprint = async (port: number): Promise<RDServiceResponse | null> => {
+  const captureFingerprint = async (port: number, host: string = 'localhost', protocol: string = 'https'): Promise<RDServiceResponse | null> => {
     setIsScanning(true);
     setError(null);
 
     try {
-      const url = `https://localhost:${port}/rd/capture`;
+      const url = `${protocol}://${host}:${port}/rd/capture`;
 
       // Using XMLHttpRequest for custom HTTP methods
       return new Promise((resolve) => {
@@ -130,7 +171,9 @@ export const useRDService = () => {
     captureFingerprint,
     isScanning,
     deviceInfo,
-    error
+    error,
+    workingHost,
+    workingProtocol
   };
 };
 
@@ -145,7 +188,7 @@ export const RDServiceIntegration: React.FC<RDServiceIntegrationProps> = ({
   type,
   label
 }) => {
-  const { scanForService, captureFingerprint, isScanning, deviceInfo, error } = useRDService();
+  const { scanForService, captureFingerprint, isScanning, deviceInfo, error, workingHost, workingProtocol } = useRDService();
   const [port, setPort] = useState<number | null>(null);
 
   const handleCapture = async () => {
@@ -158,7 +201,7 @@ export const RDServiceIntegration: React.FC<RDServiceIntegrationProps> = ({
         setPort(servicePort);
       }
 
-      const result = await captureFingerprint(servicePort);
+      const result = await captureFingerprint(servicePort, workingHost, workingProtocol);
       if (result) {
         onCapture(type, result);
       }
