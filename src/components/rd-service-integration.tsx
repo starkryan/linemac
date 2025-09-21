@@ -142,86 +142,119 @@ export const useRDService = () => {
     try {
       const url = `${protocol}://${host}:${port}/rd/capture`;
 
-      // Using XMLHttpRequest for custom HTTP methods
-      return new Promise((resolve) => {
-        const xhr = new XMLHttpRequest();
-        xhr.open('CAPTURE', url, true);
-        xhr.setRequestHeader("Content-Type", "text/xml");
-        xhr.setRequestHeader("Accept", "text/xml");
+      // Try multiple PID options configurations to resolve error 730
+      const pidOptionsList = [
+        '<PidOptions ver="1.0"><Opts env="P" fCount="1" fType="0" format="0" pidVer="2.0" timeout="10000" otp="" wadh="" posh=""/></PidOptions>',
+        '<PidOptions ver="1.0"><Opts env="S" fCount="1" fType="2" format="0" pidVer="2.0" timeout="15000" otp="" wadh="" posh=""/></PidOptions>',
+        '<PidOptions ver="1.0"><Opts fCount="1" fType="0" iCount="0" iType="0" pCount="0" pType="0" format="0" pidVer="2.0" timeout="10000"/></PidOptions>',
+        '<PidOptions ver="1.0"><Opts env="P" fCount="1" fType="2" format="0" pidVer="2.0" timeout="20000"/></PidOptions>'
+      ];
 
-        xhr.onreadystatechange = () => {
-          if (xhr.readyState === 4) {
-            setIsScanning(false);
+      // Try each configuration until one works
+      for (let i = 0; i < pidOptionsList.length; i++) {
+        const pidOptions = pidOptionsList[i];
+        console.log(`Trying PID configuration ${i + 1}:`, pidOptions);
 
-            if (xhr.status === 200) {
-              try {
-                const responseText = xhr.responseText;
+        const result = await tryCaptureWithParams(url, pidOptions);
+        if (result) {
+          return result;
+        }
+      }
 
-                // Parse XML response first
-                const parser = new DOMParser();
-                const xmlDoc = parser.parseFromString(responseText, 'text/xml');
+      setError('All capture configurations failed. Please check device connection.');
+      return null;
 
-                // Check for error codes in response (like the working test page)
-                const errorMatch = responseText.match(/errCode="([^"]*)"/);
-                if (errorMatch && errorMatch[1] !== '0') {
-                  setError(`Capture failed with error code: ${errorMatch[1]}`);
-                  resolve(null);
-                  return;
-                }
-
-                // Extract data from XML response
-                // Morpho responses can have different structures
-                const pidData = xmlDoc.querySelector('Pid')?.getAttribute('value') ||
-                              xmlDoc.querySelector('Data')?.textContent ||
-                              xmlDoc.querySelector('PidData')?.textContent ||
-                              responseText; // Fallback to full response if no specific element found
-
-                const err = xmlDoc.querySelector('Err')?.getAttribute('value') || '';
-                const status = xmlDoc.querySelector('Status')?.getAttribute('value') || 'success';
-                const info = xmlDoc.querySelector('Info')?.getAttribute('value') || 'Fingerprint captured successfully';
-
-                // For successful captures, we should have some data
-                if (pidData && pidData.length > 0) {
-                  resolve({
-                    pid: pidData,
-                    err,
-                    status,
-                    info
-                  });
-                } else {
-                  setError('No fingerprint data captured');
-                  resolve(null);
-                }
-              } catch (parseError) {
-                console.error('XML parsing error:', parseError);
-                setError('Failed to parse device response');
-                resolve(null);
-              }
-            } else {
-              setError(`Capture failed: ${xhr.statusText || xhr.status}`);
-              resolve(null);
-            }
-          }
-        };
-
-        xhr.onerror = () => {
-          setIsScanning(false);
-          setError('Network error while capturing fingerprint');
-          resolve(null);
-        };
-
-        // Generate PID options (required by Morpho RD Service)
-        // Based on the working test page parameters
-        const pidOptions = '<PidOptions ver="1.0"><Opts env="P" fCount="1" fType="0" format="0" pidVer="2.0" timeout="10000" otp="" wadh="" posh=""/></PidOptions>';
-
-        xhr.send(pidOptions);
-      });
     } catch (error) {
       setIsScanning(false);
       console.error('Capture error:', error);
       setError('Failed to capture fingerprint');
       return null;
     }
+  };
+
+  const tryCaptureWithParams = (url: string, pidOptions: string): Promise<RDServiceResponse | null> => {
+    return new Promise((resolve) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('CAPTURE', url, true);
+      xhr.setRequestHeader("Content-Type", "text/xml");
+      xhr.setRequestHeader("Accept", "text/xml");
+
+      xhr.onreadystatechange = () => {
+        if (xhr.readyState === 4) {
+          if (xhr.status === 200) {
+            try {
+              const responseText = xhr.responseText;
+              console.log('RD Service Response:', responseText);
+
+              // Parse XML response first
+              const parser = new DOMParser();
+              const xmlDoc = parser.parseFromString(responseText, 'text/xml');
+
+              // Check for error codes in response
+              const errorMatch = responseText.match(/errCode="([^"]*)"/);
+              if (errorMatch && errorMatch[1] !== '0') {
+                // Extract error info if available
+                const errorInfoMatch = responseText.match(/errInfo="([^"]*)"/);
+                const errorInfo = errorInfoMatch ? errorInfoMatch[1] : '';
+                console.log(`Error Code: ${errorMatch[1]}, Error Info: ${errorInfo}`);
+
+                // For error 730, we'll try the next configuration
+                if (errorMatch[1] === '730') {
+                  resolve(null); // Try next configuration
+                  return;
+                }
+
+                setError(`Capture failed with error code: ${errorMatch[1]}${errorInfo ? ` - ${errorInfo}` : ''}`);
+                resolve(null);
+                return;
+              }
+
+              // Extract data from XML response
+              const pidData = xmlDoc.querySelector('Pid')?.getAttribute('value') ||
+                            xmlDoc.querySelector('Data')?.textContent ||
+                            xmlDoc.querySelector('PidData')?.textContent ||
+                            responseText;
+
+              const err = xmlDoc.querySelector('Err')?.getAttribute('value') || '';
+              const status = xmlDoc.querySelector('Status')?.getAttribute('value') || 'success';
+              const info = xmlDoc.querySelector('Info')?.getAttribute('value') || 'Fingerprint captured successfully';
+
+              // For successful captures, we should have some data
+              if (pidData && pidData.length > 0) {
+                setIsScanning(false);
+                resolve({
+                  pid: pidData,
+                  err,
+                  status,
+                  info
+                });
+              } else {
+                setIsScanning(false);
+                setError('No fingerprint data captured');
+                resolve(null);
+              }
+            } catch (parseError) {
+              console.error('XML parsing error:', parseError);
+              setIsScanning(false);
+              setError('Failed to parse device response');
+              resolve(null);
+            }
+          } else {
+            setIsScanning(false);
+            setError(`Capture failed: ${xhr.statusText || xhr.status}`);
+            resolve(null);
+          }
+        }
+      };
+
+      xhr.onerror = () => {
+        setIsScanning(false);
+        setError('Network error while capturing fingerprint');
+        resolve(null);
+      };
+
+      xhr.send(pidOptions);
+    });
   };
 
   return {
