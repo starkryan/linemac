@@ -13,26 +13,7 @@ export default function ReportPage() {
   const [searchType, setSearchType] = useState("aadhaar")
   const [searchValue, setSearchValue] = useState("")
 
-  const reports = [
-    {
-      id: 1,
-      aadhaar: "XXXX-XXXX-1234",
-      name: "Rohit Rayaan",
-      type: "Demographic Update",
-      date: "15-Jan-2024",
-      status: "Completed",
-      enrollmentId: "ENR123456789"
-    },
-    {
-      id: 2,
-      aadhaar: "XXXX-XXXX-5678",
-      name: "Priya Sharma",
-      type: "Photo Update",
-      date: "20-Jan-2024",
-      status: "In Progress",
-      enrollmentId: "ENR987654321"
-    }
-  ]
+  const [reports, setReports] = useState<any[]>([])
 
   return (
     <AuthenticatedLayout>
@@ -140,19 +121,19 @@ export default function ReportPage() {
         {/* Summary Section */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           <div className="bg-white p-4 border border-gray-300">
-            <div className="text-2xl font-bold text-blue-600">156</div>
+            <div className="text-2xl font-bold text-blue-600">0</div>
             <div className="text-sm text-gray-600">Total Enrollments</div>
           </div>
           <div className="bg-white p-4 border border-gray-300">
-            <div className="text-2xl font-bold text-green-600">142</div>
+            <div className="text-2xl font-bold text-green-600">0</div>
             <div className="text-sm text-gray-600">Completed</div>
           </div>
           <div className="bg-white p-4 border border-gray-300">
-            <div className="text-2xl font-bold text-yellow-600">8</div>
+            <div className="text-2xl font-bold text-yellow-600">0</div>
             <div className="text-sm text-gray-600">In Progress</div>
           </div>
           <div className="bg-white p-4 border border-gray-300">
-            <div className="text-2xl font-bold text-red-600">6</div>
+            <div className="text-2xl font-bold text-red-600">0</div>
             <div className="text-sm text-gray-600">Rejected</div>
           </div>
         </div>

@@ -126,7 +126,7 @@ export default function BiometricEnrollmentPage() {
                   }}
                   aria-label="Capture resident fingerprint"
                 >
-                  <span className="text-white text-lg">📷</span>
+                  
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -155,7 +155,7 @@ export default function BiometricEnrollmentPage() {
                   }}
                   aria-label="Capture operator fingerprint"
                 >
-                  <span className="text-white text-lg">📷</span>
+                
                 </div>
 
                 <div className="flex items-center gap-2">
