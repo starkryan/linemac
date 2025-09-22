@@ -6,10 +6,13 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Progress } from "@/components/ui/progress"
 import { toast } from "sonner"
 import FileUpload from "@/components/FileUpload"
 import { useAuth } from "@/hooks/useAuth"
-import { Upload, Mail, CheckCircle, AlertCircle, Clock, User, MapPin, Calendar, Phone } from "lucide-react"
+import { Upload, Mail, CheckCircle, AlertCircle, Clock, User, MapPin, Calendar, Phone, Shield, Timer } from "lucide-react"
 
 interface KYCVerificationProps {
   onKYCComplete?: () => void
@@ -23,6 +26,8 @@ export default function KYCVerification({ onKYCComplete }: KYCVerificationProps)
   const [otp, setOtp] = useState('')
   const [message, setMessage] = useState('')
   const [messageType, setMessageType] = useState<'success' | 'error'>('success')
+  const [otpResendTimer, setOtpResendTimer] = useState<number>(0)
+  const [otpProgress, setOtpProgress] = useState<number>(0)
   
   // Profile data state
   const [profileData, setProfileData] = useState({
@@ -44,17 +49,42 @@ export default function KYCVerification({ onKYCComplete }: KYCVerificationProps)
     loadKYCData()
   }, [user])
 
+  // Timer effect for OTP resend
+  useEffect(() => {
+    let interval: NodeJS.Timeout
+    if (otpResendTimer > 0) {
+      interval = setInterval(() => {
+        setOtpResendTimer(prev => {
+          const newTimer = prev - 1
+          if (newTimer <= 0) {
+            clearInterval(interval)
+            return 0
+          }
+          setOtpProgress(((60 - newTimer) / 60) * 100)
+          return newTimer
+        })
+      }, 1000)
+    }
+    return () => clearInterval(interval)
+  }, [otpResendTimer])
+
   const loadKYCData = async () => {
     if (!user?.id) return
 
     try {
-      const response = await fetch('/api/user/profile')
+      let response = await fetch('/api/kyc/status')
+      if (!response.ok) {
+        // Fallback to user profile API
+        response = await fetch('/api/user/profile')
+      }
+
       if (response.ok) {
         const data = await response.json()
-        setKycStatus(data.kycStatus || 'not_started')
+        const kycStatus = data.success ? data.kycStatus : data.kycStatus
+        setKycStatus(kycStatus || 'not_started')
 
         // Validate and set photo URL
-        const photoUrl = data.kycPhotoUrl || ''
+        const photoUrl = data.success ? data.kycPhotoUrl : data.kycPhotoUrl || ''
         if (photoUrl && isValidUrl(photoUrl)) {
           setPhotoUrl(photoUrl)
         } else {
@@ -201,6 +231,8 @@ export default function KYCVerification({ onKYCComplete }: KYCVerificationProps)
 
       if (result.success) {
         setKycStatus('otp_sent')
+        setOtpResendTimer(60) // Start 60-second timer
+        setOtpProgress(0)
         showMessage('OTP sent to your email!', 'success')
       } else {
         showMessage(result.error || 'Failed to send OTP', 'error')
@@ -243,52 +275,105 @@ export default function KYCVerification({ onKYCComplete }: KYCVerificationProps)
 
   const getStatusColor = () => {
     switch (kycStatus) {
-      case 'verified': return 'text-green-600 bg-green-100'
-      case 'otp_sent': return 'text-blue-600 bg-blue-100'
-      case 'photo_uploaded': return 'text-yellow-600 bg-yellow-100'
-      default: return 'text-gray-600 bg-gray-100'
+      case 'verified': return 'bg-green-500'
+      case 'otp_sent': return 'bg-blue-500'
+      case 'photo_uploaded': return 'bg-yellow-500'
+      default: return 'bg-gray-400'
     }
   }
 
-  const getStatusText = () => {
+  const getStatusBadge = () => {
     switch (kycStatus) {
-      case 'verified': return 'Verified'
-      case 'otp_sent': return 'OTP Sent'
-      case 'photo_uploaded': return 'Photo Uploaded'
-      default: return 'Not Started'
-    }
-  }
-
-  const getStatusIcon = () => {
-    switch (kycStatus) {
-      case 'verified': return <CheckCircle className="w-4 h-4" />
-      case 'otp_sent': return <Clock className="w-4 h-4" />
-      case 'photo_uploaded': return <Upload className="w-4 h-4" />
-      default: return <AlertCircle className="w-4 h-4" />
+      case 'verified':
+        return <Badge className="bg-green-100 text-green-800 border-green-200">
+          <CheckCircle className="w-3 h-3 mr-1" />
+          Verified
+        </Badge>
+      case 'otp_sent':
+        return <Badge className="bg-blue-100 text-blue-800 border-blue-200">
+          <Clock className="w-3 h-3 mr-1" />
+          OTP Sent
+        </Badge>
+      case 'photo_uploaded':
+        return <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">
+          <Upload className="w-3 h-3 mr-1" />
+          Photo Uploaded
+        </Badge>
+      default:
+        return <Badge className="bg-gray-100 text-gray-800 border-gray-200">
+          <AlertCircle className="w-3 h-3 mr-1" />
+          Not Started
+        </Badge>
     }
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-gray-800">KYC Verification</h3>
-        <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ${getStatusColor()}`}>
-          {getStatusIcon()}
-          {getStatusText()}
-        </div>
-      </div>
+      {/* Header */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Shield className="w-5 h-5 text-blue-600" />
+              <div>
+                <CardTitle className="text-lg">KYC Verification</CardTitle>
+                <CardDescription>Complete your identity verification process</CardDescription>
+              </div>
+            </div>
+            {getStatusBadge()}
+          </div>
+        </CardHeader>
+      </Card>
 
+      {/* Status Messages */}
       {message && (
-        <div className={`p-3 rounded-md ${messageType === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+        <div className={`p-4 rounded-lg border ${
+          messageType === 'success'
+            ? 'bg-green-50 text-green-800 border-green-200'
+            : 'bg-red-50 text-red-800 border-red-200'
+        }`}>
           {message}
         </div>
       )}
 
+      {/* Progress Indicator */}
+      {kycStatus !== 'not_started' && kycStatus !== 'verified' && (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="space-y-3">
+              <div className="flex justify-between text-sm">
+                <span className="font-medium">Verification Progress</span>
+                <span className="text-gray-600">
+                  {kycStatus === 'photo_uploaded' ? '33%' : '66%'}
+                </span>
+              </div>
+              <Progress
+                value={kycStatus === 'photo_uploaded' ? 33 : 66}
+                className="h-2"
+              />
+              <div className="flex justify-between text-xs text-gray-600">
+                <span>Photo Upload</span>
+                <span>Email Verification</span>
+                <span>Complete</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Photo Upload Section */}
       {kycStatus !== 'verified' && (
-        <div className="space-y-4">
-          <Label className="text-sm font-medium text-gray-700">Upload Your Photo</Label>
-          <div className="space-y-2">
-            <Label className="text-xs text-gray-600">Select Photo from Device</Label>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Upload className="w-4 h-4" />
+              Upload Your Photo
+            </CardTitle>
+            <CardDescription>
+              Select a clear photo of yourself for identity verification
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
             <FileUpload
               onFileSelect={handlePhotoUpload}
               onError={(error) => toast.error(error, { duration: 4000 })}
@@ -296,12 +381,12 @@ export default function KYCVerification({ onKYCComplete }: KYCVerificationProps)
               maxSize={5}
               className="w-full"
             />
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       )}
 
       {photoUrl && kycStatus !== 'verified' && (
-          <div className="space-y-6">
+        <div className="space-y-6">
             {/* Profile Information Section */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
@@ -471,37 +556,54 @@ export default function KYCVerification({ onKYCComplete }: KYCVerificationProps)
               )}
 
               {kycStatus === 'otp_sent' && (
-                <div className="space-y-3">
-                  <InputOTP
-                    maxLength={6}
-                    value={otp}
-                    onChange={(value) => setOtp(value)}
-                    className="justify-center"
-                  >
-                    <InputOTPGroup>
-                      <InputOTPSlot index={0} />
-                      <InputOTPSlot index={1} />
-                      <InputOTPSlot index={2} />
-                      <InputOTPSlot index={3} />
-                      <InputOTPSlot index={4} />
-                      <InputOTPSlot index={5} />
-                    </InputOTPGroup>
-                  </InputOTP>
+                <div className="space-y-4">
+                  <div className="text-center">
+                    <Label className="text-sm font-medium mb-2 block">Enter 6-digit OTP</Label>
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                      <InputOTP
+                        maxLength={6}
+                        value={otp}
+                        onChange={(value) => setOtp(value)}
+                        className="justify-center"
+                      >
+                        <InputOTPGroup>
+                          <InputOTPSlot index={0} className="w-12 h-12 border-2 border-green-300 rounded-md bg-white text-lg font-semibold" />
+                          <InputOTPSlot index={1} className="w-12 h-12 border-2 border-green-300 rounded-md bg-white text-lg font-semibold" />
+                          <InputOTPSlot index={2} className="w-12 h-12 border-2 border-green-300 rounded-md bg-white text-lg font-semibold" />
+                          <InputOTPSlot index={3} className="w-12 h-12 border-2 border-green-300 rounded-md bg-white text-lg font-semibold" />
+                          <InputOTPSlot index={4} className="w-12 h-12 border-2 border-green-300 rounded-md bg-white text-lg font-semibold" />
+                          <InputOTPSlot index={5} className="w-12 h-12 border-2 border-green-300 rounded-md bg-white text-lg font-semibold" />
+                        </InputOTPGroup>
+                      </InputOTP>
+                    </div>
+                  </div>
+
+                  {/* Timer and Resend */}
+                  {otpResendTimer > 0 && (
+                    <div className="text-center space-y-2">
+                      <div className="text-sm text-gray-600 flex items-center justify-center gap-2">
+                        <Timer className="w-4 h-4" />
+                        Resend OTP in {otpResendTimer}s
+                      </div>
+                      <Progress value={otpProgress} className="h-2" />
+                    </div>
+                  )}
+
                   <div className="flex gap-2">
                     <Button
                       onClick={handleVerifyOTP}
                       disabled={loading || otp.length !== 6}
-                      className="flex-1"
+                      className="flex-1 bg-green-600 hover:bg-green-700"
                     >
                       {loading ? 'Verifying...' : 'Verify OTP'}
                     </Button>
                     <Button
                       onClick={handleSendOTP}
-                      disabled={loading}
+                      disabled={loading || otpResendTimer > 0}
                       variant="outline"
                       className="flex-1"
                     >
-                      Resend OTP
+                      {otpResendTimer > 0 ? `Wait ${otpResendTimer}s` : 'Resend OTP'}
                     </Button>
                   </div>
                 </div>
@@ -511,15 +613,22 @@ export default function KYCVerification({ onKYCComplete }: KYCVerificationProps)
         )}
 
         {kycStatus === 'verified' && (
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-            <div className="flex items-center gap-3">
-              <CheckCircle className="w-6 h-6 text-green-600" />
-              <div>
-                <h4 className="text-green-800 font-medium">KYC Verification Complete</h4>
-                <p className="text-green-700 text-sm">Your identity has been verified successfully</p>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                  <CheckCircle className="w-6 h-6 text-green-600" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-green-800">KYC Verification Complete</h3>
+                  <p className="text-green-700">Your identity has been verified successfully</p>
+                </div>
+                <Badge className="bg-green-100 text-green-800 border-green-200">
+                  Verified
+                </Badge>
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         )}
       </div>
   )

@@ -58,7 +58,9 @@ export async function GET(request: NextRequest) {
         fullName: session.user.name || '',
         email: session.user.email || '',
         role: userRole,
-        balance: 0
+        balance: 0,
+        profileCompleted: false,
+        profileSubmittedAt: null
       })
     }
 
@@ -83,7 +85,9 @@ export async function GET(request: NextRequest) {
       correctionCreatedAt: profile.created_at,
       kycStatus: profile.kyc_status || 'not_started',
       kycPhotoUrl: profile.kyc_photo_url || '',
-      kycVerifiedAt: profile.kyc_verified_at || null
+      kycVerifiedAt: profile.kyc_verified_at || null,
+      profileCompleted: profile.profile_completed || false,
+      profileSubmittedAt: profile.profile_submitted_at || null
     })
 
   } catch (error) {

@@ -31,6 +31,29 @@ export async function POST(request: NextRequest) {
     const userId = session.user.id
     const body: ProfileData = await request.json()
 
+    // First, check if profile is already completed
+    const currentProfileResult = await query(
+      'SELECT profile_completed, full_name, operator_name FROM "user" WHERE id = $1',
+      [userId]
+    )
+
+    if (currentProfileResult.rows.length === 0) {
+      return NextResponse.json(
+        { success: false, error: 'User not found' },
+        { status: 404 }
+      )
+    }
+
+    const currentProfile = currentProfileResult.rows[0]
+
+    // Check if profile is already completed
+    if (currentProfile.profile_completed) {
+      return NextResponse.json(
+        { success: false, error: 'Profile already completed and cannot be modified' },
+        { status: 400 }
+      )
+    }
+
     // Validate input data
     const updateFields: string[] = []
     const updateValues: any[] = []
@@ -41,6 +64,11 @@ export async function POST(request: NextRequest) {
       if (value !== undefined && value !== null && value !== '') {
         // Map camelCase to snake_case for database columns
         const dbField = key.replace(/([A-Z])/g, '_$1').toLowerCase()
+
+        // Skip updating full_name if it was set by admin (operator_name exists)
+        if (dbField === 'full_name' && currentProfile.operator_name && currentProfile.operator_name !== '') {
+          return // Skip this field
+        }
 
         if (dbField === 'date_of_birth') {
           updateFields.push(`${dbField} = $${paramIndex}`)
@@ -60,8 +88,14 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Add user ID to parameter values
+    // Add user ID and profile completion values to parameter values
     updateValues.push(userId)
+    updateValues.push(true) // profile_completed = true
+    updateValues.push(new Date()) // profile_submitted_at = current timestamp
+
+    // Add profile completion fields
+    updateFields.push(`profile_completed = $${paramIndex + 1}`)
+    updateFields.push(`profile_submitted_at = $${paramIndex + 2}`)
 
     // Build and execute the update query
     const updateQuery = `
@@ -71,7 +105,8 @@ export async function POST(request: NextRequest) {
       RETURNING
         id, email, name, full_name, phone, gender, date_of_birth,
         address, house, street, village, city, pin_code,
-        kyc_status, kyc_photo_url, operator_uid, operator_name, role
+        kyc_status, kyc_photo_url, operator_uid, operator_name, role,
+        profile_completed, profile_submitted_at
     `
 
     const result = await query(updateQuery, updateValues)
@@ -104,7 +139,9 @@ export async function POST(request: NextRequest) {
       kycPhotoUrl: updatedUser.kyc_photo_url,
       operatorUid: updatedUser.operator_uid,
       operatorName: updatedUser.operator_name,
-      role: updatedUser.role
+      role: updatedUser.role,
+      profileCompleted: updatedUser.profile_completed,
+      profileSubmittedAt: updatedUser.profile_submitted_at
     }
 
     return NextResponse.json({

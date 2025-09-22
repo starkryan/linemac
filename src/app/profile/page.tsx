@@ -31,6 +31,8 @@ interface ProfileData {
   kycStatus?: string
   kycPhotoUrl?: string
   kycVerifiedAt?: string
+  profileCompleted?: boolean
+  profileSubmittedAt?: string | null
 }
 
 export default function ProfilePage() {
@@ -86,6 +88,14 @@ export default function ProfilePage() {
   }
 
   const startEditing = () => {
+    // Check if profile is already completed
+    if (profileData?.profileCompleted) {
+      toast.error('Profile already completed', {
+        description: 'Your profile has been submitted and cannot be modified.',
+        duration: 4000,
+      })
+      return
+    }
     setEditing(true)
   }
 
@@ -138,10 +148,9 @@ export default function ProfilePage() {
         // Update local state with the returned user data
         setProfileData(result.user)
         setEditing(false)
-        // Refresh profile data to ensure consistency with server
-        await fetchProfileData()
-        toast.success('Profile updated successfully!', {
-          description: 'Your profile information has been saved.',
+        // Don't refresh profile data as it would overwrite the fresh data with stale data
+        toast.success('Profile submitted successfully!', {
+          description: 'Your profile has been submitted and cannot be modified further.',
           duration: 4000,
         })
       } else {
@@ -187,7 +196,7 @@ export default function ProfilePage() {
         <div className="mb-6">
           <div className="bg-gray-200 px-4 py-2 border border-gray-300 flex justify-between items-center">
             <h2 className="text-base font-semibold text-gray-800">Profile Information</h2>
-            {!editing && (
+            {!editing && !profileData?.profileCompleted && (
               <Button
                 onClick={startEditing}
                 variant="outline"
@@ -197,6 +206,12 @@ export default function ProfilePage() {
                 <Edit className="w-4 h-4" />
                 Edit Profile
               </Button>
+            )}
+            {profileData?.profileCompleted && (
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                <span className="text-sm text-gray-600">Profile Completed</span>
+              </div>
             )}
           </div>
           <div className="bg-white p-4">
@@ -243,7 +258,7 @@ export default function ProfilePage() {
           </div>
 
           {/* Profile Completion Notice */}
-          {!editing && (
+          {!editing && !profileData?.profileCompleted && (
             (!profileData?.fullName || profileData?.fullName === 'Not provided' || profileData?.fullName === '' ||
             !profileData?.gender || profileData?.gender === 'Not provided' || profileData?.gender === '' ||
             !profileData?.dateOfBirth || profileData?.dateOfBirth === 'Not provided' || profileData?.dateOfBirth === '' ||
@@ -282,19 +297,28 @@ export default function ProfilePage() {
               {editing ? (
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
-                    {/* Full Name */}
+                    {/* Full Name - Read-only if provided by admin */}
                     <div className="space-y-2">
                       <Label className="text-sm text-gray-700 flex items-center gap-1">
                         <User className="w-3 h-3" />
                         Full Name
+                        {profileData?.fullName && profileData?.fullName !== '' && (
+                          <span className="text-xs text-gray-500">(Set by admin)</span>
+                        )}
                       </Label>
-                      <Input
-                        type="text"
-                        placeholder="Enter full name"
-                        value={editForm.fullName}
-                        onChange={(e) => handleFormChange('fullName', e.target.value)}
-                        className="w-full"
-                      />
+                      {profileData?.fullName && profileData?.fullName !== '' ? (
+                        <div className="bg-gray-50 border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-700">
+                          {profileData.fullName}
+                        </div>
+                      ) : (
+                        <Input
+                          type="text"
+                          placeholder="Enter full name"
+                          value={editForm.fullName}
+                          onChange={(e) => handleFormChange('fullName', e.target.value)}
+                          className="w-full"
+                        />
+                      )}
                     </div>
 
                     {/* Gender */}
