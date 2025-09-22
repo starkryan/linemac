@@ -6,7 +6,7 @@
     "node": ">=20.0.0"
   },
   "scripts": {
-    "dev": "next dev",
+    "dev": "NODE_ENV=development next dev",
     "build": "next build",
     "start": "node scripts/start-with-migrate.js",
     "start:next": "next start",
@@ -16,6 +16,8 @@
     "reset-admin": "tsx scripts/reset-admin-user.js",
     "create-default-users": "node scripts/create-default-users.js"
   },
+  "packageManager": "npm@9.x",
+  "preferUnplugged": true,
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
     "@radix-ui/react-accordion": "^1.2.12",

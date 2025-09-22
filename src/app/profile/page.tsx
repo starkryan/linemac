@@ -118,12 +118,17 @@ export default function ProfilePage() {
 
     setSaving(true)
     try {
+      const profileData = {
+        ...editForm,
+        fullName: editForm.fullName // Ensure fullName is included
+      }
+
       const response = await fetch('/api/kyc/save-profile-data', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(editForm)
+        body: JSON.stringify(profileData)
       })
 
       const result = await response.json()
@@ -131,6 +136,8 @@ export default function ProfilePage() {
       if (result.success) {
         setProfileData(result.user)
         setEditing(false)
+        // Refresh profile data to ensure consistency
+        await fetchProfileData()
         toast.success('Profile updated successfully!', {
           description: 'Your profile information has been saved.',
           duration: 4000,

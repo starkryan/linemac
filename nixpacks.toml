@@ -1,11 +1,29 @@
+# Nixpacks Configuration for Faster Builds
 [phases.setup]
-nixPkgs = ["...", "nodejs_22"]
+nixPkgs = ["...", "nodejs_22", "npm-9_x"]
 
 [phases.install]
-cmds = ["npm i"]
+cmds = [
+  "npm ci --cache /tmp/.npm --prefer-offline --no-audit",
+  "mkdir -p /app/node_modules/.cache && cp -r /tmp/.npm /app/node_modules/.cache/ 2>/dev/null || true"
+]
 
 [phases.build]
 cmds = ["npm run build"]
 
 [start]
-cmd = "npm run start"
+cmd = "npm start"
+
+# Build environment variables for optimization
+[env]
+NPM_CONFIG_CACHE = "/tmp/.npm"
+NPM_CONFIG_PREFRE_OFFLINE = "true"
+NODE_ENV = "production"
+NEXT_TELEMETRY_DISABLED = "1"
+
+# Cache configuration for faster builds
+[phases.install.cache]
+paths = ["/tmp/.npm", "/app/node_modules/.cache"]
+
+[phases.build.cache]
+paths = ["/app/.next/cache"]

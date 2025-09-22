@@ -1,15 +1,14 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { toast } from "sonner"
-import CameraComponent from "@/components/CameraComponent"
 import FileUpload from "@/components/FileUpload"
 import { useAuth } from "@/hooks/useAuth"
-import { Upload, Camera, Mail, CheckCircle, AlertCircle, Clock, User, MapPin, Calendar, Phone } from "lucide-react"
+import { Upload, Mail, CheckCircle, AlertCircle, Clock, User, MapPin, Calendar, Phone } from "lucide-react"
 
 interface KYCVerificationProps {
   onKYCComplete?: () => void
@@ -23,10 +22,10 @@ export default function KYCVerification({ onKYCComplete }: KYCVerificationProps)
   const [otp, setOtp] = useState('')
   const [message, setMessage] = useState('')
   const [messageType, setMessageType] = useState<'success' | 'error'>('success')
-  const [cameraActive, setCameraActive] = useState(false)
-
+  
   // Profile data state
   const [profileData, setProfileData] = useState({
+    fullName: '',
     phone: '',
     gender: '',
     dateOfBirth: '',
@@ -38,6 +37,39 @@ export default function KYCVerification({ onKYCComplete }: KYCVerificationProps)
   })
 
   const [showProfileForm, setShowProfileForm] = useState(false)
+
+  // Load KYC data on component mount
+  useEffect(() => {
+    loadKYCData()
+  }, [user])
+
+  const loadKYCData = async () => {
+    if (!user?.id) return
+
+    try {
+      const response = await fetch('/api/user/profile')
+      if (response.ok) {
+        const data = await response.json()
+        setKycStatus(data.kycStatus || 'not_started')
+        setPhotoUrl(data.kycPhotoUrl || '')
+
+        // Load profile data
+        setProfileData({
+          fullName: data.fullName || '',
+          phone: data.phone || '',
+          gender: data.gender || '',
+          dateOfBirth: data.dateOfBirth || '',
+          house: data.house || '',
+          street: data.street || '',
+          village: data.village || '',
+          city: data.city || '',
+          pinCode: data.pinCode || ''
+        })
+      }
+    } catch (error) {
+      console.error('Error loading KYC data:', error)
+    }
+  }
 
   const showMessage = (text: string, type: 'success' | 'error' = 'success') => {
     setMessage(text)
@@ -70,6 +102,8 @@ export default function KYCVerification({ onKYCComplete }: KYCVerificationProps)
       if (result.success) {
         showMessage('Profile data saved successfully!', 'success')
         setShowProfileForm(false)
+        // Refresh the KYC data to show updated status
+        await loadKYCData()
       } else {
         showMessage(result.error || 'Failed to save profile data', 'error')
       }
@@ -96,8 +130,11 @@ export default function KYCVerification({ onKYCComplete }: KYCVerificationProps)
       const result = await response.json()
 
       if (result.success) {
+        console.log('Photo upload successful, URL:', result.photoUrl)
         setPhotoUrl(result.photoUrl)
         setKycStatus('photo_uploaded')
+        // Refresh profile data to update KYC status in database
+        await loadKYCData()
         toast.success('Photo uploaded successfully!', {
           description: 'Please complete your profile information to proceed with KYC verification.',
           duration: 4000,
@@ -118,18 +155,7 @@ export default function KYCVerification({ onKYCComplete }: KYCVerificationProps)
     }
   }
 
-  const handlePhotoCapture = async (photoData: string) => {
-    try {
-      const response = await fetch(photoData)
-      const blob = await response.blob()
-      const file = new File([blob], 'kyc-photo.jpg', { type: 'image/jpeg' })
-      await handlePhotoUpload(file)
-      setCameraActive(false)
-    } catch (error) {
-      showMessage('Failed to capture photo', 'error')
-    }
-  }
-
+  
   const handleSendOTP = async () => {
     if (!user?.id) return
 
@@ -230,69 +256,51 @@ export default function KYCVerification({ onKYCComplete }: KYCVerificationProps)
         {!photoUrl ? (
           <div className="space-y-4">
             <Label className="text-sm font-medium text-gray-700">Upload Your Photo</Label>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label className="text-xs text-gray-600">Upload from Device</Label>
-                <FileUpload
-                  onFileSelect={handlePhotoUpload}
-                  onError={(error) => toast.error(error, { duration: 4000 })}
-                  acceptedTypes=".jpg,.jpeg,.png"
-                  maxSize={5}
-                  className="w-full"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-xs text-gray-600">Take Photo</Label>
-                <Button
-                  onClick={() => setCameraActive(true)}
-                  variant="outline"
-                  className="w-full flex items-center gap-2"
-                >
-                  <Camera className="w-4 h-4" />
-                  Open Camera
-                </Button>
-              </div>
+            <div className="space-y-2">
+              <Label className="text-xs text-gray-600">Select Photo from Device</Label>
+              <FileUpload
+                onFileSelect={handlePhotoUpload}
+                onError={(error) => toast.error(error, { duration: 4000 })}
+                acceptedTypes=".jpg,.jpeg,.png"
+                maxSize={5}
+                className="w-full"
+              />
             </div>
           </div>
         ) : (
           <div className="space-y-4">
             <div className="flex items-center gap-4">
-              <div className="w-20 h-20 rounded-full overflow-hidden bg-gray-200">
-                <img
-                  src={photoUrl}
-                  alt="KYC Photo"
-                  className="w-full h-full object-cover"
-                />
-              </div>
+              {photoUrl && photoUrl.startsWith('http') ? (
+                <div className="w-20 h-20 rounded-full overflow-hidden bg-gray-200">
+                  <img
+                    src={photoUrl}
+                    alt="KYC Photo"
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      console.error('Image failed to load:', photoUrl)
+                      e.currentTarget.style.display = 'none'
+                    }}
+                  />
+                </div>
+              ) : (
+                <div className="w-20 h-20 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
+                  <span className="text-xs text-gray-500 text-center">No valid image</span>
+                </div>
+              )}
               <div className="flex-1">
                 <Label className="text-sm font-medium text-gray-700">Photo Uploaded</Label>
                 <p className="text-xs text-gray-600">Click below to send verification OTP</p>
+                {photoUrl && (
+                  <p className="text-xs text-blue-600 truncate max-w-48" title={photoUrl}>
+                    URL: {photoUrl}
+                  </p>
+                )}
               </div>
             </div>
           </div>
         )}
 
-        {cameraActive && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-4 w-full max-w-2xl">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold">Take KYC Photo</h3>
-                <Button
-                  onClick={() => setCameraActive(false)}
-                  variant="outline"
-                  size="sm"
-                >
-                  Close
-                </Button>
-              </div>
-              <CameraComponent
-                onPhotoCapture={handlePhotoCapture}
-                onClose={() => setCameraActive(false)}
-              />
-            </div>
-          </div>
-        )}
-
+  
         {photoUrl && kycStatus !== 'verified' && (
           <div className="space-y-6">
             {/* Profile Information Section */}
@@ -314,6 +322,21 @@ export default function KYCVerification({ onKYCComplete }: KYCVerificationProps)
               {showProfileForm && (
                 <div className="bg-gray-50 p-4 rounded-lg space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Full Name */}
+                    <div className="space-y-2">
+                      <Label className="text-xs text-gray-600 flex items-center gap-1">
+                        <User className="w-3 h-3" />
+                        Full Name
+                      </Label>
+                      <Input
+                        type="text"
+                        placeholder="Enter full name"
+                        value={profileData.fullName}
+                        onChange={(e) => handleProfileDataChange('fullName', e.target.value)}
+                        className="w-full"
+                      />
+                    </div>
+
                     {/* Phone */}
                     <div className="space-y-2">
                       <Label className="text-xs text-gray-600 flex items-center gap-1">

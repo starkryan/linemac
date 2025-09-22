@@ -3,6 +3,7 @@ import { query } from '@/lib/db'
 import { auth } from '@/lib/auth-server'
 
 interface ProfileData {
+  fullName?: string
   phone?: string
   gender?: string
   dateOfBirth?: string

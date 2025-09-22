@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 import {
   Table,
   TableBody,
@@ -32,6 +33,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Search,
@@ -47,7 +58,8 @@ import {
   UserPlus,
   Download,
   Loader2,
-  Key
+  Key,
+  AlertTriangle
 } from "lucide-react";
 import CreateUserModal from "./create-user-modal";
 import UserDetailsModal from "./user-details-modal";
@@ -85,6 +97,8 @@ export default function UsersTable({ className }: UsersTableProps) {
   const [totalUsers, setTotalUsers] = useState(0);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [userToDelete, setUserToDelete] = useState<User | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Fetch users from API
   useEffect(() => {
@@ -126,6 +140,62 @@ export default function UsersTable({ className }: UsersTableProps) {
       setError(err instanceof Error ? err.message : 'Failed to fetch users');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteUser = async () => {
+    if (!userToDelete) return;
+
+    try {
+      setIsDeleting(true);
+
+      const response = await fetch(`/api/admin/users/${userToDelete.id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        // Try to parse error as JSON, fallback to text if HTML response
+        let errorMessage = 'Failed to delete user';
+        try {
+          const contentType = response.headers.get('content-type');
+          if (contentType && contentType.includes('application/json')) {
+            const errorData = await response.json();
+            errorMessage = errorData.error || errorMessage;
+          } else {
+            errorMessage = await response.text();
+            // If it's HTML, extract a cleaner error message
+            if (errorMessage.includes('<!DOCTYPE')) {
+              errorMessage = `Server error (${response.status}): Please try again`;
+            }
+          }
+        } catch {
+          errorMessage = `Server error (${response.status}): Please try again`;
+        }
+        throw new Error(errorMessage);
+      }
+
+      const result = await response.json();
+      console.log('User deleted successfully:', result);
+
+      // Show success toast
+      toast.success(`User ${userToDelete.name} deleted successfully!`);
+
+      // Refresh users list
+      await fetchUsers();
+
+      // Clear any existing errors
+      setError(null);
+    } catch (err) {
+      console.error('Delete user error:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to delete user';
+
+      // Show error toast
+      toast.error(`Failed to delete user: ${errorMessage}`);
+
+      setError(errorMessage);
+    } finally {
+      setIsDeleting(false);
+      setUserToDelete(null);
     }
   };
 
@@ -362,7 +432,10 @@ export default function UsersTable({ className }: UsersTableProps) {
                                 <Mail className="mr-2 h-4 w-4" />
                                 Send Email
                               </DropdownMenuItem>
-                              <DropdownMenuItem className="text-red-600">
+                              <DropdownMenuItem
+                                className="text-red-600"
+                                onClick={() => setUserToDelete(user)}
+                              >
                                 <Trash2 className="mr-2 h-4 w-4" />
                                 Delete User
                               </DropdownMenuItem>
@@ -403,6 +476,42 @@ export default function UsersTable({ className }: UsersTableProps) {
         user={selectedUser}
         onPasswordChanged={fetchUsers}
       />
+
+      {/* Delete User Confirmation Dialog */}
+      <AlertDialog open={!!userToDelete} onOpenChange={(open) => !open && setUserToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center space-x-2">
+              <AlertTriangle className="h-5 w-5 text-red-600" />
+              <span>Delete User</span>
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete <strong>{userToDelete?.name}</strong> ({userToDelete?.email})?
+              This action cannot be undone and will permanently remove the user and all their data.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteUser}
+              disabled={isDeleting}
+              className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete User
+                </>
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
