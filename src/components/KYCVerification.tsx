@@ -270,21 +270,29 @@ export default function KYCVerification({ onKYCComplete }: KYCVerificationProps)
         ) : (
           <div className="space-y-4">
             <div className="flex items-center gap-4">
-              {photoUrl && photoUrl.startsWith('http') ? (
-                <div className="w-20 h-20 rounded-full overflow-hidden bg-gray-200">
+              {photoUrl ? (
+                <div className="w-20 h-20 rounded-full overflow-hidden bg-gray-200 border-2 border-gray-300">
                   <img
                     src={photoUrl}
                     alt="KYC Photo"
                     className="w-full h-full object-cover"
                     onError={(e) => {
                       console.error('Image failed to load:', photoUrl)
-                      e.currentTarget.style.display = 'none'
+                      const target = e.target as HTMLImageElement
+                      target.style.display = 'none'
+                      const fallback = target.parentElement?.querySelector('.image-fallback')
+                      if (fallback) {
+                        (fallback as HTMLElement).style.display = 'flex'
+                      }
                     }}
                   />
+                  <div className="image-fallback hidden w-full h-full bg-gray-200 flex items-center justify-center">
+                    <span className="text-xs text-gray-500 text-center">Image unavailable</span>
+                  </div>
                 </div>
               ) : (
                 <div className="w-20 h-20 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
-                  <span className="text-xs text-gray-500 text-center">No valid image</span>
+                  <span className="text-xs text-gray-500 text-center">No photo</span>
                 </div>
               )}
               <div className="flex-1">

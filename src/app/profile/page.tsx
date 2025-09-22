@@ -203,13 +203,69 @@ export default function ProfilePage() {
         </div>
 
         <div className="max-w-7xl mx-auto px-6 py-8 space-y-6">
+          {/* Profile Photo Display */}
+          <div className="mb-6">
+            <div className="bg-white rounded-lg p-6 shadow-sm">
+              <div className="flex items-center gap-6">
+                {profileData?.kycPhotoUrl ? (
+                  <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-200 border-3 border-gray-300 shadow-sm">
+                    <img
+                      src={profileData.kycPhotoUrl}
+                      alt="Profile Photo"
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        console.error('Profile image failed to load:', profileData.kycPhotoUrl)
+                        const target = e.target as HTMLImageElement
+                        target.style.display = 'none'
+                        const fallback = target.parentElement?.querySelector('.image-fallback')
+                        if (fallback) {
+                          (fallback as HTMLElement).style.display = 'flex'
+                        }
+                      }}
+                    />
+                    <div className="image-fallback hidden w-full h-full bg-gray-200 flex items-center justify-center">
+                      <span className="text-xs text-gray-500 text-center">Photo unavailable</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="w-24 h-24 rounded-full bg-gray-200 border-2 border-gray-300 flex items-center justify-center">
+                    <User className="w-8 h-8 text-gray-400" />
+                  </div>
+                )}
+                <div className="flex-1">
+                  <h3 className="text-xl font-semibold text-gray-800">
+                    {profileData?.fullName || 'Not provided'}
+                  </h3>
+                  <p className="text-sm text-gray-600 mt-1">
+                    {profileData?.email || user?.email || 'No email provided'}
+                  </p>
+                  <div className="flex items-center gap-2 mt-2">
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      profileData?.kycStatus === 'verified'
+                        ? 'bg-green-100 text-green-800'
+                        : profileData?.kycStatus === 'photo_uploaded'
+                        ? 'bg-yellow-100 text-yellow-800'
+                        : 'bg-gray-100 text-gray-800'
+                    }`}>
+                      {profileData?.kycStatus === 'verified' ? '✓ KYC Verified' :
+                       profileData?.kycStatus === 'photo_uploaded' ? '📷 Photo Uploaded' :
+                       '⏳ KYC Pending'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Profile Completion Notice */}
-          {!editing && (profileData?.fullName === 'Not provided' || !profileData?.fullName ||
-            profileData?.gender === 'Not provided' || !profileData?.gender ||
-            profileData?.dateOfBirth === 'Not provided' || !profileData?.dateOfBirth ||
-            profileData?.phone === 'Not provided' || !profileData?.phone ||
-            profileData?.house === 'Not provided' || !profileData?.house ||
-            profileData?.city === 'Not provided' || !profileData?.city) && (
+          {!editing && (
+            (!profileData?.fullName || profileData?.fullName === 'Not provided' || profileData?.fullName === '' ||
+            !profileData?.gender || profileData?.gender === 'Not provided' || profileData?.gender === '' ||
+            !profileData?.dateOfBirth || profileData?.dateOfBirth === 'Not provided' || profileData?.dateOfBirth === '' ||
+            !profileData?.phone || profileData?.phone === 'Not provided' || profileData?.phone === '' ||
+            !profileData?.house || profileData?.house === 'Not provided' || profileData?.house === '' ||
+            !profileData?.city || profileData?.city === 'Not provided' || profileData?.city === '')
+          ) && (
             <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
