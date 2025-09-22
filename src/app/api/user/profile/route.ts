@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get user profile data
+    // Get user profile data from user table (where profile data is saved)
     const profileResult = await query(
       `SELECT
         u.id,
@@ -26,23 +26,17 @@ export async function GET(request: NextRequest) {
         u.full_name,
         u.phone,
         u.address,
-        cr.name as correction_name,
-        cr.gender,
-        cr.dob as date_of_birth,
-        cr.email as correction_email,
-        cr.house_no as house,
-        cr.street,
-        cr.area as village,
-        cr.city,
-        cr.pin_code,
-        cr.mobile_number as correction_phone,
-        cr.status,
-        cr.created_at
+        u.gender,
+        u.date_of_birth,
+        u.house,
+        u.street,
+        u.village,
+        u.city,
+        u.pin_code,
+        u.profile_completed,
+        u.profile_submitted_at
        FROM "user" u
-       LEFT JOIN correction_requests cr ON u.id = cr.user_id
-       WHERE u.id = $1
-       ORDER BY cr.created_at DESC
-       LIMIT 1`,
+       WHERE u.id = $1`,
       [session.user.id]
     )
 
@@ -67,8 +61,7 @@ export async function GET(request: NextRequest) {
     const profile = profileResult.rows[0]
 
     return NextResponse.json({
-      // Prioritize user table data for profile information (most recent updates), fallback to correction_requests
-      fullName: profile.full_name || session.user.name || profile.correction_name || '',
+      fullName: profile.full_name || session.user.name || '',
       gender: profile.gender || '',
       dateOfBirth: profile.date_of_birth ? new Date(profile.date_of_birth).toISOString().split('T')[0] : '',
       house: profile.house || '',
@@ -77,12 +70,12 @@ export async function GET(request: NextRequest) {
       city: profile.city || '',
       pinCode: profile.pin_code || '',
       email: session.user.email || '',
-      phone: profile.phone || profile.correction_phone || '',
+      phone: profile.phone || '',
       role: profile.role || 'user',
       balance: parseFloat(profile.balance) || 0,
-      hasCorrectionData: true,
-      correctionStatus: profile.status,
-      correctionCreatedAt: profile.created_at,
+      hasCorrectionData: false,
+      correctionStatus: null,
+      correctionCreatedAt: null,
       kycStatus: profile.kyc_status || 'not_started',
       kycPhotoUrl: profile.kyc_photo_url || '',
       kycVerifiedAt: profile.kyc_verified_at || null,
