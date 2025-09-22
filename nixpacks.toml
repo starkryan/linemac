@@ -4,7 +4,7 @@ nixPkgs = ["...", "nodejs_22", "npm-9_x"]
 
 [phases.install]
 cmds = [
-  "npm ci --cache /tmp/.npm --prefer-offline --no-audit",
+  "npm install --cache /tmp/.npm --prefer-offline --no-audit",
   "mkdir -p /app/node_modules/.cache && cp -r /tmp/.npm /app/node_modules/.cache/ 2>/dev/null || true"
 ]
 
