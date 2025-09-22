@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { IndianRupee, Edit, Save, X, User, MapPin, Phone, Calendar } from "lucide-react"
+import { IndianRupee, Edit, Save, X, User, Phone, Calendar } from "lucide-react"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -10,6 +10,7 @@ import { toast } from "sonner"
 import AuthenticatedLayout from "@/app/components/AuthenticatedLayout"
 import { useAuth } from "@/hooks/useAuth"
 import KYCVerification from "@/components/KYCVerification"
+import ImageLoader from "@/components/ImageLoader"
 
 interface ProfileData {
   fullName: string
@@ -33,7 +34,7 @@ interface ProfileData {
 }
 
 export default function ProfilePage() {
-  const { user, session: authSession, loading, isAuthenticated } = useAuth()
+  const { user, loading, isAuthenticated } = useAuth()
   const [profileData, setProfileData] = useState<ProfileData | null>(null)
   const [profileLoading, setProfileLoading] = useState(true)
   const [editing, setEditing] = useState(false)
@@ -208,27 +209,23 @@ export default function ProfilePage() {
             <div className="bg-white rounded-lg p-6 shadow-sm">
               <div className="flex items-center gap-6">
                 {profileData?.kycPhotoUrl ? (
-                  <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-200 border-3 border-gray-300 shadow-sm">
-                    <img
+                  <div className="w-20 h-20 rounded-full overflow-hidden bg-gray-200 border-3 border-gray-300 shadow-sm relative">
+                    <ImageLoader
                       src={profileData.kycPhotoUrl}
                       alt="Profile Photo"
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        console.error('Profile image failed to load:', profileData.kycPhotoUrl)
-                        const target = e.target as HTMLImageElement
-                        target.style.display = 'none'
-                        const fallback = target.parentElement?.querySelector('.image-fallback')
-                        if (fallback) {
-                          (fallback as HTMLElement).style.display = 'flex'
-                        }
-                      }}
-                    />
-                    <div className="image-fallback hidden w-full h-full bg-gray-200 flex items-center justify-center">
-                      <span className="text-xs text-gray-500 text-center">Photo unavailable</span>
-                    </div>
+                      fallback={
+                        <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                          <User className="w-8 h-8 text-gray-400" />
+                        </div>
+                      }
+                    >
+                      <img
+                        className="w-full h-full object-cover"
+                      />
+                    </ImageLoader>
                   </div>
                 ) : (
-                  <div className="w-24 h-24 rounded-full bg-gray-200 border-2 border-gray-300 flex items-center justify-center">
+                  <div className="w-20 h-20 rounded-full bg-gray-200 border-2 border-gray-300 flex items-center justify-center">
                     <User className="w-8 h-8 text-gray-400" />
                   </div>
                 )}
@@ -239,20 +236,7 @@ export default function ProfilePage() {
                   <p className="text-sm text-gray-600 mt-1">
                     {profileData?.email || user?.email || 'No email provided'}
                   </p>
-                  <div className="flex items-center gap-2 mt-2">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      profileData?.kycStatus === 'verified'
-                        ? 'bg-green-100 text-green-800'
-                        : profileData?.kycStatus === 'photo_uploaded'
-                        ? 'bg-yellow-100 text-yellow-800'
-                        : 'bg-gray-100 text-gray-800'
-                    }`}>
-                      {profileData?.kycStatus === 'verified' ? '✓ KYC Verified' :
-                       profileData?.kycStatus === 'photo_uploaded' ? '📷 Photo Uploaded' :
-                       '⏳ KYC Pending'}
-                    </span>
                   </div>
-                </div>
               </div>
             </div>
           </div>

@@ -51,7 +51,15 @@ export default function KYCVerification({ onKYCComplete }: KYCVerificationProps)
       if (response.ok) {
         const data = await response.json()
         setKycStatus(data.kycStatus || 'not_started')
-        setPhotoUrl(data.kycPhotoUrl || '')
+
+        // Validate and set photo URL
+        const photoUrl = data.kycPhotoUrl || ''
+        if (photoUrl && isValidUrl(photoUrl)) {
+          setPhotoUrl(photoUrl)
+        } else {
+          console.warn('Invalid or missing photo URL:', photoUrl)
+          setPhotoUrl('')
+        }
 
         // Load profile data
         setProfileData({
@@ -71,10 +79,33 @@ export default function KYCVerification({ onKYCComplete }: KYCVerificationProps)
     }
   }
 
+  const isValidUrl = (url: string): boolean => {
+    try {
+      new URL(url)
+      return true
+    } catch {
+      return false
+    }
+  }
+
+  const checkImageAccessibility = async (url: string): Promise<boolean> => {
+    try {
+      const response = await fetch(url, { method: 'HEAD' })
+      const contentType = response.headers.get('content-type')
+      return response.ok && contentType ? contentType.startsWith('image/') : false
+    } catch {
+      return false
+    }
+  }
+
   const showMessage = (text: string, type: 'success' | 'error' = 'success') => {
     setMessage(text)
     setMessageType(type)
     setTimeout(() => setMessage(''), 5000)
+  }
+
+  const showImageError = () => {
+    showMessage('Profile photo is currently unavailable. Please try uploading again.', 'error')
   }
 
   const handleProfileDataChange = (field: string, value: string) => {
@@ -252,64 +283,23 @@ export default function KYCVerification({ onKYCComplete }: KYCVerificationProps)
         </div>
       )}
 
-      <div className="space-y-4">
-        {!photoUrl ? (
-          <div className="space-y-4">
-            <Label className="text-sm font-medium text-gray-700">Upload Your Photo</Label>
-            <div className="space-y-2">
-              <Label className="text-xs text-gray-600">Select Photo from Device</Label>
-              <FileUpload
-                onFileSelect={handlePhotoUpload}
-                onError={(error) => toast.error(error, { duration: 4000 })}
-                acceptedTypes=".jpg,.jpeg,.png"
-                maxSize={5}
-                className="w-full"
-              />
-            </div>
+      {kycStatus !== 'verified' && (
+        <div className="space-y-4">
+          <Label className="text-sm font-medium text-gray-700">Upload Your Photo</Label>
+          <div className="space-y-2">
+            <Label className="text-xs text-gray-600">Select Photo from Device</Label>
+            <FileUpload
+              onFileSelect={handlePhotoUpload}
+              onError={(error) => toast.error(error, { duration: 4000 })}
+              acceptedTypes=".jpg,.jpeg,.png"
+              maxSize={5}
+              className="w-full"
+            />
           </div>
-        ) : (
-          <div className="space-y-4">
-            <div className="flex items-center gap-4">
-              {photoUrl ? (
-                <div className="w-20 h-20 rounded-full overflow-hidden bg-gray-200 border-2 border-gray-300">
-                  <img
-                    src={photoUrl}
-                    alt="KYC Photo"
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      console.error('Image failed to load:', photoUrl)
-                      const target = e.target as HTMLImageElement
-                      target.style.display = 'none'
-                      const fallback = target.parentElement?.querySelector('.image-fallback')
-                      if (fallback) {
-                        (fallback as HTMLElement).style.display = 'flex'
-                      }
-                    }}
-                  />
-                  <div className="image-fallback hidden w-full h-full bg-gray-200 flex items-center justify-center">
-                    <span className="text-xs text-gray-500 text-center">Image unavailable</span>
-                  </div>
-                </div>
-              ) : (
-                <div className="w-20 h-20 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
-                  <span className="text-xs text-gray-500 text-center">No photo</span>
-                </div>
-              )}
-              <div className="flex-1">
-                <Label className="text-sm font-medium text-gray-700">Photo Uploaded</Label>
-                <p className="text-xs text-gray-600">Click below to send verification OTP</p>
-                {photoUrl && (
-                  <p className="text-xs text-blue-600 truncate max-w-48" title={photoUrl}>
-                    URL: {photoUrl}
-                  </p>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
+        </div>
+      )}
 
-  
-        {photoUrl && kycStatus !== 'verified' && (
+      {photoUrl && kycStatus !== 'verified' && (
           <div className="space-y-6">
             {/* Profile Information Section */}
             <div className="space-y-4">
@@ -524,6 +514,5 @@ export default function KYCVerification({ onKYCComplete }: KYCVerificationProps)
           </div>
         )}
       </div>
-    </div>
   )
 }

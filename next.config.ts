@@ -76,6 +76,20 @@ if (!isDev) {
         },
       },
       {
+        urlPattern: /^https:\/\/.*\.b-cdn\.net\/.*$/,
+        handler: "NetworkFirst",
+        options: {
+          cacheName: "bunnyCdnCache",
+          expiration: {
+            maxEntries: 50,
+            maxAgeSeconds: 3600, // 1 hour - shorter cache for CDN
+          },
+          cacheableResponse: {
+            statuses: [0, 200],
+          },
+        },
+      },
+      {
         urlPattern: /\.(?:js|css)$/,
         handler: "StaleWhileRevalidate",
         options: {
