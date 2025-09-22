@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
 
     await query(
       `UPDATE "user"
-       SET kyc_status = 'verified', kyc_verified_at = $1, kyc_otp = NULL, kyc_otp_expires_at = NULL
+       SET kyc_status = 'verified', kyc_verified_at = $1, kyc_otp = NULL, kyc_otp_expires_at = NULL, kyc_otp_sent_at = NULL
        WHERE id = $2`,
       [verifiedAt, userId]
     )

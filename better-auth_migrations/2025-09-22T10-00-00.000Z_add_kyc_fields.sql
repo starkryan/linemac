@@ -18,6 +18,10 @@ BEGIN
             ALTER TABLE "user" ADD COLUMN kyc_otp_expires_at TIMESTAMPTZ;
         END IF;
 
+        IF NOT EXISTS (SELECT FROM pg_attribute WHERE attrelid = '"user"'::regclass AND attname = 'kyc_otp_sent_at') THEN
+            ALTER TABLE "user" ADD COLUMN kyc_otp_sent_at TIMESTAMPTZ;
+        END IF;
+
         IF NOT EXISTS (SELECT FROM pg_attribute WHERE attrelid = '"user"'::regclass AND attname = 'kyc_verified_at') THEN
             ALTER TABLE "user" ADD COLUMN kyc_verified_at TIMESTAMPTZ;
         END IF;

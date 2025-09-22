@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { toast } from "sonner"
 import CameraComponent from "@/components/CameraComponent"
 import FileUpload from "@/components/FileUpload"
 import { useAuth } from "@/hooks/useAuth"
@@ -97,12 +98,21 @@ export default function KYCVerification({ onKYCComplete }: KYCVerificationProps)
       if (result.success) {
         setPhotoUrl(result.photoUrl)
         setKycStatus('photo_uploaded')
-        showMessage('Photo uploaded successfully! Please complete your profile information.', 'success')
+        toast.success('Photo uploaded successfully!', {
+          description: 'Please complete your profile information to proceed with KYC verification.',
+          duration: 4000,
+        })
       } else {
-        showMessage(result.error || 'Failed to upload photo', 'error')
+        toast.error(result.error || 'Failed to upload photo', {
+          description: 'Please check the file and try again.',
+          duration: 5000,
+        })
       }
     } catch (error) {
-      showMessage('Failed to upload photo', 'error')
+      toast.error('Failed to upload photo', {
+        description: 'Network error occurred. Please try again.',
+        duration: 5000,
+      })
     } finally {
       setLoading(false)
     }
@@ -225,6 +235,7 @@ export default function KYCVerification({ onKYCComplete }: KYCVerificationProps)
                 <Label className="text-xs text-gray-600">Upload from Device</Label>
                 <FileUpload
                   onFileSelect={handlePhotoUpload}
+                  onError={(error) => toast.error(error, { duration: 4000 })}
                   acceptedTypes=".jpg,.jpeg,.png"
                   maxSize={5}
                   className="w-full"

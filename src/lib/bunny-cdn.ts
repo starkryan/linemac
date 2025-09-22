@@ -26,11 +26,19 @@ class BunnyCDN {
 
   async uploadFile(file: File | Buffer, filename: string, contentType?: string): Promise<{ success: boolean; url?: string; error?: string }> {
     try {
-      // TEMPORARY: Mock upload for testing
-      if (process.env.NODE_ENV === 'development') {
-        const mockUrl = `https://mock-cdn.example.com/${filename}`
-        console.log('Mock upload:', { filename, size: file instanceof File ? file.size : 'buffer' })
-        return { success: true, url: mockUrl }
+      console.log('Bunny CDN Upload:', {
+        filename,
+        size: file instanceof File ? file.size : 'buffer',
+        storageZone: this.config.storageZoneName,
+        hasAccessKey: !!this.config.accessKey,
+        accessKeyLength: this.config.accessKey?.length || 0
+      })
+
+      // Check if credentials are properly configured
+      if (!this.config.accessKey || this.config.accessKey.length < 10) {
+        const error = 'Bunny CDN access key not properly configured'
+        console.error(error)
+        return { success: false, error }
       }
 
       const baseUrl = this.getBaseUrl()
@@ -44,6 +52,17 @@ class BunnyCDN {
         buffer = file
       }
 
+      console.log('Bunny CDN API Request:', {
+        url,
+        method: 'PUT',
+        headers: {
+          'AccessKey': this.config.accessKey ? '[REDACTED]' : 'missing',
+          'Content-Type': contentType || 'application/octet-stream',
+          'Content-Length': buffer.length
+        },
+        bufferSize: buffer.length
+      })
+
       const response = await fetch(url, {
         method: 'PUT',
         headers: {
@@ -53,22 +72,47 @@ class BunnyCDN {
         body: new Uint8Array(buffer)
       })
 
+      console.log('Bunny CDN API Response:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok
+      })
+
       if (response.ok) {
         const cdnUrl = `https://${this.config.storageZoneName}.b-cdn.net/${filename}`
+        console.log('Bunny CDN upload successful:', cdnUrl)
         return { success: true, url: cdnUrl }
       } else {
         const errorText = await response.text()
-        return { success: false, error: `Bunny CDN upload failed: ${errorText}` }
+        console.error('Bunny CDN upload failed:', {
+          status: response.status,
+          statusText: response.statusText,
+          errorText,
+          url: url
+        })
+        return { success: false, error: `Bunny CDN upload failed (${response.status}): ${errorText}` }
       }
     } catch (error) {
+      console.error('Bunny CDN upload error:', error)
       return { success: false, error: `Upload error: ${error instanceof Error ? error.message : 'Unknown error'}` }
     }
   }
 
   async deleteFile(filename: string): Promise<{ success: boolean; error?: string }> {
     try {
+      if (!this.config.accessKey || this.config.accessKey.length < 10) {
+        const error = 'Bunny CDN access key not properly configured'
+        console.error(error)
+        return { success: false, error }
+      }
+
       const baseUrl = this.getBaseUrl()
       const url = `${baseUrl}/${filename}`
+
+      console.log('Bunny CDN Delete Request:', {
+        url,
+        method: 'DELETE'
+      })
 
       const response = await fetch(url, {
         method: 'DELETE',
@@ -77,13 +121,27 @@ class BunnyCDN {
         }
       })
 
+      console.log('Bunny CDN Delete Response:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok
+      })
+
       if (response.ok) {
+        console.log('Bunny CDN delete successful:', filename)
         return { success: true }
       } else {
         const errorText = await response.text()
-        return { success: false, error: `Bunny CDN delete failed: ${errorText}` }
+        console.error('Bunny CDN delete failed:', {
+          status: response.status,
+          statusText: response.statusText,
+          errorText,
+          url: url
+        })
+        return { success: false, error: `Bunny CDN delete failed (${response.status}): ${errorText}` }
       }
     } catch (error) {
+      console.error('Bunny CDN delete error:', error)
       return { success: false, error: `Delete error: ${error instanceof Error ? error.message : 'Unknown error'}` }
     }
   }

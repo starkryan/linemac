@@ -7,6 +7,7 @@ interface FileUploadProps {
   onFileSelect?: (file: File) => void
   onFileView?: () => void
   onFileRemove?: () => void
+  onError?: (error: string) => void
   acceptedTypes?: string
   maxSize?: number // in MB
   className?: string
@@ -16,6 +17,7 @@ export default function FileUpload({
   onFileSelect,
   onFileView,
   onFileRemove,
+  onError,
   acceptedTypes = ".pdf,.jpg,.jpeg,.png",
   maxSize = 5,
   className = ""
@@ -26,14 +28,14 @@ export default function FileUpload({
   const handleFileSelect = (file: File) => {
     // Validate file size
     if (file.size > maxSize * 1024 * 1024) {
-      alert(`File size must be less than ${maxSize}MB`)
+      onError?.(`File size must be less than ${maxSize}MB`)
       return
     }
 
     // Validate file type
     const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase()
     if (!acceptedTypes.includes(fileExtension)) {
-      alert(`File type must be one of: ${acceptedTypes}`)
+      onError?.(`File type must be one of: ${acceptedTypes}`)
       return
     }
 

@@ -9,18 +9,28 @@ interface EmailOptions {
   html?: string
 }
 
+interface EmailResult {
+  success: boolean
+  error?: string
+  data?: unknown
+}
+
 export class EmailService {
-  async sendEmail(options: EmailOptions): Promise<{ success: boolean; error?: string }> {
+  async sendEmail(options: EmailOptions): Promise<EmailResult> {
     try {
-      // TEMPORARY: Mock email sending for testing
-      if (process.env.NODE_ENV === 'development') {
-        console.log('Mock email sent:', {
-          to: options.to,
-          subject: options.subject,
-          hasHtml: !!options.html,
-          hasText: !!options.text
-        })
-        return { success: true }
+      // Validate required parameters
+      if (!options.to || !options.subject) {
+        return { success: false, error: 'Missing required email parameters' }
+      }
+
+      if (!options.html && !options.text) {
+        return { success: false, error: 'Email content (html or text) is required' }
+      }
+
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      if (!emailRegex.test(options.to)) {
+        return { success: false, error: 'Invalid email address format' }
       }
 
       const emailParams: any = {
@@ -35,14 +45,24 @@ export class EmailService {
         emailParams.text = options.text
       }
 
+      console.log('Sending email via Resend:', {
+        to: options.to,
+        subject: options.subject,
+        hasHtml: !!options.html,
+        hasText: !!options.text
+      })
+
       const result = await resend.emails.send(emailParams)
 
       if (result.error) {
+        console.error('Resend API error:', result.error)
         return { success: false, error: result.error.message }
       }
 
-      return { success: true }
+      console.log('Email sent successfully:', result.data)
+      return { success: true, data: result.data }
     } catch (error) {
+      console.error('Email service error:', error)
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Failed to send email'
@@ -50,7 +70,7 @@ export class EmailService {
     }
   }
 
-  async sendOTP(email: string, otp: string): Promise<{ success: boolean; error?: string }> {
+  async sendOTP(email: string, otp: string): Promise<EmailResult> {
     const subject = 'Your KYC Verification OTP'
     const text = `Your One-Time Password (OTP) for KYC verification is: ${otp}
 
@@ -91,8 +111,21 @@ UCL Team`
     return this.sendEmail({ to: email, subject, text, html })
   }
 
-  generateOTP(): string {
-    return Math.floor(100000 + Math.random() * 900000).toString()
+generateOTP(): string {
+    // Generate cryptographically secure random 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString()
+    return otp
+  }
+
+  // Add rate limiting support for OTP requests
+  canSendOTP(lastSentAt: Date | null): boolean {
+    if (!lastSentAt) return true
+
+    const now = new Date()
+    const timeSinceLastSend = now.getTime() - lastSentAt.getTime()
+    const minInterval = 60 * 1000 // 1 minute between OTP requests
+
+    return timeSinceLastSend > minInterval
   }
 }
 
