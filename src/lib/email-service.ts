@@ -88,7 +88,7 @@ UCL Team`
         <!-- Header with Logo -->
         <div style="background-color: #f8f9fa; padding: 20px; text-align: center; border-bottom: 3px solid #ff6b35;">
           <img src="https://i.ibb.co/jkPbSM8D/email-logo.png" alt="UCL Logo" style="max-width: 120px; height: auto; margin-bottom: 10px;">
-          <h1 style="color: #333; margin: 0; font-size: 24px; font-weight: 600;">UCL - Update Client Letter</h1>
+          <h1 style="color: #333; margin: 0; font-size: 24px; font-weight: 600;">UCL - Update Client Lite</h1>
         </div>
 
         <!-- Email Content -->

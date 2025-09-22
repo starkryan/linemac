@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp"
 import { toast } from "sonner"
 import FileUpload from "@/components/FileUpload"
 import { useAuth } from "@/hooks/useAuth"
@@ -471,14 +472,21 @@ export default function KYCVerification({ onKYCComplete }: KYCVerificationProps)
 
               {kycStatus === 'otp_sent' && (
                 <div className="space-y-3">
-                  <Input
-                    type="text"
-                    placeholder="Enter 6-digit OTP"
-                    value={otp}
-                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  <InputOTP
                     maxLength={6}
-                    className="text-center text-lg tracking-widest"
-                  />
+                    value={otp}
+                    onChange={(value) => setOtp(value)}
+                    className="justify-center"
+                  >
+                    <InputOTPGroup>
+                      <InputOTPSlot index={0} />
+                      <InputOTPSlot index={1} />
+                      <InputOTPSlot index={2} />
+                      <InputOTPSlot index={3} />
+                      <InputOTPSlot index={4} />
+                      <InputOTPSlot index={5} />
+                    </InputOTPGroup>
+                  </InputOTP>
                   <div className="flex gap-2">
                     <Button
                       onClick={handleVerifyOTP}
