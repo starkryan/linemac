@@ -37,7 +37,8 @@ const nextConfig: NextConfig = {
   generateBuildId: async () => {
     return 'build-' + Date.now();
   },
-};
+
+  };
 
 // PWA configuration with workbox
 const pwaConfig = withPWA({
@@ -92,6 +93,7 @@ const pwaConfig = withPWA({
   },
 });
 
-const finalConfig = pwaConfig(nextConfig as any);
+// @ts-ignore
+const finalConfig = pwaConfig(nextConfig);
 
 export default finalConfig;
