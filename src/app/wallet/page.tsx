@@ -93,8 +93,8 @@ export default function WalletPage() {
 
   const handleRecharge = async () => {
     const amount = parseFloat(rechargeAmount)
-    if (!amount || amount < 500) {
-      alert('Minimum recharge amount is ₹500\n\nAmounts below ₹500 are not supported by the payment gateway.')
+    if (!amount || amount < 1000) {
+      alert('Minimum recharge amount is ₹1000\n\nAmounts below ₹1000 are not supported by the payment gateway.')
       return
     }
 
@@ -211,23 +211,23 @@ export default function WalletPage() {
                   </label>
                   <Input
                     type="number"
-                    placeholder="Enter amount (min. ₹500)"
+                    placeholder="Enter amount (min. ₹1000)"
                     value={rechargeAmount}
                     onChange={(e) => setRechargeAmount(e.target.value)}
-                    min="500"
+                    min="1000"
                     step="1"
                     className="bg-white border-gray-400 h-8"
                   />
-                  {rechargeAmount && parseFloat(rechargeAmount) < 500 && (
+                  {rechargeAmount && parseFloat(rechargeAmount) < 1000 && (
                     <p className="text-red-600 text-xs mt-1">
-                      Minimum recharge amount is ₹500.
+                      Minimum recharge amount is ₹1000.
                     </p>
                   )}
                 </div>
 
                 {/* Quick Amount Buttons */}
                 <div className="grid grid-cols-3 gap-2">
-                  {[500, 1000, 2000].map((amount) => (
+                  {[1000, 2000, 3000].map((amount) => (
                     <Button
                       key={amount}
                       variant="outline"
@@ -242,7 +242,7 @@ export default function WalletPage() {
                 <Button
                   className="bg-blue-600 hover:bg-blue-700 text-white h-8 text-sm"
                   onClick={handleRecharge}
-                  disabled={paymentLoading || !rechargeAmount || parseFloat(rechargeAmount) < 500}
+                  disabled={paymentLoading || !rechargeAmount || parseFloat(rechargeAmount) < 1000}
                 >
                   {paymentLoading ? (
                     <>

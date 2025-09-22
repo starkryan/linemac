@@ -65,14 +65,10 @@ export async function GET(request: NextRequest) {
     const profile = profileResult.rows[0]
 
     return NextResponse.json({
-      // Prioritize user table data for profile information, fallback to correction_requests
+      // Prioritize user table data for profile information (most recent updates), fallback to correction_requests
       fullName: profile.full_name || session.user.name || profile.correction_name || '',
       gender: profile.gender || '',
-      dateOfBirth: profile.date_of_birth ? new Date(profile.date_of_birth).toLocaleDateString('en-IN', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric'
-      }) : '',
+      dateOfBirth: profile.date_of_birth ? new Date(profile.date_of_birth).toISOString().split('T')[0] : '',
       house: profile.house || '',
       street: profile.street || '',
       village: profile.village || '',

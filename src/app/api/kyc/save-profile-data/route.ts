@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
       fullName: updatedUser.full_name,
       phone: updatedUser.phone,
       gender: updatedUser.gender,
-      dateOfBirth: updatedUser.date_of_birth,
+      dateOfBirth: updatedUser.date_of_birth ? new Date(updatedUser.date_of_birth).toISOString().split('T')[0] : '',
       address: updatedUser.address,
       house: updatedUser.house,
       street: updatedUser.street,

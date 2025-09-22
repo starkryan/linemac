@@ -135,9 +135,10 @@ export default function ProfilePage() {
       const result = await response.json()
 
       if (result.success) {
+        // Update local state with the returned user data
         setProfileData(result.user)
         setEditing(false)
-        // Refresh profile data to ensure consistency
+        // Refresh profile data to ensure consistency with server
         await fetchProfileData()
         toast.success('Profile updated successfully!', {
           description: 'Your profile information has been saved.',
