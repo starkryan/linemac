@@ -336,30 +336,7 @@ export default function KYCVerification({ onKYCComplete }: KYCVerificationProps)
         </div>
       )}
 
-      {/* Progress Indicator */}
-      {kycStatus !== 'not_started' && kycStatus !== 'verified' && (
-        <Card>
-          <CardContent className="pt-6">
-            <div className="space-y-3">
-              <div className="flex justify-between text-sm">
-                <span className="font-medium">Verification Progress</span>
-                <span className="text-gray-600">
-                  {kycStatus === 'photo_uploaded' ? '33%' : '66%'}
-                </span>
-              </div>
-              <Progress
-                value={kycStatus === 'photo_uploaded' ? 33 : 66}
-                className="h-2"
-              />
-              <div className="flex justify-between text-xs text-gray-600">
-                <span>Photo Upload</span>
-                <span>Email Verification</span>
-                <span>Complete</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      {/* Progress Indicator - Removed as requested */}
 
       {/* Photo Upload Section */}
       {kycStatus !== 'verified' && (
@@ -566,7 +543,7 @@ export default function KYCVerification({ onKYCComplete }: KYCVerificationProps)
                         onChange={(value) => setOtp(value)}
                         className="justify-center"
                       >
-                        <InputOTPGroup>
+                        <InputOTPGroup className="gap-2">
                           <InputOTPSlot index={0} className="w-12 h-12 border-2 border-green-300 rounded-md bg-white text-lg font-semibold" />
                           <InputOTPSlot index={1} className="w-12 h-12 border-2 border-green-300 rounded-md bg-white text-lg font-semibold" />
                           <InputOTPSlot index={2} className="w-12 h-12 border-2 border-green-300 rounded-md bg-white text-lg font-semibold" />
@@ -580,12 +557,11 @@ export default function KYCVerification({ onKYCComplete }: KYCVerificationProps)
 
                   {/* Timer and Resend */}
                   {otpResendTimer > 0 && (
-                    <div className="text-center space-y-2">
+                    <div className="text-center">
                       <div className="text-sm text-gray-600 flex items-center justify-center gap-2">
                         <Timer className="w-4 h-4" />
                         Resend OTP in {otpResendTimer}s
                       </div>
-                      <Progress value={otpProgress} className="h-2" />
                     </div>
                   )}
 
@@ -601,7 +577,7 @@ export default function KYCVerification({ onKYCComplete }: KYCVerificationProps)
                       onClick={handleSendOTP}
                       disabled={loading || otpResendTimer > 0}
                       variant="outline"
-                      className="flex-1"
+                      className="flex-1 border-gray-300 text-gray-700 hover:bg-gray-50"
                     >
                       {otpResendTimer > 0 ? `Wait ${otpResendTimer}s` : 'Resend OTP'}
                     </Button>
