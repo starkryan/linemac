@@ -4,7 +4,6 @@ import { auth } from '@/lib/auth-server'
 
 export async function GET(request: NextRequest) {
   try {
-    // Get authenticated user session
     const session = await auth.api.getSession({
       headers: request.headers
     })
@@ -21,7 +20,13 @@ export async function GET(request: NextRequest) {
         u.name,
         u.role,
         u.balance,
-        cr.name as full_name,
+        u.kyc_status,
+        u.kyc_photo_url,
+        u.kyc_verified_at,
+        u.full_name,
+        u.phone,
+        u.address,
+        cr.name as correction_name,
         cr.gender,
         cr.dob as date_of_birth,
         cr.email as correction_email,
@@ -30,7 +35,7 @@ export async function GET(request: NextRequest) {
         cr.area as village,
         cr.city,
         cr.pin_code,
-        cr.mobile_number as phone,
+        cr.mobile_number as correction_phone,
         cr.status,
         cr.created_at
        FROM "user" u
@@ -60,7 +65,7 @@ export async function GET(request: NextRequest) {
     const profile = profileResult.rows[0]
 
     return NextResponse.json({
-      fullName: profile.full_name || session.user.name || '',
+      fullName: profile.full_name || profile.correction_name || session.user.name || '',
       gender: profile.gender || '',
       dateOfBirth: profile.date_of_birth ? new Date(profile.date_of_birth).toLocaleDateString('en-IN', {
         day: '2-digit',
@@ -73,12 +78,15 @@ export async function GET(request: NextRequest) {
       city: profile.city || '',
       pinCode: profile.pin_code || '',
       email: session.user.email || '',
-      phone: profile.phone || '',
+      phone: profile.phone || profile.correction_phone || '',
       role: profile.role || 'user',
       balance: parseFloat(profile.balance) || 0,
       hasCorrectionData: true,
       correctionStatus: profile.status,
-      correctionCreatedAt: profile.created_at
+      correctionCreatedAt: profile.created_at,
+      kycStatus: profile.kyc_status || 'not_started',
+      kycPhotoUrl: profile.kyc_photo_url || '',
+      kycVerifiedAt: profile.kyc_verified_at || null
     })
 
   } catch (error) {

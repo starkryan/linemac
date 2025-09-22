@@ -1,0 +1,33 @@
+
+> ucl@0.1.0 dev
+> next dev
+
+   ▲ Next.js 15.5.3
+   - Local:        http://localhost:3000
+   - Network:      http://192.168.1.5:3000
+   - Environments: .env
+   - Experiments (use with caution):
+     · optimizePackageImports
+
+ ✓ Starting...
+> [PWA] PWA support is disabled
+> [PWA] PWA support is disabled
+ ✓ Ready in 1336ms
+ ○ Compiling /api/auth/login ...
+ ✓ Compiled /api/auth/login in 1369ms (767 modules)
+Login error: SyntaxError: Bad escaped character in JSON at position 63 (line 1 column 64)
+    at JSON.parse (<anonymous>)
+    at async POST (src/app/api/auth/login/route.ts:14:18)
+  12 | export async function POST(request: NextRequest) {
+  13 |   try {
+> 14 |     const body = await request.json() as LoginRequestBody;
+     |                  ^
+  15 |     const { operatorUid, operatorName, password } = body;
+  16 |
+  17 |     // Validate required fields
+ POST /api/auth/login 500 in 1631ms
+ ✓ Compiled /api/auth/session in 154ms (769 modules)
+Session endpoint: Starting session check...
+Session endpoint: Session result: Not found
+Session endpoint: No valid session found
+ GET /api/auth/session 401 in 272ms
