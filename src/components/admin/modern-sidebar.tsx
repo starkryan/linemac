@@ -13,7 +13,8 @@ import {
   Bell,
   LogOut,
   Menu,
-  X
+  X,
+  DollarSign
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -61,6 +62,12 @@ const navMain = [
     url: "#",
     icon: Users,
     tab: "users",
+  },
+  {
+    title: "Balance Management",
+    url: "#",
+    icon: DollarSign,
+    tab: "balance",
   },
   {
     title: "Requests",
@@ -212,6 +219,7 @@ export default function AdminSidebar({ activeTab, onTabChange, children }: Admin
               <h1 className="text-xl font-semibold capitalize">
                 {activeTab === "overview" && "Dashboard"}
                 {activeTab === "users" && "User Management"}
+                {activeTab === "balance" && "Balance Management"}
                 {activeTab === "requests" && "Correction Requests"}
                 {activeTab === "settings" && "System Settings"}
                 {activeTab === "health" && "System Health"}

@@ -7,6 +7,7 @@ import ModernAnalytics from "@/components/admin/modern-analytics";
 import UsersTable from "@/components/admin/users-table";
 import RequestsTable from "@/components/admin/requests-table";
 import AdminAuthWrapper from "@/components/admin/admin-auth-wrapper";
+import BalanceManagement from "@/components/admin/BalanceManagement";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -28,7 +29,8 @@ import {
   TrendingUp,
   Server,
   Wifi,
-  WifiOff
+  WifiOff,
+  DollarSign
 } from "lucide-react";
 
 export default function AdminDashboard() {
@@ -45,6 +47,7 @@ export default function AdminDashboard() {
         )}
 
         {activeTab === "users" && <UsersTable />}
+        {activeTab === "balance" && <BalanceManagement />}
         {activeTab === "requests" && <RequestsTable />}
 
         {activeTab === "health" && (

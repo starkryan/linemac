@@ -1,6 +1,7 @@
 import { Pool } from "pg";
 import { betterAuth } from "better-auth";
 import { nextCookies } from "better-auth/next-js";
+import { headers } from "next/headers";
 import bcrypt from "bcrypt";
 
 const pool = new Pool({
@@ -74,3 +75,16 @@ export const auth = betterAuth({
     },
   },
 });
+
+// Server-side session helper
+export async function getServerSession() {
+  try {
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
+    return session;
+  } catch (error) {
+    console.error('getServerSession error:', error);
+    return null;
+  }
+}
