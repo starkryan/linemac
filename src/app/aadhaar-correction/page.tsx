@@ -54,6 +54,9 @@ export default function GovernmentForm() {
 
   // Form state
   const [formData, setFormData] = useState({
+    // Update Type
+    updateType: '',
+
     // Personal Details
     name: '',
     name_hindi: '',
@@ -391,6 +394,70 @@ export default function GovernmentForm() {
               </div>
             </div>
 
+            {/* Update Type Selection Section */}
+            <div className="mb-6">
+              <div className="bg-gray-200 px-4 py-2 border border-gray-300">
+                <h2 className="text-base font-semibold text-gray-800">What do you want to update?</h2>
+              </div>
+              <div className="bg-white p-4">
+                <div className="flex items-center gap-8">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-gray-700">Choose what to update</span>
+                    <span className="text-red-600 font-bold text-base">✱</span>
+                    <span className="text-gray-400 text-xs">⊙</span>
+                  </div>
+                  <RadioGroup
+                    value={formData.updateType}
+                    onValueChange={(value) => handleInputChange("updateType", value)}
+                    className="flex items-center gap-6"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="name" id="update-name" className="border-gray-400" />
+                      <Label htmlFor="update-name" className="text-sm text-gray-700">
+                        Name
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="dob" id="update-dob" className="border-gray-400" />
+                      <Label htmlFor="update-dob" className="text-sm text-gray-700">
+                        Date of Birth
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="address" id="update-address" className="border-gray-400" />
+                      <Label htmlFor="update-address" className="text-sm text-gray-700">
+                        Address
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="mobile" id="update-mobile" className="border-gray-400" />
+                      <Label htmlFor="update-mobile" className="text-sm text-gray-700">
+                        Mobile
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="photo" id="update-photo" className="border-gray-400" />
+                      <Label htmlFor="update-photo" className="text-sm text-gray-700">
+                        Photo
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="biometric" id="update-biometric" className="border-gray-400" />
+                      <Label htmlFor="update-biometric" className="text-sm text-gray-700">
+                        Biometric
+                      </Label>
+                    </div>
+                                      </RadioGroup>
+                  {formErrors.updateType && (
+                    <p className="text-red-500 text-xs mt-1">{formErrors.updateType}</p>
+                  )}
+                </div>
+                <div className="mt-3 text-sm text-gray-600">
+                  Select the type of update you want to perform. The form will show relevant sections based on your selection.
+                </div>
+              </div>
+            </div>
+
             {/* Appointment Details Section */}
             <div className="mb-6">
               <div className="bg-gray-200 px-4 py-2 border border-gray-300">
@@ -542,13 +609,43 @@ export default function GovernmentForm() {
             {/* Contact Details Section */}
             <div>
               <div className="bg-gray-200 px-4 py-2 border border-gray-300 flex justify-between items-center">
-                <h2 className="text-base font-semibold text-gray-800">Contact Details (Default)</h2>
+                <h2 className="text-base font-semibold text-gray-800">Contact Details</h2>
                 <Button variant="outline" size="sm" className="bg-white border-gray-400 h-8 px-3 text-xs">
                   Copy Previous
                 </Button>
               </div>
               <div className="bg-white p-4">
                 <div className="space-y-4">
+                  {/* Mobile Number Row */}
+                  <div className="grid grid-cols-2 gap-6">
+                    <div>
+                      <Label className="text-sm text-gray-700 mb-2 block">
+                        Mobile Number <span className="text-red-600 font-bold text-base">✱</span>
+                      </Label>
+                      <Input
+                        className="bg-white border-gray-400 h-8"
+                        value={formData.mobile_number}
+                        onChange={(e) => handleInputChange("mobile_number", e.target.value)}
+                        placeholder="+91 XXXXX XXXXX"
+                      />
+                      {formErrors.mobile_number && (
+                        <p className="text-red-500 text-xs mt-1">{formErrors.mobile_number}</p>
+                      )}
+                    </div>
+                    <div>
+                      <Label className="text-sm text-gray-700 mb-2 block">
+                        मोबाइल नंबर <span className="text-red-600 font-bold text-base">✱</span>
+                      </Label>
+                      <Input
+                        className="bg-white border-gray-400 h-8"
+                        value={formData.mobile_number}
+                        onChange={(e) => handleInputChange("mobile_number", e.target.value)}
+                        placeholder="+91 XXXXX XXXXX"
+                        disabled
+                      />
+                    </div>
+                  </div>
+
                   {/* C/O Row */}
                   <div className="grid grid-cols-2 gap-6">
                     <div>

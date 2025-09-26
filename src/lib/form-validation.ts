@@ -5,6 +5,9 @@ export interface FormErrors {
 }
 
 export interface FormData {
+  // Update Type
+  updateType: string;
+
   // Personal Details
   name: string;
   name_hindi: string;
@@ -188,23 +191,41 @@ export const FormValidation = {
   validateForm(formData: Partial<FormData>): FormErrors {
     const errors: FormErrors = {};
 
-    // Validate basic demographics
+    // Validate update type selection
+    errors.updateType = this.validateRequired(formData.updateType || '', 'Update type');
+
+    // Always validate Aadhaar number (required for all operations)
     errors.aadhaar_number = this.validateAadhaar(formData.aadhaar_number || '');
-    errors.mobile_number = this.validateMobile(formData.mobile_number || '');
-    errors.name = this.validateName(formData.name || '');
-    errors.gender = this.validateGender(formData.gender || '');
-    errors.dob = this.validateDOB(formData.dob || '');
-    errors.email = this.validateEmail(formData.email || '');
-    errors.pin_code = this.validatePinCode(formData.pin_code || '');
 
-    // Validate address fields
-    errors.city = this.validateRequired(formData.city || '', 'City');
-    errors.district = this.validateRequired(formData.district || '', 'District');
-    errors.state = this.validateRequired(formData.state || '', 'State');
+    // Conditional validation based on update type
+    const updateType = formData.updateType;
 
-    // Validate relative details
-    errors.head_of_family_name = this.validateRequired(formData.head_of_family_name || '', 'Head of family name');
-    errors.relationship = this.validateRequired(formData.relationship || '', 'Relationship');
+    if (updateType === 'name' || updateType === 'multiple') {
+      errors.name = this.validateName(formData.name || '');
+    }
+
+    if (updateType === 'dob' || updateType === 'multiple') {
+      errors.dob = this.validateDOB(formData.dob || '');
+    }
+
+    if (updateType === 'address' || updateType === 'multiple') {
+      errors.city = this.validateRequired(formData.city || '', 'City');
+      errors.district = this.validateRequired(formData.district || '', 'District');
+      errors.state = this.validateRequired(formData.state || '', 'State');
+      errors.pin_code = this.validatePinCode(formData.pin_code || '');
+    }
+
+    if (updateType === 'mobile' || updateType === 'multiple') {
+      errors.mobile_number = this.validateMobile(formData.mobile_number || '');
+    }
+
+    if (updateType === 'multiple') {
+      // Validate all fields for multiple updates
+      errors.gender = this.validateGender(formData.gender || '');
+      errors.email = this.validateEmail(formData.email || '');
+      errors.head_of_family_name = this.validateRequired(formData.head_of_family_name || '', 'Head of family name');
+      errors.relationship = this.validateRequired(formData.relationship || '', 'Relationship');
+    }
 
     // Validate verification details (only if verification method is documents)
     if (formData.dob_proof_type) {
@@ -247,6 +268,7 @@ export const FormValidation = {
    */
   formatError(field: string, error: string): string {
     const fieldNames: { [key: string]: string } = {
+      updateType: 'Update Type',
       aadhaar_number: 'Aadhaar Number',
       mobile_number: 'Mobile Number',
       name: 'Name',
