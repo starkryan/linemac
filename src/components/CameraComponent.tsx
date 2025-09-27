@@ -8,9 +8,10 @@ interface CameraComponentProps {
   onClose: () => void
   showCaptureButton?: boolean
   inline?: boolean
+  captureDataAttr?: string
 }
 
-export default function CameraComponent({ onPhotoCapture, onClose, showCaptureButton = true, inline = false }: CameraComponentProps) {
+export default function CameraComponent({ onPhotoCapture, onClose, showCaptureButton = true, inline = false, captureDataAttr }: CameraComponentProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [isCameraActive, setIsCameraActive] = useState(false)
@@ -26,13 +27,28 @@ export default function CameraComponent({ onPhotoCapture, onClose, showCaptureBu
     }
   }, [stream])
 
+  // Auto-start camera when component mounts
+  useEffect(() => {
+    if (!isCameraActive) {
+      startCamera()
+    }
+  }, [])
+
   const startCamera = async () => {
     try {
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: {
           width: { ideal: inline ? 640 : 1280 },
           height: { ideal: inline ? 480 : 720 },
-          facingMode: 'user'
+          facingMode: 'user',
+          // Explicit color constraints to prevent black & white mode
+          aspectRatio: 16/9,
+          frameRate: { ideal: 30 },
+          colorTemperature: 'standard',
+          brightness: 'standard',
+          contrast: 'standard',
+          saturation: 'standard',
+          sharpness: 'standard'
         },
         audio: false
       })
@@ -67,11 +83,20 @@ export default function CameraComponent({ onPhotoCapture, onClose, showCaptureBu
 
       // Pass captured photo to parent
       onPhotoCapture(photoData)
+
+      // Don't stop camera - keep it active for continuous capture
+      // Camera stays ready for next capture
+
+      // Auto-reset for continuous capture after a short delay
+      setTimeout(() => {
+        setCapturedPhoto(null)
+      }, 1000) // Show captured photo for 1 second, then reset for next capture
     }
   }
 
   const retakePhoto = () => {
     setCapturedPhoto(null)
+    // Camera stays active for next capture
   }
 
   const stopCamera = () => {
@@ -91,8 +116,6 @@ export default function CameraComponent({ onPhotoCapture, onClose, showCaptureBu
         <div className="flex-1 flex items-center justify-center bg-black relative">
           {!isCameraActive && !capturedPhoto && (
             <div className="text-center text-white">
-              <div className="text-4xl mb-2">📷</div>
-              <p className="text-sm">Click Aadhaar icon to start camera</p>
             </div>
           )}
 
@@ -104,7 +127,13 @@ export default function CameraComponent({ onPhotoCapture, onClose, showCaptureBu
                 playsInline
                 muted
                 className="w-full h-full object-cover"
-                style={{ transform: 'scaleX(-1)' }}
+                style={{
+                  transform: 'scaleX(-1)',
+                  minWidth: '100%',
+                  minHeight: '100%',
+                  width: '100%',
+                  height: '100%'
+                }}
               />
               <div className="absolute inset-0 border-2 border-green-400 pointer-events-none" style={{ margin: '10px' }}>
                 <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-green-400"></div>
@@ -131,43 +160,14 @@ export default function CameraComponent({ onPhotoCapture, onClose, showCaptureBu
             <Button
               onClick={capturePhoto}
               className="w-12 h-12 rounded-full bg-red-600 text-white border-2 border-white hover:bg-red-700 flex items-center justify-center"
+              {...(captureDataAttr ? { [`data-${captureDataAttr}`]: "true" } : {})}
             >
               <div className="w-8 h-8 bg-white rounded-full"></div>
             </Button>
           </div>
         )}
 
-        {/* Action buttons */}
-        <div className="p-2 bg-black flex justify-center gap-2">
-          {capturedPhoto && (
-            <>
-              <Button
-                onClick={retakePhoto}
-                size="sm"
-                className="bg-yellow-600 text-white hover:bg-yellow-700 h-8 px-3 text-xs"
-              >
-                Retake
-              </Button>
-              <Button
-                onClick={stopCamera}
-                size="sm"
-                className="bg-blue-600 text-white hover:bg-blue-700 h-8 px-3 text-xs"
-              >
-                Done
-              </Button>
-            </>
-          )}
-          {!isCameraActive && !capturedPhoto && (
-            <Button
-              onClick={startCamera}
-              size="sm"
-              className="bg-green-600 text-white hover:bg-green-700 h-8 px-3 text-xs"
-            >
-              Start
-            </Button>
-          )}
-        </div>
-
+        
         {/* Hidden canvas for capturing */}
         <canvas ref={canvasRef} className="hidden" />
       </div>
@@ -191,7 +191,7 @@ export default function CameraComponent({ onPhotoCapture, onClose, showCaptureBu
             onClick={startCamera}
             className="bg-green-600 text-white hover:bg-green-700"
           >
-            ▶️ Start Camera
+            ▶️ Camera
           </Button>
         )}
 
@@ -220,8 +220,6 @@ export default function CameraComponent({ onPhotoCapture, onClose, showCaptureBu
       <div className="flex-1 flex items-center justify-center bg-black">
         {!isCameraActive && !capturedPhoto && (
           <div className="text-center text-white">
-            <div className="text-6xl mb-4">📷</div>
-            <p className="text-lg">Click "Start Camera" to begin</p>
           </div>
         )}
 
@@ -233,7 +231,13 @@ export default function CameraComponent({ onPhotoCapture, onClose, showCaptureBu
               playsInline
               muted
               className="max-w-full max-h-full"
-              style={{ transform: 'scaleX(-1)' }}
+              style={{
+                transform: 'scaleX(-1)',
+                minWidth: '100%',
+                minHeight: '100%',
+                width: '100%',
+                height: '100%'
+              }}
             />
             <div className="absolute inset-0 border-4 border-green-400 pointer-events-none" style={{ margin: '20px' }}>
               <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-green-400"></div>
@@ -260,6 +264,7 @@ export default function CameraComponent({ onPhotoCapture, onClose, showCaptureBu
           <Button
             onClick={capturePhoto}
             className="w-16 h-16 rounded-full bg-red-600 text-white border-4 border-white hover:bg-red-700 flex items-center justify-center"
+            {...(captureDataAttr ? { [`data-${captureDataAttr}`]: "true" } : {})}
           >
             <div className="w-12 h-12 bg-white rounded-full"></div>
           </Button>

@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { AadhaarIcon } from "@/components/ui/AadhaarIcon"
 import CameraComponent from "@/components/CameraComponent"
+import Image from "next/image"
 
 interface PhotographSectionProps {
   onPhotoCountChange?: (mainPhotoCount: number, exceptionPhotoCount: number) => void
@@ -22,7 +23,8 @@ export default function PhotographSection({ onPhotoCountChange }: PhotographSect
   const exceptionPhotoIndexRef = useRef(0)
 
   const handleMainPhotoCapture = (photoData: string) => {
-    setMainPhotos(prev => [...prev, photoData])
+    // Add to exception photos (display in second box)
+    setExceptionPhotos(prev => [...prev, photoData])
     mainPhotoIndexRef.current++
 
     // Simulate quality score (in real app, this would be calculated)
@@ -35,7 +37,8 @@ export default function PhotographSection({ onPhotoCountChange }: PhotographSect
   }
 
   const handleExceptionPhotoCapture = (photoData: string) => {
-    setExceptionPhotos(prev => [...prev, photoData])
+    // Add to main photos (display in first box)
+    setMainPhotos(prev => [...prev, photoData])
     exceptionPhotoIndexRef.current++
 
     // Simulate quality score
@@ -69,6 +72,62 @@ export default function PhotographSection({ onPhotoCountChange }: PhotographSect
     }
   }
 
+  const restartMainCamera = () => {
+    if (mainCameraActive) {
+      setMainCameraActive(false)
+      setTimeout(() => setMainCameraActive(true), 100)
+    }
+  }
+
+  const restartExceptionCamera = () => {
+    if (exceptionCameraActive) {
+      setExceptionCameraActive(false)
+      setTimeout(() => setExceptionCameraActive(true), 100)
+    }
+  }
+
+  const toggleMainCamera = () => {
+    if (remainingMainPhotos <= 0) return
+
+    if (!mainCameraActive) {
+      // Directly start camera without any delay
+      setMainCameraActive(true)
+    } else {
+      // Camera is already active, capture photo directly
+      // Simulate the capture by creating a photo data
+      captureMainPhotoDirectly()
+    }
+  }
+
+  const toggleExceptionCamera = () => {
+    if (remainingExceptionPhotos <= 0) return
+
+    if (!exceptionCameraActive) {
+      // Directly start camera without any delay
+      setExceptionCameraActive(true)
+    } else {
+      // Camera is already active, capture photo directly
+      captureExceptionPhotoDirectly()
+    }
+  }
+
+  const captureMainPhotoDirectly = () => {
+    // Find the main camera component and trigger capture
+    const mainCameraElement = document.querySelector('[data-main-capture="true"]') as HTMLButtonElement
+    if (mainCameraElement) {
+      mainCameraElement.click()
+    }
+  }
+
+  const captureExceptionPhotoDirectly = () => {
+    // Find the exception camera component and trigger capture
+    const exceptionCameraElement = document.querySelector('[data-exception-capture="true"]') as HTMLButtonElement
+    if (exceptionCameraElement) {
+      exceptionCameraElement.click()
+    }
+  }
+
+
   const remainingMainPhotos = 4 - mainPhotoIndexRef.current
   const remainingExceptionPhotos = 4 - exceptionPhotoIndexRef.current
 
@@ -83,8 +142,8 @@ export default function PhotographSection({ onPhotoCountChange }: PhotographSect
             <div className="flex items-center gap-2">
               <div
                 className="w-5 h-5 flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity"
-                onClick={() => remainingMainPhotos > 0 && setMainCameraActive(!mainCameraActive)}
-                title={remainingMainPhotos > 0 ? (mainCameraActive ? "Stop Camera" : "Start Camera") : "Camera disabled"}
+                onClick={toggleMainCamera}
+                title={remainingMainPhotos > 0 ? (mainCameraActive ? "Capture Photo" : "Camera") : "Camera disabled"}
               >
                 <AadhaarIcon />
               </div>
@@ -108,12 +167,34 @@ export default function PhotographSection({ onPhotoCountChange }: PhotographSect
                 onClose={() => setMainCameraActive(false)}
                 showCaptureButton={remainingMainPhotos > 0}
                 inline={true}
+                captureDataAttr="main-capture"
               />
             ) : mainPhotos.length === 0 ? (
-              <div className="bg-black w-full h-96 border border-gray-400 flex items-center justify-center">
-                <div className="text-center">
-                
+              <div className="space-y-4">
+                {/* Camera preview area */}
+                <div className="bg-black w-full h-96 border border-gray-400 flex items-center justify-center">
+                  {mainCameraActive ? (
+                    <CameraComponent
+                      onPhotoCapture={handleMainPhotoCapture}
+                      onClose={() => setMainCameraActive(false)}
+                      showCaptureButton={remainingMainPhotos > 0}
+                      inline={true}
+                      captureDataAttr="main-capture"
+                    />
+                  ) : null}
                 </div>
+
+                {/* Capture button */}
+                {mainCameraActive && remainingMainPhotos > 0 && (
+                  <div className="flex justify-center">
+                    <Button
+                      onClick={captureMainPhotoDirectly}
+                      className="bg-red-600 text-white hover:bg-red-700 px-6 py-2"
+                    >
+                      Capture Photo
+                    </Button>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="space-y-4">
@@ -149,12 +230,12 @@ export default function PhotographSection({ onPhotoCountChange }: PhotographSect
 
                 {/* Capture more button if available */}
                 {remainingMainPhotos > 0 && (
-                  <div className="flex gap-2">
+                  <div className="flex justify-center">
                     <Button
                       onClick={() => setMainCameraActive(true)}
-                      className="bg-blue-600 text-white hover:bg-blue-700 flex-1"
+                      className="bg-blue-600 text-white hover:bg-blue-700 px-6 py-2"
                     >
-                      Capture Photo
+                      Capture More
                     </Button>
                   </div>
                 )}
@@ -169,8 +250,8 @@ export default function PhotographSection({ onPhotoCountChange }: PhotographSect
             <div className="flex items-center gap-2">
               <div
                 className="w-5 h-5 flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity"
-                onClick={() => remainingExceptionPhotos > 0 && setExceptionCameraActive(!exceptionCameraActive)}
-                title={remainingExceptionPhotos > 0 ? (exceptionCameraActive ? "Stop Camera" : "Start Camera") : "Camera disabled"}
+                onClick={toggleExceptionCamera}
+                title={remainingExceptionPhotos > 0 ? (exceptionCameraActive ? "Capture Photo" : "Camera") : "Camera disabled"}
               >
                 <AadhaarIcon />
               </div>
@@ -189,23 +270,36 @@ export default function PhotographSection({ onPhotoCountChange }: PhotographSect
           </div>
           <div className="p-4">
             {exceptionCameraActive ? (
-              <CameraComponent
-                onPhotoCapture={handleExceptionPhotoCapture}
-                onClose={() => setExceptionCameraActive(false)}
-                showCaptureButton={remainingExceptionPhotos > 0}
-                inline={true}
-              />
-            ) : exceptionPhotos.length === 0 ? (
-              <div className="bg-gray-600 w-full h-96 border border-gray-400 flex items-center justify-center">
-              
+              <div className="space-y-2">
+                <CameraComponent
+                  onPhotoCapture={handleExceptionPhotoCapture}
+                  onClose={() => setExceptionCameraActive(false)}
+                  showCaptureButton={remainingExceptionPhotos > 0}
+                  inline={true}
+                  captureDataAttr="exception-capture"
+                />
+                {/* Arrow play button for quick restart */}
+                <div className="flex justify-center">
+                  <Image
+                    src="/arrow-play.png"
+                    alt="Restart Camera"
+                    width={32}
+                    height={32}
+                    className="cursor-pointer hover:opacity-80 transition-opacity"
+                    onClick={restartExceptionCamera}
+                    title="Restart Camera"
+                  />
+                </div>
               </div>
+            ) : exceptionPhotos.length === 0 ? (
+              <div className="bg-gray-600 w-full h-96 border border-gray-400 flex items-center justify-center"></div>
             ) : (
               <div className="space-y-4">
-                {/* Display the latest captured exception photo */}
-                <div className="bg-gray-600 w-full h-80 border border-gray-400 flex items-center justify-center overflow-hidden">
+                {/* Display the latest captured photo (from main section) */}
+                <div className="bg-black w-full h-80 border border-gray-400 flex items-center justify-center overflow-hidden">
                   <img
                     src={exceptionPhotos[exceptionPhotos.length - 1]}
-                    alt="Latest exception capture"
+                    alt="Latest capture from main"
                     className="max-w-full max-h-full object-contain"
                     style={{ transform: 'scaleX(-1)' }}
                   />
@@ -231,17 +325,7 @@ export default function PhotographSection({ onPhotoCountChange }: PhotographSect
                   ))}
                 </div>
 
-                {/* Capture more button if available */}
-                {remainingExceptionPhotos > 0 && (
-                  <div className="flex gap-2">
-                    <Button
-                      onClick={() => setExceptionCameraActive(true)}
-                      className="bg-blue-600 text-white hover:bg-blue-700 flex-1"
-                    >
-                      ▶️ Capture Photo
-                    </Button>
-                  </div>
-                )}
+         
               </div>
             )}
           </div>
