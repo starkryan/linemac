@@ -536,12 +536,12 @@ export default function KYCVerification({ onKYCComplete }: KYCVerificationProps)
                 <div className="space-y-4">
                   <div className="text-center">
                     <Label className="text-sm font-medium mb-2 block">Enter 6-digit OTP</Label>
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-4 justify-center">
                       <InputOTP
                         maxLength={6}
                         value={otp}
                         onChange={(value) => setOtp(value)}
-                        className="justify-center"
+                        className="justify-center items-center"
                       >
                         <InputOTPGroup className="gap-2">
                           <InputOTPSlot index={0} className="w-12 h-12 border-2 border-green-300 rounded-md bg-white text-lg font-semibold" />
