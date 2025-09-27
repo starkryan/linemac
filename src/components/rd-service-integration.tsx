@@ -48,7 +48,11 @@ export const useRDService = () => {
                     // Check for various RD service responses
                     if (responseText.includes("Morpho_RD_Service") ||
                         responseText.includes("MORPHO_RD_SERVICE") ||
-                        responseText.includes("IDEMIA_L1_RDSERVICE")) {
+                        responseText.includes("IDEMIA_L1_RDSERVICE") ||
+                        responseText.includes("Mantra") ||
+                        responseText.includes("MANTRA") ||
+                        responseText.includes("MFS") ||
+                        responseText.includes("RDService")) {
                       resolve(true);
                     } else {
                       resolve(false);
@@ -82,7 +86,7 @@ export const useRDService = () => {
       }
     }
 
-    setError('RD Service not found. Please ensure Morpho RD Service is running.');
+    setError('RD Service not found. Please ensure RD Service (Morpho/Mantra) is running.');
     return -1;
   };
 
@@ -101,9 +105,9 @@ export const useRDService = () => {
             if (xhr.status === 200) {
               const responseText = xhr.responseText;
               // Try to extract device info from response
-              let deviceInfo = `Morpho Device on ${protocol}://${host}:${port}`;
+              let deviceInfo = `Biometric Device on ${protocol}://${host}:${port}`;
 
-              if (responseText.includes('Morpho') || responseText.includes('IDEMIA')) {
+              if (responseText.includes('Morpho') || responseText.includes('IDEMIA') || responseText.includes('Mantra') || responseText.includes('MFS')) {
                 // Extract actual device info if available
                 const infoMatch = responseText.match(/<Info[^>]*>([^<]*)<\/Info>/);
                 if (infoMatch && infoMatch[1]) {

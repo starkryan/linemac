@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { AadhaarIcon } from "@/components/ui/AadhaarIcon"
 import { RDServiceIntegration, useRDService } from "@/components/rd-service-integration"
+import { MorphoFingerprintCapture } from "@/components/morpho-fingerprint-capture"
+import { MantraFingerprintCapture } from "@/components/mantra-fingerprint-capture"
 
 interface BiometricData {
   quality: number
@@ -25,12 +27,14 @@ interface BiometricSectionProps {
   }
   simplifiedMode?: boolean
   simplifiedTitle?: string
+  deviceType?: 'morpho' | 'mantra' | 'both'
 }
 
-export default function BiometricSection({ onFingerprintCapture, onIrisCapture, mode = 'fingerprints', excludeThumbs = false, customTitles, simplifiedMode = false, simplifiedTitle }: BiometricSectionProps) {
+export default function BiometricSection({ onFingerprintCapture, onIrisCapture, mode = 'fingerprints', excludeThumbs = false, customTitles, simplifiedMode = false, simplifiedTitle, deviceType = 'both' }: BiometricSectionProps) {
   const [activeCapture, setActiveCapture] = useState<string | null>(null)
   const [biometricData, setBiometricData] = useState<Record<string, BiometricData>>({})
   const [showRDCapture, setShowRDCapture] = useState<string | null>(null)
+  const [selectedDevice, setSelectedDevice] = useState<'morpho' | 'mantra'>('morpho')
 
   const allFingerprintTypes = [
     {
@@ -147,6 +151,52 @@ export default function BiometricSection({ onFingerprintCapture, onIrisCapture, 
     setActiveCapture(null)
   }
 
+  const handleMorphoCapture = (type: 'left' | 'right' | 'thumbs', morphoData: any) => {
+    const biometricType = fingerprintTypes.find(ft => ft.subtype === type)
+    if (!biometricType) return
+
+    const newData: BiometricData = {
+      quality: morphoData.score || 95,
+      timestamp: new Date().toISOString(),
+      data: morphoData.pid || `morpho_${type}_${Date.now()}`
+    }
+
+    setBiometricData(prev => ({
+      ...prev,
+      [biometricType.id]: newData
+    }))
+
+    if (onFingerprintCapture) {
+      onFingerprintCapture(type, newData)
+    }
+
+    setShowRDCapture(null)
+    setActiveCapture(null)
+  }
+
+  const handleMantraCapture = (type: 'left' | 'right' | 'thumbs', mantraData: any) => {
+    const biometricType = fingerprintTypes.find(ft => ft.subtype === type)
+    if (!biometricType) return
+
+    const newData: BiometricData = {
+      quality: mantraData.score || mantraData.qScore || 95,
+      timestamp: new Date().toISOString(),
+      data: mantraData.pid || `mantra_${type}_${Date.now()}`
+    }
+
+    setBiometricData(prev => ({
+      ...prev,
+      [biometricType.id]: newData
+    }))
+
+    if (onFingerprintCapture) {
+      onFingerprintCapture(type, newData)
+    }
+
+    setShowRDCapture(null)
+    setActiveCapture(null)
+  }
+
   const handleRemoveData = (id: string) => {
     setBiometricData(prev => {
       const newData = { ...prev }
@@ -157,6 +207,35 @@ export default function BiometricSection({ onFingerprintCapture, onIrisCapture, 
 
   return (
     <div className="space-y-6">
+      {/* Device selection */}
+      {deviceType === 'both' && (
+        <div className="flex items-center justify-center gap-4 p-4 bg-gray-50 rounded-lg">
+          <span className="text-sm font-medium text-gray-700">Select Device:</span>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setSelectedDevice('morpho')}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                selectedDevice === 'morpho'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              Morpho
+            </button>
+            <button
+              onClick={() => setSelectedDevice('mantra')}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                selectedDevice === 'mantra'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              Mantra
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Biometric capture interface */}
       <div className={simplifiedMode ? "grid grid-cols-1 gap-6" : "grid grid-cols-2 lg:grid-cols-3 gap-6"}>
         {displayTypes.map((biometricType) => {
@@ -196,16 +275,36 @@ export default function BiometricSection({ onFingerprintCapture, onIrisCapture, 
 
               {/* Content */}
               <div className="p-4">
-                {isActive && showRDCapture === biometricType.id && biometricType.type === 'fingerprint' ? (
-                  /* RD Service capture state */
+                {isActive && biometricType.type === 'fingerprint' ? (
+                  /* Device-specific capture state */
                   <div className="space-y-4">
                     <div className="bg-black w-full h-64 border border-gray-400 flex items-center justify-center relative">
-                      <div className="text-center text-white">
-                        <RDServiceIntegration
-                          onCapture={handleRDCapture}
-                          type={biometricType.subtype}
-                          label={`Capture ${biometricType.title}`}
-                        />
+                      <div className="text-center text-white w-full">
+                        {deviceType === 'morpho' ? (
+                          <MorphoFingerprintCapture
+                            captureType={biometricType.subtype}
+                            title={biometricType.title}
+                            onCaptureComplete={(data) => handleMorphoCapture(biometricType.subtype, data)}
+                          />
+                        ) : deviceType === 'mantra' ? (
+                          <MantraFingerprintCapture
+                            captureType={biometricType.subtype}
+                            title={biometricType.title}
+                            onCaptureComplete={(data) => handleMantraCapture(biometricType.subtype, data)}
+                          />
+                        ) : selectedDevice === 'morpho' ? (
+                          <MorphoFingerprintCapture
+                            captureType={biometricType.subtype}
+                            title={biometricType.title}
+                            onCaptureComplete={(data) => handleMorphoCapture(biometricType.subtype, data)}
+                          />
+                        ) : selectedDevice === 'mantra' ? (
+                          <MantraFingerprintCapture
+                            captureType={biometricType.subtype}
+                            title={biometricType.title}
+                            onCaptureComplete={(data) => handleMantraCapture(biometricType.subtype, data)}
+                          />
+                        ) : null}
                       </div>
                     </div>
                   </div>

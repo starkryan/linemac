@@ -1182,6 +1182,7 @@ export default function GovernmentForm() {
         {activeTab === "fingerprints" && (
           <BiometricSection
             mode="fingerprints"
+            deviceType="both"
             onFingerprintCapture={(type, data) => {
               // Convert the new format to the existing format for compatibility
               const captureResponse: CaptureResponse = {

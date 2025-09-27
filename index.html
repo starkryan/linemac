@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Mantra RD — Web Test</title>
+<style>
+  :root{
+    --bg:#0f1720; --card:#0b1220; --muted:#9aa7b2; --accent:#00b894;
+    --glass: rgba(255,255,255,0.03);
+    --danger:#ff6b6b; --glass-2: rgba(255,255,255,0.02);
+    font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    color-scheme: dark;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    min-height:100vh;
+    background: linear-gradient(180deg,#071021 0%, #07192b 60%);
+    color:#e6eef3;
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+    padding:24px;
+  }
+
+  .container{max-width:1100px;margin:0 auto}
+
+  header{
+    display:flex;align-items:center;gap:16px;margin-bottom:20px;
+  }
+  .logo{
+    width:56px;height:56px;border-radius:10px;background:linear-gradient(135deg,#06202a,#063044);
+    display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;font-size:18px;box-shadow:0 6px 18px rgba(0,0,0,.4);
+  }
+  header h1{font-size:20px;margin:0}
+  header p{margin:0;color:var(--muted);font-size:13px}
+
+  .grid{display:grid;grid-template-columns:360px 1fr; gap:18px; align-items:start}
+
+  .card{background:var(--card);border-radius:12px;padding:14px;box-shadow:0 8px 20px rgba(0,0,0,.5);border:1px solid rgba(255,255,255,0.03)}
+  .controls{display:flex;flex-direction:column;gap:10px}
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    padding:10px 12px;border-radius:10px;border:0;cursor:pointer;font-weight:600;
+    color:#04231b;background:var(--accent);box-shadow:0 6px 16px rgba(0,184,148,0.08);
+  }
+  .btn.secondary{background:transparent;color:#9fb0bd;border:1px solid rgba(255,255,255,0.04);}
+  .btn.warn{background:var(--danger);color:#fff}
+  .small{font-size:13px;padding:8px 10px;border-radius:8px}
+
+  label.smalltxt{display:block;color:var(--muted);font-size:12px;margin-bottom:6px}
+
+  textarea, input[type="text"], select{
+    width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.03);
+    background:var(--glass);color:inherit;font-size:14px;
+  }
+
+  .infoRow{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .meta{font-size:13px;color:var(--muted);margin-top:8px}
+
+  /* result area */
+  .result-area{display:flex;flex-direction:column;gap:10px}
+  .result-header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .status{padding:6px 10px;border-radius:999px;font-weight:700;font-size:13px}
+  .status.ok{background:rgba(0,184,148,0.12);color:var(--accent)}
+  .status.err{background:rgba(255,107,107,0.12);color:var(--danger)}
+  pre.trace{white-space:pre-wrap;background:var(--glass-2);padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.02);max-height:420px;overflow:auto;color:#d8f0ea}
+
+  .controls-row{display:flex;gap:8px;flex-wrap:wrap}
+  .muted{color:var(--muted);font-size:13px}
+  .download{background:#0b3b3a;color:#d7fff6;padding:8px 10px;border-radius:8px;border:0;font-weight:700}
+
+  .footer{margin-top:18px;color:var(--muted);font-size:13px}
+  .spinner{width:16px;height:16px;border-radius:50%;border:2px solid rgba(255,255,255,0.06);border-top:2px solid var(--accent);animation:spin 1s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  .inlineInput{display:flex;gap:8px}
+  .inlineInput > *{flex:1}
+  .kbd{background:rgba(255,255,255,0.03);padding:4px 8px;border-radius:6px;color:var(--muted);font-size:12px;border:1px solid rgba(255,255,255,0.02)}
+  @media (max-width:880px){
+    .grid{grid-template-columns:1fr; }
+    header{flex-direction:column;align-items:flex-start;gap:8px}
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">MFS</div>
+      <div>
+        <h1>Mantra RD — MFS110 Test</h1>
+        <p>Use this UI with local proxy at <span class="kbd">http://127.0.0.1:3000</span>. Keep biometric artifacts private.</p>
+      </div>
+    </header>
+
+    <div class="grid">
+      <!-- left column: controls -->
+      <div class="card">
+        <div class="controls">
+          <label class="smalltxt">Discovery & Device</label>
+          <div class="infoRow">
+            <button id="btnDiscover" class="btn">Discover</button>
+            <button id="btnDeviceInfo" class="btn secondary" disabled>Device Info</button>
+            <button id="btnCapture" class="btn" style="background:#0b6bd6" disabled>Capture</button>
+          </div>
+
+          <div style="margin-top:10px">
+            <label class="smalltxt">Port</label>
+            <div class="inlineInput">
+              <input id="txtPort" type="text" value="11101" />
+              <button id="btnSetPort" class="btn secondary small">Set</button>
+            </div>
+            <div class="meta">If discovery fails, set the RD service port manually.</div>
+          </div>
+
+          <hr style="border:none; height:1px; background:rgba(255,255,255,0.02); margin:12px 0">
+
+          <label class="smalltxt">PidOptions (editable)</label>
+          <textarea id="pidOptions" rows="8">&lt;PidOptions ver="1.0"&gt;&lt;Opts fCount="1" fType="0" iCount="0" pCount="0" pgCount="2" format="0" pidVer="2.0" timeout="10000" pTimeout="20000" posh="UNKNOWN" env="P" /&gt;&lt;CustOpts&gt;&lt;Param name="mantrakey" value=&quot;&quot; /&gt;&lt;/CustOpts&gt;&lt;/PidOptions&gt;</textarea>
+
+          <div style="display:flex;gap:8px;margin-top:10px">
+            <button id="btnLoadExample" class="btn secondary small">Load Example</button>
+            <button id="btnClear" class="btn secondary small">Clear Output</button>
+          </div>
+
+          <div class="meta">Tip: place finger on the sensor just before clicking <strong>Capture</strong>.</div>
+        </div>
+      </div>
+
+      <!-- right column: results -->
+      <div class="card result-area">
+        <div class="result-header">
+          <div>
+            <div id="statusBox" class="status muted">Idle</div>
+            <div class="meta" id="metaInfo">No discovery yet</div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button id="btnDownloadAll" class="download" disabled>Download PidData</button>
+            <button id="btnReveal" class="btn secondary small" disabled>Reveal Data</button>
+          </div>
+        </div>
+
+        <div>
+          <label class="smalltxt">Discovery / Device Info</label>
+          <pre id="discoverBox" class="trace">{ not discovered }</pre>
+        </div>
+
+        <div>
+          <label class="smalltxt">Capture Response (preview)</label>
+          <pre id="captureBox" class="trace">{ no capture }</pre>
+        </div>
+
+        <div style="display:flex;gap:12px;align-items:center;justify-content:space-between">
+          <div class="muted">Sensitive data is hidden by default. Use download for secure transfer.</div>
+          <div id="qscore" class="muted"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">Built for local testing. Do not share PID / SKEY / HMAC publicly.</div>
+  </div>
+
+<script>
+const apiBase = "http://127.0.0.1:3000";
+
+const $ = id => document.getElementById(id);
+let discoveredPort = null;
+let lastPidDataXml = null;
+let lastRespMeta = null;
+
+function setStatus(text, ok=true) {
+  const st = $('statusBox');
+  st.textContent = text;
+  st.className = 'status ' + (ok ? 'ok' : 'err');
+}
+
+function maskDataXml(xml) {
+  // hide large Data block for safety
+  return xml.replace(/(<Data[^>]*>)[\s\S]*?(<\/Data>)/i, '$1...[base64 omitted]$2');
+}
+
+async function discover() {
+  setStatus('Discovering…', true);
+  $('discoverBox').textContent = 'Scanning...';
+  try {
+    const r = await fetch(apiBase + '/api/discover', { cache:'no-store' });
+    if (!r.ok) throw new Error('Discover failed: ' + r.status);
+    const j = await r.json();
+    discoveredPort = j.port;
+    $('txtPort').value = discoveredPort;
+    $('discoverBox').textContent = j.result && j.result.body ? j.result.body : JSON.stringify(j, null, 2);
+    $('btnDeviceInfo').disabled = false;
+    $('btnCapture').disabled = false;
+    setStatus('RD Service found on ' + discoveredPort, true);
+    $('metaInfo').textContent = 'RDSvc: ' + (j.result && j.result.body ? (j.result.body.includes('RDService') ? 'READY' : 'Unknown') : 'unknown');
+  } catch (e) {
+    $('discoverBox').textContent = 'Discover error: ' + e;
+    setStatus('Discover failed', false);
+    $('btnDeviceInfo').disabled = true;
+    $('btnCapture').disabled = true;
+    discoveredPort = null;
+    $('metaInfo').textContent = 'No RD found';
+  }
+}
+
+async function deviceInfo() {
+  const port = $('txtPort').value || 11101;
+  setStatus('Requesting device info…', true);
+  try {
+    const r = await fetch(apiBase + '/api/deviceinfo', {
+      method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ port: parseInt(port,10) })
+    });
+    const j = await r.json();
+    $('discoverBox').textContent = j.raw && j.raw.body ? j.raw.body : JSON.stringify(j, null, 2);
+    setStatus('Device info OK', true);
+  } catch (e) {
+    $('discoverBox').textContent = 'DeviceInfo error: ' + e;
+    setStatus('DeviceInfo failed', false);
+  }
+}
+
+async function capture() {
+  const port = $('txtPort').value || 11101;
+  const pidOptions = $('pidOptions').value.trim();
+  if (!pidOptions) return alert('PidOptions is empty');
+  if (!confirm('Place finger on sensor and click OK to start capture')) return;
+  setStatus('Capturing…', true);
+  $('captureBox').textContent = 'Waiting for capture response…';
+  $('btnCapture').disabled = true;
+  try {
+    const r = await fetch(apiBase + '/api/capture', {
+      method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ port: parseInt(port,10), pidOptions })
+    });
+    if (!r.ok) throw new Error('Capture failed: ' + r.status);
+    const j = await r.json();
+    const xml = j.raw && j.raw.body ? j.raw.body : JSON.stringify(j, null, 2);
+    // parse XML safely (DOMParser)
+    let respCode = 'unknown';
+    try {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(xml, 'application/xml');
+      const resp = doc.querySelector('Resp');
+      if (resp) {
+        respCode = resp.getAttribute('errCode') || respCode;
+        const q = resp.getAttribute('qScore');
+        $('qscore').textContent = q ? 'qScore: ' + q : '';
+        lastRespMeta = {
+          errCode: resp.getAttribute('errCode'),
+          errInfo: resp.getAttribute('errInfo'),
+          fCount: resp.getAttribute('fCount'),
+          fType: resp.getAttribute('fType'),
+          nmPoints: resp.getAttribute('nmPoints'),
+          qScore: resp.getAttribute('qScore')
+        };
+      }
+      const dataNode = doc.querySelector('Data');
+      if (dataNode && dataNode.textContent && dataNode.textContent.trim().length) {
+        lastPidDataXml = xml;
+        $('btnDownloadAll').disabled = false;
+        $('btnReveal').disabled = false;
+      } else {
+        lastPidDataXml = null;
+        $('btnDownloadAll').disabled = true;
+        $('btnReveal').disabled = true;
+      }
+    } catch (e) {
+      // parsing error: still show safe preview
+      lastPidDataXml = xml;
+      $('btnDownloadAll').disabled = true;
+      $('btnReveal').disabled = true;
+    }
+
+    // display masked XML
+    $('captureBox').textContent = maskDataXml(xml);
+    if (lastRespMeta && lastRespMeta.errCode === '0') {
+      setStatus('Capture SUCCESS (' + lastRespMeta.errInfo + ')', true);
+    } else {
+      setStatus('Capture result: ' + (lastRespMeta ? lastRespMeta.errInfo : respCode), false);
+    }
+  } catch (e) {
+    $('captureBox').textContent = 'Capture error: ' + e;
+    setStatus('Capture failed', false);
+  } finally {
+    $('btnCapture').disabled = false;
+  }
+}
+
+function downloadFile(filename, content) {
+  const blob = new Blob([content], { type: 'application/xml' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+}
+
+$('btnDiscover').addEventListener('click', discover);
+$('btnDeviceInfo').addEventListener('click', deviceInfo);
+$('btnCapture').addEventListener('click', capture);
+$('btnSetPort').addEventListener('click', ()=>{ discoveredPort = $('txtPort').value; $('btnDeviceInfo').disabled=false; $('btnCapture').disabled=false; setStatus('Port set: ' + discoveredPort, true); });
+$('btnLoadExample').addEventListener('click', ()=> {
+  $('pidOptions').value = '<PidOptions ver="1.0"><Opts fCount="1" fType="0" iCount="0" pCount="0" pgCount="2" format="0" pidVer="2.0" timeout="10000" pTimeout="20000" posh="UNKNOWN" env="P" /><CustOpts><Param name="mantrakey" value=\"\" /></CustOpts></PidOptions>';
+});
+$('btnClear').addEventListener('click', ()=> {
+  $('discoverBox').textContent = '{ not discovered }';
+  $('captureBox').textContent = '{ no capture }';
+  $('metaInfo').textContent = '';
+  $('qscore').textContent = '';
+  setStatus('Idle', true);
+  lastPidDataXml = null; $('btnDownloadAll').disabled = true; $('btnReveal').disabled = true;
+});
+
+$('btnDownloadAll').addEventListener('click', ()=> {
+  if (!lastPidDataXml) return alert('No PidData to download');
+  if (!confirm('This file contains biometric data. Save it securely. Continue?')) return;
+  downloadFile('PidData.xml', lastPidDataXml);
+});
+
+$('btnReveal').addEventListener('click', ()=> {
+  if (!lastPidDataXml) return alert('No PidData available');
+  if (!confirm('Revealing will show the full capture XML including base64. Only reveal in a secure environment. Continue?')) return;
+  $('captureBox').textContent = lastPidDataXml;
+});
+
+window.addEventListener('load', ()=> {
+  // optional: auto-discover when page loads
+  // discover();
+});
+
+</script>
+</body>
+</html>
