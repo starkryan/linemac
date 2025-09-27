@@ -41,14 +41,8 @@ export default function CameraComponent({ onPhotoCapture, onClose, showCaptureBu
           width: { ideal: inline ? 640 : 1280 },
           height: { ideal: inline ? 480 : 720 },
           facingMode: 'user',
-          // Explicit color constraints to prevent black & white mode
           aspectRatio: 16/9,
-          frameRate: { ideal: 30 },
-          colorTemperature: 'standard',
-          brightness: 'standard',
-          contrast: 'standard',
-          saturation: 'standard',
-          sharpness: 'standard'
+          frameRate: { ideal: 30 }
         },
         audio: false
       })
