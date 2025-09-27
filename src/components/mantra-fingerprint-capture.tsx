@@ -33,70 +33,25 @@ export function MantraFingerprintCapture({
   captureType,
   title,
   onCaptureComplete,
-  proxyUrl = 'http://127.0.0.1:3000'
+  proxyUrl = '/api/mantra'
 }: MantraFingerprintCaptureProps) {
   const [deviceStatus, setDeviceStatus] = useState<'checking' | 'connected' | 'disconnected'>('checking');
   const [isCapturing, setIsCapturing] = useState(false);
   const [captureResult, setCaptureResult] = useState<MantraCaptureResponse | null>(null);
   const [deviceInfo, setDeviceInfo] = useState<MantraDeviceInfo | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [proxyStatus, setProxyStatus] = useState<'checking' | 'online' | 'offline'>('checking');
-  const [workingProxyUrl, setWorkingProxyUrl] = useState<string>(proxyUrl);
 
   useEffect(() => {
-    checkProxyStatus();
     checkDeviceConnection();
   }, []);
-
-  const checkProxyStatus = async () => {
-    // Try multiple proxy URLs to find the working one
-    const proxyUrls = [
-      proxyUrl,
-      'http://localhost:3000',
-      'http://127.0.0.1:3000'
-    ];
-
-    for (const url of proxyUrls) {
-      try {
-        const response = await fetch(`${url}/api/discover`, {
-          method: 'GET',
-          cache: 'no-store'
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          if (data.ok) {
-            setProxyStatus('online');
-            setWorkingProxyUrl(url);
-            return;
-          }
-        }
-      } catch {
-        // Continue to next URL
-      }
-    }
-
-    setProxyStatus('offline');
-  };
 
   const checkDeviceConnection = async () => {
     try {
       setDeviceStatus('checking');
       setError(null);
 
-      // Check if proxy is online first
-      const currentProxyStatus = proxyStatus;
-      if (currentProxyStatus !== 'online') {
-        await checkProxyStatus();
-        if (proxyStatus !== 'online') {
-          setDeviceStatus('disconnected');
-          setError('Mantra proxy server is not running');
-          return;
-        }
-      }
-
-      // Try to discover device using the working proxy URL
-      const response = await fetch(`${workingProxyUrl}/api/discover`, {
+      // Try to discover device through Next.js API
+      const response = await fetch(`${proxyUrl}/discover`, {
         method: 'GET',
         cache: 'no-store'
       });
@@ -146,13 +101,13 @@ export function MantraFingerprintCapture({
       // Generate PID options based on capture type
       const pidOptions = generatePidOptions(captureType);
 
-      const response = await fetch(`${workingProxyUrl}/api/capture`, {
+      const response = await fetch(`${proxyUrl}/capture`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          port: 11101, // Default Mantra port
+          port: 11101,
           pidOptions
         })
       });
@@ -235,14 +190,7 @@ export function MantraFingerprintCapture({
     }
   };
 
-  const getProxyStatusIcon = () => {
-    switch (proxyStatus) {
-      case 'online': return <Wifi className="w-4 h-4 text-green-600" />;
-      case 'offline': return <WifiOff className="w-4 h-4 text-red-600" />;
-      default: return <Loader2 className="w-4 h-4 animate-spin" />;
-    }
-  };
-
+  
   const getCaptureStatusIcon = () => {
     if (!captureResult) return null;
     return captureResult.status === 'SUCCESS'
@@ -254,22 +202,12 @@ export function MantraFingerprintCapture({
     <div className="bg-white rounded-lg border border-gray-200 p-6 space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
-        <div className="flex items-center gap-2">
-          <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-            proxyStatus === 'online' ? 'bg-green-100 text-green-800' :
-            proxyStatus === 'offline' ? 'bg-red-100 text-red-800' :
-            'bg-yellow-100 text-yellow-800'
-          }`}>
-            {getProxyStatusIcon()}
-            <span className="ml-1">Proxy</span>
-          </div>
-          <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor()}`}>
-            {getStatusIcon()}
-            <span className="ml-2">
-              {deviceStatus === 'checking' ? 'Checking Device...' :
-               deviceStatus === 'connected' ? 'Device Connected' : 'Device Disconnected'}
-            </span>
-          </div>
+        <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor()}`}>
+          {getStatusIcon()}
+          <span className="ml-2">
+            {deviceStatus === 'checking' ? 'Checking Device...' :
+             deviceStatus === 'connected' ? 'Device Connected' : 'Device Disconnected'}
+          </span>
         </div>
       </div>
 
@@ -365,9 +303,9 @@ export function MantraFingerprintCapture({
       <div className="flex justify-center gap-3">
         <button
           onClick={handleCapture}
-          disabled={deviceStatus !== 'connected' || isCapturing || proxyStatus !== 'online'}
+          disabled={deviceStatus !== 'connected' || isCapturing}
           className={`px-6 py-2 rounded-lg font-medium transition-colors ${
-            deviceStatus === 'connected' && !isCapturing && proxyStatus === 'online'
+            deviceStatus === 'connected' && !isCapturing
               ? 'bg-blue-600 hover:bg-blue-700 text-white'
               : 'bg-gray-300 text-gray-500 cursor-not-allowed'
           }`}
@@ -382,7 +320,7 @@ export function MantraFingerprintCapture({
           )}
         </button>
 
-        {(deviceStatus === 'disconnected' || proxyStatus === 'offline') && (
+        {deviceStatus === 'disconnected' && (
           <button
             onClick={checkDeviceConnection}
             className="px-4 py-2 text-blue-600 hover:text-blue-700 text-sm font-medium"
@@ -393,8 +331,8 @@ export function MantraFingerprintCapture({
       </div>
 
       <div className="text-xs text-gray-500 text-center">
-        <p>Ensure Mantra RD Service is running and device is connected</p>
-        <p>Working Proxy: {workingProxyUrl}</p>
+        <p>Ensure Mantra RD Service is running on port 11101 and device is connected</p>
+        <p>Using Next.js API routes for secure RD Service communication</p>
       </div>
     </div>
   );
