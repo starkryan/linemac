@@ -6,6 +6,7 @@ import DeviceInfo from './DeviceInfo';
 import FingerprintCapture from './FingerprintCapture';
 import ResponseDisplay from './ResponseDisplay';
 import RemoteDeviceConfig from './RemoteDeviceConfig';
+import DirectRDService from './DirectRDService';
 
 const MantraTestPage: React.FC = () => {
   const [deviceInfo, setDeviceInfo] = useState<any>(null);
@@ -43,28 +44,40 @@ const MantraTestPage: React.FC = () => {
         </div>
 
         <div className="space-y-6">
-          {/* Remote Device Configuration */}
-          <RemoteDeviceConfig
-            onDeviceConfigured={handleRemoteDeviceConfigured}
+          {/* Direct RDService Component - Works from any hosting */}
+          <DirectRDService
             onResponse={handleResponse}
           />
 
-          {/* Device Discovery */}
-          <DeviceDiscovery
-            onDeviceDiscovered={handleDeviceDiscovered}
-            onResponse={handleResponse}
-          />
+          <div className="border-t pt-6">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">Alternative: Server-Based Communication</h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Use these components if you need server-based communication (requires RDService accessible from server)
+            </p>
 
-          {/* Device Information */}
-          <DeviceInfo
-            deviceInfo={deviceInfo}
-            onResponse={handleResponse}
-          />
+            {/* Remote Device Configuration */}
+            <RemoteDeviceConfig
+              onDeviceConfigured={handleRemoteDeviceConfigured}
+              onResponse={handleResponse}
+            />
 
-          {/* Fingerprint Capture */}
-          <FingerprintCapture
-            onResponse={handleResponse}
-          />
+            {/* Device Discovery */}
+            <DeviceDiscovery
+              onDeviceDiscovered={handleDeviceDiscovered}
+              onResponse={handleResponse}
+            />
+
+            {/* Device Information */}
+            <DeviceInfo
+              deviceInfo={deviceInfo}
+              onResponse={handleResponse}
+            />
+
+            {/* Fingerprint Capture */}
+            <FingerprintCapture
+              onResponse={handleResponse}
+            />
+          </div>
 
           {/* Response Display */}
           {lastResponse && (
@@ -88,16 +101,16 @@ const MantraTestPage: React.FC = () => {
             <h3 className="text-lg font-semibold text-blue-800 mb-3">Help & Information</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <div>
-                <h4 className="font-medium text-blue-700 mb-2">Getting Started</h4>
+                <h4 className="font-medium text-blue-700 mb-2">Direct RDService (Recommended)</h4>
                 <ul className="text-sm text-blue-600 space-y-1">
-                  <li>• Configure remote RDService connection</li>
-                  <li>• Click "Discover Device" to find connected devices</li>
-                  <li>• Use "Get Device Info" for detailed specifications</li>
-                  <li>• Configure PID options before capturing fingerprints</li>
+                  <li>• Works from any hosting (uclippb.com, etc.)</li>
+                  <li>• Communicates directly with your local RDService</li>
+                  <li>• No server configuration required</li>
+                  <li>• Just ensure RDService is running locally</li>
                 </ul>
               </div>
               <div>
-                <h4 className="font-medium text-blue-700 mb-2">Remote Setup</h4>
+                <h4 className="font-medium text-blue-700 mb-2">Server-Based Alternative</h4>
                 <ul className="text-sm text-blue-600 space-y-1">
                   <li>• Use "Remote Device Configuration" for VPS setups</li>
                   <li>• Configure authentication for remote access</li>
@@ -108,10 +121,10 @@ const MantraTestPage: React.FC = () => {
               <div>
                 <h4 className="font-medium text-blue-700 mb-2">Troubleshooting</h4>
                 <ul className="text-sm text-blue-600 space-y-1">
-                  <li>• Check RDService is running on target machine</li>
-                  <li>• Verify firewall and port forwarding settings</li>
-                  <li>• Ensure authentication keys are correct</li>
-                  <li>• In development mode, mock responses are provided</li>
+                  <li>• Check RDService is running on ports 11100-11105</li>
+                  <li>• Verify Windows Firewall allows localhost connections</li>
+                  <li>• Ensure Mantra device drivers are installed</li>
+                  <li>• Test with official Mantra test page first</li>
                 </ul>
               </div>
             </div>

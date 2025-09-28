@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label"
 import { AadhaarIcon } from "@/components/ui/AadhaarIcon"
 import { RDServiceIntegration, useRDService } from "@/components/rd-service-integration"
 import { MorphoFingerprintCapture } from "@/components/morpho-fingerprint-capture"
-import { MantraFingerprintCapture } from "@/components/mantra-fingerprint-capture"
+import { AadhaarMantraCapture } from "@/components/mantra/AadhaarMantraCapture"
 
 interface BiometricData {
   quality: number
@@ -34,7 +34,7 @@ export default function BiometricSection({ onFingerprintCapture, onIrisCapture, 
   const [activeCapture, setActiveCapture] = useState<string | null>(null)
   const [biometricData, setBiometricData] = useState<Record<string, BiometricData>>({})
   const [showRDCapture, setShowRDCapture] = useState<string | null>(null)
-  const [selectedDevice, setSelectedDevice] = useState<'morpho' | 'mantra'>('morpho')
+  const [selectedDevice, setSelectedDevice] = useState<'morpho' | 'mantra'>('mantra')
 
   const allFingerprintTypes = [
     {
@@ -179,9 +179,9 @@ export default function BiometricSection({ onFingerprintCapture, onIrisCapture, 
     if (!biometricType) return
 
     const newData: BiometricData = {
-      quality: mantraData.score || mantraData.qScore || 95,
-      timestamp: new Date().toISOString(),
-      data: mantraData.pid || `mantra_${type}_${Date.now()}`
+      quality: mantraData.qScore || mantraData.score || 95,
+      timestamp: mantraData.timestamp || new Date().toISOString(),
+      data: mantraData.data || mantraData.pid || `mantra_${type}_${Date.now()}`
     }
 
     setBiometricData(prev => ({
@@ -287,10 +287,11 @@ export default function BiometricSection({ onFingerprintCapture, onIrisCapture, 
                             onCaptureComplete={(data) => handleMorphoCapture(biometricType.subtype, data)}
                           />
                         ) : deviceType === 'mantra' ? (
-                          <MantraFingerprintCapture
+                          <AadhaarMantraCapture
                             captureType={biometricType.subtype}
                             title={biometricType.title}
                             onCaptureComplete={(data) => handleMantraCapture(biometricType.subtype, data)}
+                            autoStart={true}
                           />
                         ) : selectedDevice === 'morpho' ? (
                           <MorphoFingerprintCapture
@@ -299,10 +300,11 @@ export default function BiometricSection({ onFingerprintCapture, onIrisCapture, 
                             onCaptureComplete={(data) => handleMorphoCapture(biometricType.subtype, data)}
                           />
                         ) : selectedDevice === 'mantra' ? (
-                          <MantraFingerprintCapture
+                          <AadhaarMantraCapture
                             captureType={biometricType.subtype}
                             title={biometricType.title}
                             onCaptureComplete={(data) => handleMantraCapture(biometricType.subtype, data)}
+                            autoStart={true}
                           />
                         ) : null}
                       </div>
@@ -337,10 +339,17 @@ export default function BiometricSection({ onFingerprintCapture, onIrisCapture, 
                           className="w-16 h-16 mx-auto mb-4"
                         />
                         <p className="text-lg font-medium mb-2">{biometricType.title}</p>
-                        <p className="text-sm opacity-75">Quality: {capturedData.quality}%</p>
-                        <p className="text-xs opacity-50 mt-2">
-                          {new Date(capturedData.timestamp).toLocaleTimeString()}
-                        </p>
+                        <div className="text-center">
+                          <div className="text-3xl font-bold text-green-400 mb-1">
+                            {capturedData.quality}%
+                          </div>
+                          <div className="text-sm text-blue-300 mb-2">
+                            Excellent Quality
+                          </div>
+                          <p className="text-xs opacity-50">
+                            {new Date(capturedData.timestamp).toLocaleTimeString()}
+                          </p>
+                        </div>
                       </div>
                     </div>
                     <div className="flex gap-2">
