@@ -44,36 +44,6 @@ function extractErrorCode(errorMessage: string): string {
   return 'UNKNOWN';
 }
 
-function callRdWithRetry(port: number, method: string, path = '/', body = null, timeout = 5000, maxRetries = 3): Promise<{ statusCode: number; headers: any; body: string }> {
-  return new Promise(async (resolve, reject) => {
-    let lastError: any = null;
-
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-      try {
-        const result = await callRdSingle(port, method, path, body, timeout);
-        resolve(result);
-        return;
-      } catch (error: any) {
-        lastError = error;
-        console.log(`Attempt ${attempt}/${maxRetries} failed: ${error.message}`);
-
-        // Don't retry on certain errors
-        if (error.code === 'ECONNREFUSED' && attempt === maxRetries) {
-          break;
-        }
-
-        // Wait before retry (exponential backoff)
-        if (attempt < maxRetries) {
-          const delay = Math.min(1000 * Math.pow(2, attempt - 1), 5000);
-          await new Promise(resolve => setTimeout(resolve, delay));
-        }
-      }
-    }
-
-    reject(lastError);
-  });
-}
-
 function callRdSingle(port: number, method: string, path = '/', body = null, timeout = 5000): Promise<{ statusCode: number; headers: any; body: string }> {
   return new Promise((resolve, reject) => {
     const opts = {
@@ -87,9 +57,9 @@ function callRdSingle(port: number, method: string, path = '/', body = null, tim
         'Content-Length': body ? Buffer.byteLength(body) : 0,
         'User-Agent': 'Mantra-RDService-Client/1.0'
       },
-      rejectUnauthorized: false, // dev only. Use CA in prod.
+      rejectUnauthorized: false,
       timeout,
-      family: 4 // Force IPv4
+      family: 4
     };
 
     const req = require('https').request(opts, (res: any) => {
@@ -124,20 +94,50 @@ function callRdSingle(port: number, method: string, path = '/', body = null, tim
   });
 }
 
+function callRdWithRetry(port: number, method: string, path = '/', body = null, timeout = 5000, maxRetries = 3): Promise<{ statusCode: number; headers: any; body: string }> {
+  return new Promise(async (resolve, reject) => {
+    let lastError: any = null;
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        const result = await callRdSingle(port, method, path, body, timeout);
+        resolve(result);
+        return;
+      } catch (error: any) {
+        lastError = error;
+        console.log(`Attempt ${attempt}/${maxRetries} failed: ${error.message}`);
+
+        // Don't retry on certain errors
+        if (error.code === 'ECONNREFUSED' && attempt === maxRetries) {
+          break;
+        }
+
+        // Wait before retry (exponential backoff)
+        if (attempt < maxRetries) {
+          const delay = Math.min(1000 * Math.pow(2, attempt - 1), 5000);
+          await new Promise(resolve => setTimeout(resolve, delay));
+        }
+      }
+    }
+
+    reject(lastError);
+  });
+}
+
 export async function GET(request: NextRequest) {
   const port = 11101;
   const isDevelopment = process.env.NODE_ENV === 'development';
   const method = request.method;
   const url = new URL(request.url);
-  const path = url.pathname.replace('/api/mantra/discover', '');
+  const path = url.pathname.replace('/api/mantra/rd/service', '');
 
   // Support different HTTP methods like the Express server
-  let httpMethod = method;
+  let httpMethod = 'RDSERVICE'; // Default for this endpoint
   if (method === 'GET') {
     // For GET requests, check if it's trying to use RDService verb
     const rdServiceParam = url.searchParams.get('method');
-    if (rdServiceParam === 'RDSERVICE') {
-      httpMethod = 'RDSERVICE';
+    if (rdServiceParam) {
+      httpMethod = rdServiceParam.toUpperCase();
     }
   }
 
@@ -145,7 +145,7 @@ export async function GET(request: NextRequest) {
 
     // In development mode, return mock response if RDService is not available
     if (isDevelopment) {
-      console.log('Development mode: Using mock RDService response for mantra device');
+      console.log('Development mode: Using mock RDService response for mantra device (rd/service)');
       const parsedResult = parseXmlResponse(MOCK_RD_SERVICE_RESPONSE);
       return NextResponse.json({
         ok: true,
@@ -158,7 +158,7 @@ export async function GET(request: NextRequest) {
           parsed: parsedResult
         },
         mock: true,
-        message: 'Development mode - mock RDService response'
+        message: 'Development mode - mock RDService response (rd/service)'
       });
     }
 
@@ -188,7 +188,7 @@ export async function GET(request: NextRequest) {
 
     // Handle connection errors gracefully in development
     if (isDevelopment && errorMessage.includes('ECONNREFUSED')) {
-      console.log('Development mode: RDService not available, using mock response');
+      console.log('Development mode: RDService not available, using mock response (rd/service)');
       const parsedResult = parseXmlResponse(MOCK_RD_SERVICE_RESPONSE);
       return NextResponse.json({
         ok: true,
@@ -201,7 +201,7 @@ export async function GET(request: NextRequest) {
           parsed: parsedResult
         },
         mock: true,
-        message: 'Development mode - mock RDService response (service not running)'
+        message: 'Development mode - mock RDService response (service not running, rd/service)'
       });
     }
 
@@ -228,4 +228,8 @@ export async function GET(request: NextRequest) {
       timestamp: new Date().toISOString()
     }, { status: 502 });
   }
+}
+
+export async function POST(request: NextRequest) {
+  return GET(request);
 }

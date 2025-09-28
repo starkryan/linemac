@@ -1,5 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+// Mock device info response for development environments
+const MOCK_DEVICE_INFO_RESPONSE = `<?xml version="1.0" encoding="UTF-8"?>
+<DeviceInfo>
+  <Param name="status" value="true"/>
+  <Param name="datetime" value="${new Date().toISOString()}"/>
+  <Param name="model" value="Mantra MFS100"/>
+  <Param name="serial" value="DEV-MOCK-001"/>
+  <Param name="firmware" value="1.0.0"/>
+  <Param name="library" value="development-mock"/>
+  <Param name="manufacturer" value="Mantra"/>
+  <Param name="type" value="Fingerprint Scanner"/>
+</DeviceInfo>`;
+
+// Helper function to parse XML response
+function parseXmlResponse(xmlString: string): any {
+  try {
+    const result: any = { deviceInfo: {} };
+    const paramMatches = xmlString.match(/<Param name="([^"]*)" value="([^"]*)"/g);
+    if (paramMatches) {
+      paramMatches.forEach(param => {
+        const match = param.match(/<Param name="([^"]*)" value="([^"]*)"/);
+        if (match) {
+          result.deviceInfo[match[1]] = match[2];
+        }
+      });
+    }
+    return result;
+  } catch (error) {
+    return { error: 'Failed to parse XML response' };
+  }
+}
+
 function callRd(port: number, method: string, path = '/rd/info', body = null, timeout = 5000): Promise<{ statusCode: number; headers: any; body: string }> {
   return new Promise((resolve, reject) => {
     const opts = {
@@ -30,10 +62,69 @@ function callRd(port: number, method: string, path = '/rd/info', body = null, ti
 export async function POST(request: NextRequest) {
   const body = await request.json();
   const port = body?.port ?? 11101;
+  const isDevelopment = process.env.NODE_ENV === 'development';
+
   try {
+    // In development mode, return mock response if RDService is not available
+    if (isDevelopment) {
+      console.log('Development mode: Using mock device info response for mantra device');
+      const parsedResult = parseXmlResponse(MOCK_DEVICE_INFO_RESPONSE);
+      return NextResponse.json({
+        ok: true,
+        port,
+        method: 'DEVICEINFO',
+        result: {
+          statusCode: 200,
+          headers: { 'content-type': 'text/xml' },
+          body: MOCK_DEVICE_INFO_RESPONSE,
+          parsed: parsedResult
+        },
+        mock: true,
+        message: 'Development mode - mock device info response'
+      });
+    }
+
+    // Production mode: try to connect to actual RDService
     const result = await callRd(port, 'DEVICEINFO', '/rd/info', null, 5000);
-    return NextResponse.json({ ok: true, raw: result });
+    const parsedResult = parseXmlResponse(result.body);
+    return NextResponse.json({
+      ok: true,
+      port,
+      method: 'DEVICEINFO',
+      result: {
+        ...result,
+        parsed: parsedResult
+      }
+    });
   } catch (err) {
-    return NextResponse.json({ ok: false, error: String(err) }, { status: 502 });
+    const errorMessage = String(err);
+
+    // Handle connection errors gracefully in development
+    if (isDevelopment && errorMessage.includes('ECONNREFUSED')) {
+      console.log('Development mode: RDService not available, using mock device info response');
+      const parsedResult = parseXmlResponse(MOCK_DEVICE_INFO_RESPONSE);
+      return NextResponse.json({
+        ok: true,
+        port,
+        method: 'DEVICEINFO',
+        result: {
+          statusCode: 200,
+          headers: { 'content-type': 'text/xml' },
+          body: MOCK_DEVICE_INFO_RESPONSE,
+          parsed: parsedResult
+        },
+        mock: true,
+        message: 'Development mode - mock device info response (service not running)'
+      });
+    }
+
+    return NextResponse.json({
+      ok: false,
+      port,
+      method: 'DEVICEINFO',
+      error: errorMessage,
+      suggestion: isDevelopment ? 'Running in development mode with mock service' : 'Please ensure Mantra RDService is installed and running',
+      timestamp: new Date().toISOString()
+    }, { status: 502 });
   }
 }
