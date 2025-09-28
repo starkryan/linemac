@@ -1,0 +1,306 @@
+npm warn config global-style This option has been deprecated in favor of `--install-strategy=shallow`
+
+> ucl@0.1.0 dev
+> NODE_ENV=development next dev
+
+   ▲ Next.js 15.5.3
+   - Local:        http://localhost:3000
+   - Network:      http://192.168.1.9:3000
+   - Environments: .env
+
+ ✓ Starting...
+ ✓ Ready in 1478ms
+ ⚠ Cross origin request detected from rolf-prothallium-semiseriously.ngrok-free.dev to /_next/* resource. In a future major version of Next.js, you will need to explicitly configure "allowedDevOrigins" in next.config to allow this.
+Read more: https://nextjs.org/docs/app/api-reference/config/next-config-js/allowedDevOrigins
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ○ Compiling /aadhaar-correction ...
+ ⨯ ./src/components/CameraComponent.tsx
+Error:   [31mx[0m Expected ',', got 'export'
+     ,-[[36;1;4m/home/neo/ucl/src/components/CameraComponent.tsx[0m:293:1]
+ [2m290[0m |   )
+ [2m291[0m | }
+ [2m292[0m | 
+ [2m293[0m | export default forwardRef<CameraComponentRef, CameraComponentProps>(CameraComponent)
+     : [35;1m^^^^^^[0m
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/components/CameraComponent.tsx
+./src/components/PhotographSection.tsx
+./src/app/aadhaar-correction/page.tsx
+ ⨯ ./src/components/CameraComponent.tsx
+Error:   [31mx[0m Expected ',', got 'export'
+     ,-[[36;1;4m/home/neo/ucl/src/components/CameraComponent.tsx[0m:293:1]
+ [2m290[0m |   )
+ [2m291[0m | }
+ [2m292[0m | 
+ [2m293[0m | export default forwardRef<CameraComponentRef, CameraComponentProps>(CameraComponent)
+     : [35;1m^^^^^^[0m
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/components/CameraComponent.tsx
+./src/components/PhotographSection.tsx
+./src/app/aadhaar-correction/page.tsx
+ ⨯ ./src/components/CameraComponent.tsx
+Error:   [31mx[0m Expected ',', got 'export'
+     ,-[[36;1;4m/home/neo/ucl/src/components/CameraComponent.tsx[0m:293:1]
+ [2m290[0m |   )
+ [2m291[0m | }
+ [2m292[0m | 
+ [2m293[0m | export default forwardRef<CameraComponentRef, CameraComponentProps>(CameraComponent)
+     : [35;1m^^^^^^[0m
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/components/CameraComponent.tsx
+./src/components/PhotographSection.tsx
+./src/app/aadhaar-correction/page.tsx
+ GET /aadhaar-correction 500 in 1739ms
+ GET /aadhaar-correction 500 in 9ms
+ ⨯ ./src/components/CameraComponent.tsx
+Error:   [31mx[0m Expected ',', got 'export'
+     ,-[[36;1;4m/home/neo/ucl/src/components/CameraComponent.tsx[0m:293:1]
+ [2m290[0m |   )
+ [2m291[0m | }
+ [2m292[0m | 
+ [2m293[0m | export default CameraComponent
+     : [35;1m^^^^^^[0m
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/components/CameraComponent.tsx
+./src/components/PhotographSection.tsx
+./src/app/aadhaar-correction/page.tsx
+ ⚠ ./src/components/PhotographSection.tsx
+Attempted import error: '@/components/CameraComponent' does not contain a default export (imported as 'CameraComponent').
+
+Import trace for requested module:
+./src/components/PhotographSection.tsx
+./src/app/aadhaar-correction/page.tsx
+
+./src/components/PhotographSection.tsx
+Attempted import error: '@/components/CameraComponent' does not contain a default export (imported as 'CameraComponent').
+
+Import trace for requested module:
+./src/components/PhotographSection.tsx
+./src/app/aadhaar-correction/page.tsx
+
+./src/components/PhotographSection.tsx
+Attempted import error: '@/components/CameraComponent' does not contain a default export (imported as 'CameraComponent').
+
+Import trace for requested module:
+./src/components/PhotographSection.tsx
+./src/app/aadhaar-correction/page.tsx
+
+./src/components/PhotographSection.tsx
+Attempted import error: '@/components/CameraComponent' does not contain a default export (imported as 'CameraComponent').
+
+Import trace for requested module:
+./src/components/PhotographSection.tsx
+./src/app/aadhaar-correction/page.tsx
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ GET /aadhaar-correction 200 in 249ms
+ ⚠ ./src/components/PhotographSection.tsx
+Attempted import error: '@/components/CameraComponent' does not contain a default export (imported as 'CameraComponent').
+
+Import trace for requested module:
+./src/components/PhotographSection.tsx
+./src/app/aadhaar-correction/page.tsx
+
+./src/components/PhotographSection.tsx
+Attempted import error: '@/components/CameraComponent' does not contain a default export (imported as 'CameraComponent').
+
+Import trace for requested module:
+./src/components/PhotographSection.tsx
+./src/app/aadhaar-correction/page.tsx
+
+./src/components/PhotographSection.tsx
+Attempted import error: '@/components/CameraComponent' does not contain a default export (imported as 'CameraComponent').
+
+Import trace for requested module:
+./src/components/PhotographSection.tsx
+./src/app/aadhaar-correction/page.tsx
+
+./src/components/PhotographSection.tsx
+Attempted import error: '@/components/CameraComponent' does not contain a default export (imported as 'CameraComponent').
+
+Import trace for requested module:
+./src/components/PhotographSection.tsx
+./src/app/aadhaar-correction/page.tsx
+ ⚠ ./src/components/PhotographSection.tsx
+Attempted import error: '@/components/CameraComponent' does not contain a default export (imported as 'CameraComponent').
+
+Import trace for requested module:
+./src/components/PhotographSection.tsx
+./src/app/aadhaar-correction/page.tsx
+
+./src/components/PhotographSection.tsx
+Attempted import error: '@/components/CameraComponent' does not contain a default export (imported as 'CameraComponent').
+
+Import trace for requested module:
+./src/components/PhotographSection.tsx
+./src/app/aadhaar-correction/page.tsx
+
+./src/components/PhotographSection.tsx
+Attempted import error: '@/components/CameraComponent' does not contain a default export (imported as 'CameraComponent').
+
+Import trace for requested module:
+./src/components/PhotographSection.tsx
+./src/app/aadhaar-correction/page.tsx
+
+./src/components/PhotographSection.tsx
+Attempted import error: '@/components/CameraComponent' does not contain a default export (imported as 'CameraComponent').
+
+Import trace for requested module:
+./src/components/PhotographSection.tsx
+./src/app/aadhaar-correction/page.tsx
+Session endpoint: Starting session check...
+Session endpoint: Starting session check...
+Session endpoint: Session result: Found
+Session endpoint: Session result: Found
+Session endpoint: User data found, role: admin
+Session endpoint: Returning session data for user: admin@ucl.test
+ GET /api/auth/session 200 in 698ms
+Session endpoint: User data found, role: admin
+Session endpoint: Returning session data for user: admin@ucl.test
+ GET /api/auth/session 200 in 601ms
+Session endpoint: Starting session check...
+Session endpoint: Session result: Found
+Session endpoint: User data found, role: admin
+Session endpoint: Returning session data for user: admin@ucl.test
+ GET /api/auth/session 200 in 10ms
+Session endpoint: Starting session check...
+Session endpoint: Session result: Found
+Session endpoint: User data found, role: admin
+Session endpoint: Returning session data for user: admin@ucl.test
+ GET /api/auth/session 200 in 15ms
+Session endpoint: Starting session check...
+Session endpoint: Session result: Found
+Session endpoint: User data found, role: admin
+Session endpoint: Returning session data for user: admin@ucl.test
+ GET /api/auth/session 200 in 15ms
+ ✓ Compiled /api/auth/session in 312ms (1766 modules)
+ GET /aadhaar-correction 200 in 59ms
+ GET /aadhaar-correction 200 in 117ms
+ ✓ Compiled in 289ms (1278 modules)
+ GET /aadhaar-correction 200 in 82ms
+ ✓ Compiled in 178ms (1278 modules)
+ GET /aadhaar-correction 200 in 50ms
+ ✓ Compiled in 164ms (1278 modules)
+ GET /aadhaar-correction 200 in 37ms
+ GET /aadhaar-correction 200 in 112ms
+ ✓ Compiled in 310ms (1278 modules)
+ ✓ Compiled /api/auth/session in 410ms (1184 modules)
+Session endpoint: Starting session check...
+Session endpoint: Starting session check...
+Session endpoint: Session result: Found
+Session endpoint: Session result: Found
+Session endpoint: User data found, role: admin
+Session endpoint: Returning session data for user: admin@ucl.test
+ GET /api/auth/session 200 in 586ms
+Session endpoint: User data found, role: admin
+Session endpoint: Returning session data for user: admin@ucl.test
+ GET /api/auth/session 200 in 481ms
+Session endpoint: Starting session check...
+Session endpoint: Session result: Found
+Session endpoint: User data found, role: admin
+Session endpoint: Returning session data for user: admin@ucl.test
+ GET /api/auth/session 200 in 10ms
+Session endpoint: Starting session check...
+Session endpoint: Session result: Found
+Session endpoint: User data found, role: admin
+Session endpoint: Returning session data for user: admin@ucl.test
+ GET /api/auth/session 200 in 12ms
+Session endpoint: Starting session check...
+Session endpoint: Session result: Found
+Session endpoint: User data found, role: admin
+Session endpoint: Returning session data for user: admin@ucl.test
+ GET /api/auth/session 200 in 7ms
+ ✓ Compiled in 208ms (1765 modules)
+ GET /aadhaar-correction 200 in 53ms
+ ✓ Compiled in 287ms (1765 modules)
+ GET /aadhaar-correction 200 in 47ms
+ ✓ Compiled in 191ms (1765 modules)
+ GET /aadhaar-correction 200 in 37ms
+ HEAD /aadhaar-correction 200 in 107ms
+ GET /aadhaar-correction 200 in 47ms
+Session endpoint: Starting session check...
+Session endpoint: Session result: Found
+Session endpoint: Starting session check...
+Session endpoint: Session result: Found
+Session endpoint: User data found, role: admin
+Session endpoint: Returning session data for user: admin@ucl.test
+ GET /api/auth/session 200 in 108ms
+Session endpoint: User data found, role: admin
+Session endpoint: Returning session data for user: admin@ucl.test
+ GET /api/auth/session 200 in 15ms
+Session endpoint: Starting session check...
+Session endpoint: Session result: Found
+Session endpoint: User data found, role: admin
+Session endpoint: Returning session data for user: admin@ucl.test
+ GET /api/auth/session 200 in 8ms
+Session endpoint: Starting session check...
+Session endpoint: Session result: Found
+Session endpoint: User data found, role: admin
+Session endpoint: Returning session data for user: admin@ucl.test
+ GET /api/auth/session 200 in 7ms
+Session endpoint: Starting session check...
+Session endpoint: Session result: Found
+Session endpoint: User data found, role: admin
+Session endpoint: Returning session data for user: admin@ucl.test
+ GET /api/auth/session 200 in 8ms
+ ✓ Compiled /_not-found in 219ms (698 modules)
+ ⨯ [Error [InvariantError]: Invariant: Expected clientReferenceManifest to be defined. This is a bug in Next.js.]
+ ⨯ [Error [InvariantError]: Invariant: Expected clientReferenceManifest to be defined. This is a bug in Next.js.]
+[TypeError: Cannot read properties of undefined (reading '/_app')]
+ ⨯ [TypeError: Cannot read properties of undefined (reading '/_app')]
+ ⨯ [TypeError: Cannot read properties of undefined (reading '/_app')]
+ ⨯ [Error: Cannot find module '/home/neo/ucl/.next/server/pages/_document.js'
+Require stack:
+- /home/neo/ucl/node_modules/next/dist/server/require.js
+- /home/neo/ucl/node_modules/next/dist/server/load-components.js
+- /home/neo/ucl/node_modules/next/dist/build/utils.js
+- /home/neo/ucl/node_modules/next/dist/build/swc/options.js
+- /home/neo/ucl/node_modules/next/dist/build/swc/index.js
+- /home/neo/ucl/node_modules/next/dist/build/next-config-ts/transpile-config.js
+- /home/neo/ucl/node_modules/next/dist/server/config.js
+- /home/neo/ucl/node_modules/next/dist/server/next.js
+- /home/neo/ucl/node_modules/next/dist/server/lib/start-server.js] {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array]
+}
+[TypeError: Cannot read properties of undefined (reading '/_app')]
+ ⨯ [TypeError: Cannot read properties of undefined (reading '/_app')]
+[TypeError: Cannot read properties of undefined (reading '/_app')]
+ ⨯ [Error: Cannot find module '/home/neo/ucl/.next/server/pages/_document.js'
+Require stack:
+- /home/neo/ucl/node_modules/next/dist/server/require.js
+- /home/neo/ucl/node_modules/next/dist/server/load-components.js
+- /home/neo/ucl/node_modules/next/dist/build/utils.js
+- /home/neo/ucl/node_modules/next/dist/build/swc/options.js
+- /home/neo/ucl/node_modules/next/dist/build/swc/index.js
+- /home/neo/ucl/node_modules/next/dist/build/next-config-ts/transpile-config.js
+- /home/neo/ucl/node_modules/next/dist/server/config.js
+- /home/neo/ucl/node_modules/next/dist/server/next.js
+- /home/neo/ucl/node_modules/next/dist/server/lib/start-server.js] {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array]
+}
+[TypeError: Cannot read properties of undefined (reading '/_app')]
+ ⨯ [TypeError: Cannot read properties of undefined (reading '/_app')]
+[TypeError: Cannot read properties of undefined (reading '/_app')]
+ GET /aadhaar-correction 500 in 811ms
+ GET /aadhaar-correction 500 in 21ms

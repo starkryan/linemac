@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -21,10 +21,12 @@ export default function PhotographSection({ onPhotoCountChange }: PhotographSect
   const [exceptionPhotoScore, setExceptionPhotoScore] = useState(0)
   const mainPhotoIndexRef = useRef(0)
   const exceptionPhotoIndexRef = useRef(0)
+  const mainCameraRef = useRef<{ startCamera: () => void }>(null)
+  const exceptionCameraRef = useRef<{ startCamera: () => void }>(null)
 
   const handleMainPhotoCapture = (photoData: string) => {
-    // Add to exception photos (display in second box)
-    setExceptionPhotos(prev => [...prev, photoData])
+    // Add to main photos array
+    setMainPhotos(prev => [...prev, photoData])
     mainPhotoIndexRef.current++
 
     // Simulate quality score (in real app, this would be calculated)
@@ -37,8 +39,8 @@ export default function PhotographSection({ onPhotoCountChange }: PhotographSect
   }
 
   const handleExceptionPhotoCapture = (photoData: string) => {
-    // Add to main photos (display in first box)
-    setMainPhotos(prev => [...prev, photoData])
+    // Add to exception photos array
+    setExceptionPhotos(prev => [...prev, photoData])
     exceptionPhotoIndexRef.current++
 
     // Simulate quality score
@@ -86,44 +88,54 @@ export default function PhotographSection({ onPhotoCountChange }: PhotographSect
     }
   }
 
+  // Effect to start camera when component becomes active
+  useEffect(() => {
+    if (mainCameraActive && mainCameraRef.current) {
+      console.log('PhotographSection: Starting main camera')
+      // Small delay to ensure CameraComponent is fully mounted
+      const timer = setTimeout(() => {
+        mainCameraRef.current?.startCamera()
+      }, 50)
+      return () => clearTimeout(timer)
+    }
+  }, [mainCameraActive])
+
+  useEffect(() => {
+    if (exceptionCameraActive && exceptionCameraRef.current) {
+      console.log('PhotographSection: Starting exception camera')
+      // Small delay to ensure CameraComponent is fully mounted
+      const timer = setTimeout(() => {
+        exceptionCameraRef.current?.startCamera()
+      }, 50)
+      return () => clearTimeout(timer)
+    }
+  }, [exceptionCameraActive])
+
   const toggleMainCamera = () => {
     if (remainingMainPhotos <= 0) return
 
+    console.log('PhotographSection: Toggling main camera, current state:', mainCameraActive)
+
     if (!mainCameraActive) {
-      // Directly start camera without any delay
+      // Start camera
       setMainCameraActive(true)
     } else {
-      // Camera is already active, capture photo directly
-      // Simulate the capture by creating a photo data
-      captureMainPhotoDirectly()
+      // Camera is already active, stop it
+      setMainCameraActive(false)
     }
   }
 
   const toggleExceptionCamera = () => {
     if (remainingExceptionPhotos <= 0) return
 
+    console.log('PhotographSection: Toggling exception camera, current state:', exceptionCameraActive)
+
     if (!exceptionCameraActive) {
-      // Directly start camera without any delay
+      // Start camera
       setExceptionCameraActive(true)
     } else {
-      // Camera is already active, capture photo directly
-      captureExceptionPhotoDirectly()
-    }
-  }
-
-  const captureMainPhotoDirectly = () => {
-    // Find the main camera component and trigger capture
-    const mainCameraElement = document.querySelector('[data-main-capture="true"]') as HTMLButtonElement
-    if (mainCameraElement) {
-      mainCameraElement.click()
-    }
-  }
-
-  const captureExceptionPhotoDirectly = () => {
-    // Find the exception camera component and trigger capture
-    const exceptionCameraElement = document.querySelector('[data-exception-capture="true"]') as HTMLButtonElement
-    if (exceptionCameraElement) {
-      exceptionCameraElement.click()
+      // Camera is already active, stop it
+      setExceptionCameraActive(false)
     }
   }
 
@@ -135,10 +147,10 @@ export default function PhotographSection({ onPhotoCountChange }: PhotographSect
     <div className="space-y-6">
   
       {/* Photograph capture interface with two sections */}
-      <div className="grid grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Main Photograph Section */}
         <div className="bg-white border border-gray-300 rounded">
-          <div className="bg-blue-100 px-4 py-2 flex items-center justify-between">
+          <div className="bg-blue-100 px-3 py-2 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div
                 className="w-5 h-5 flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity"
@@ -152,59 +164,47 @@ export default function PhotographSection({ onPhotoCountChange }: PhotographSect
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-700">Score</span>
+              <span className="text-xs text-gray-700">Score</span>
               <Input
-                className="bg-white border-gray-400 h-6 w-16 text-center"
+                className="bg-white border-gray-400 h-5 w-12 text-center text-xs"
                 value={`${mainPhotoScore}%`}
                 readOnly
               />
             </div>
           </div>
-          <div className="p-4">
+          <div className="p-3">
             {mainCameraActive ? (
-              <CameraComponent
-                onPhotoCapture={handleMainPhotoCapture}
-                onClose={() => setMainCameraActive(false)}
-                showCaptureButton={remainingMainPhotos > 0}
-                inline={true}
-                captureDataAttr="main-capture"
-              />
-            ) : mainPhotos.length === 0 ? (
               <div className="space-y-4">
                 {/* Camera preview area */}
-                <div className="bg-black w-full h-96 border border-gray-400 flex items-center justify-center">
-                  {mainCameraActive ? (
-                    <CameraComponent
-                      onPhotoCapture={handleMainPhotoCapture}
-                      onClose={() => setMainCameraActive(false)}
-                      showCaptureButton={remainingMainPhotos > 0}
-                      inline={true}
-                      captureDataAttr="main-capture"
-                    />
-                  ) : null}
+                <div className="bg-black w-full h-64 border border-gray-400 flex items-center justify-center">
+                  <CameraComponent
+                    ref={mainCameraRef}
+                    onPhotoCapture={handleMainPhotoCapture}
+                    onClose={() => setMainCameraActive(false)}
+                    showCaptureButton={remainingMainPhotos > 0}
+                    inline={false}
+                  />
                 </div>
-
-                {/* Capture button */}
-                {mainCameraActive && remainingMainPhotos > 0 && (
-                  <div className="flex justify-center">
-                    <Button
-                      onClick={captureMainPhotoDirectly}
-                      className="bg-red-600 text-white hover:bg-red-700 px-6 py-2"
-                    >
-                      Capture Photo
-                    </Button>
+              </div>
+            ) : mainPhotos.length === 0 ? (
+              <div className="space-y-4">
+                {/* Camera preview area - show placeholder when camera is off */}
+                <div className="bg-black w-full h-64 border border-gray-400 flex items-center justify-center">
+                  <div className="text-white text-center">
+                    <div className="mb-4">📷</div>
+                    <div className="text-sm">Camera is off</div>
+                    <div className="text-xs text-gray-400">Click the camera icon above to start</div>
                   </div>
-                )}
+                </div>
               </div>
             ) : (
               <div className="space-y-4">
                 {/* Display the latest captured photo */}
-                <div className="bg-black w-full h-80 border border-gray-400 flex items-center justify-center overflow-hidden">
+                <div className="bg-black w-full h-48 border border-gray-400 flex items-center justify-center overflow-hidden">
                   <img
                     src={mainPhotos[mainPhotos.length - 1]}
                     alt="Latest capture"
                     className="max-w-full max-h-full object-contain"
-                    style={{ transform: 'scaleX(-1)' }}
                   />
                 </div>
 
@@ -215,12 +215,11 @@ export default function PhotographSection({ onPhotoCountChange }: PhotographSect
                       <img
                         src={photo}
                         alt={`Capture ${index + 1}`}
-                        className="w-16 h-16 object-cover border-2 border-gray-300 rounded"
-                        style={{ transform: 'scaleX(-1)' }}
+                        className="w-12 h-12 object-cover border-2 border-gray-300 rounded"
                       />
                       <button
                         onClick={() => removeMainPhoto(index)}
-                        className="absolute -top-2 -right-2 w-6 h-6 bg-red-600 text-white rounded-full text-xs flex items-center justify-center hover:bg-red-700"
+                        className="absolute -top-2 -right-2 w-5 h-5 bg-red-600 text-white rounded-full text-xs flex items-center justify-center hover:bg-red-700"
                       >
                         ✕
                       </button>
@@ -260,48 +259,47 @@ export default function PhotographSection({ onPhotoCountChange }: PhotographSect
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-700">Score</span>
+              <span className="text-xs text-gray-700">Score</span>
               <Input
-                className="bg-white border-gray-400 h-6 w-16 text-center"
+                className="bg-white border-gray-400 h-5 w-12 text-center text-xs"
                 value={`${exceptionPhotoScore}%`}
                 readOnly
               />
             </div>
           </div>
-          <div className="p-4">
+          <div className="p-3">
             {exceptionCameraActive ? (
-              <div className="space-y-2">
-                <CameraComponent
-                  onPhotoCapture={handleExceptionPhotoCapture}
-                  onClose={() => setExceptionCameraActive(false)}
-                  showCaptureButton={remainingExceptionPhotos > 0}
-                  inline={true}
-                  captureDataAttr="exception-capture"
-                />
-                {/* Arrow play button for quick restart */}
-                <div className="flex justify-center">
-                  <Image
-                    src="/arrow-play.png"
-                    alt="Restart Camera"
-                    width={32}
-                    height={32}
-                    className="cursor-pointer hover:opacity-80 transition-opacity"
-                    onClick={restartExceptionCamera}
-                    title="Restart Camera"
+              <div className="space-y-4">
+                {/* Camera preview area */}
+                <div className="bg-black w-full h-64 border border-gray-400 flex items-center justify-center">
+                  <CameraComponent
+                    ref={exceptionCameraRef}
+                    onPhotoCapture={handleExceptionPhotoCapture}
+                    onClose={() => setExceptionCameraActive(false)}
+                    showCaptureButton={remainingExceptionPhotos > 0}
+                    inline={false}
                   />
                 </div>
               </div>
             ) : exceptionPhotos.length === 0 ? (
-              <div className="bg-gray-600 w-full h-96 border border-gray-400 flex items-center justify-center"></div>
+              <div className="space-y-4">
+                {/* Camera preview area - show placeholder when camera is off */}
+                <div className="bg-gray-600 w-full h-64 border border-gray-400 flex items-center justify-center">
+                  <div className="text-white text-center">
+                    <div className="mb-4">📷</div>
+                    <div className="text-sm">Camera is off</div>
+                    <div className="text-xs text-gray-400">Click the camera icon above to start</div>
+                  </div>
+                </div>
+              </div>
             ) : (
               <div className="space-y-4">
-                {/* Display the latest captured photo (from main section) */}
-                <div className="bg-black w-full h-80 border border-gray-400 flex items-center justify-center overflow-hidden">
+                {/* Display the latest captured photo */}
+                <div className="bg-black w-full h-48 border border-gray-400 flex items-center justify-center overflow-hidden">
                   <img
                     src={exceptionPhotos[exceptionPhotos.length - 1]}
-                    alt="Latest capture from main"
+                    alt="Latest exception capture"
                     className="max-w-full max-h-full object-contain"
-                    style={{ transform: 'scaleX(-1)' }}
                   />
                 </div>
 
@@ -312,12 +310,11 @@ export default function PhotographSection({ onPhotoCountChange }: PhotographSect
                       <img
                         src={photo}
                         alt={`Exception Capture ${index + 1}`}
-                        className="w-16 h-16 object-cover border-2 border-gray-300 rounded"
-                        style={{ transform: 'scaleX(-1)' }}
+                        className="w-12 h-12 object-cover border-2 border-gray-300 rounded"
                       />
                       <button
                         onClick={() => removeExceptionPhoto(index)}
-                        className="absolute -top-2 -right-2 w-6 h-6 bg-red-600 text-white rounded-full text-xs flex items-center justify-center hover:bg-red-700"
+                        className="absolute -top-2 -right-2 w-5 h-5 bg-red-600 text-white rounded-full text-xs flex items-center justify-center hover:bg-red-700"
                       >
                         ✕
                       </button>
@@ -325,7 +322,17 @@ export default function PhotographSection({ onPhotoCountChange }: PhotographSect
                   ))}
                 </div>
 
-         
+                {/* Capture more button if available */}
+                {remainingExceptionPhotos > 0 && (
+                  <div className="flex justify-center">
+                    <Button
+                      onClick={() => setExceptionCameraActive(true)}
+                      className="bg-blue-600 text-white hover:bg-blue-700 px-6 py-2"
+                    >
+                      Capture More
+                    </Button>
+                  </div>
+                )}
               </div>
             )}
           </div>
