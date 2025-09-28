@@ -61,32 +61,17 @@ function callRd(port: number, method: string, path = '/rd/info', body = null, ti
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
-  const port = body?.port ?? 11101;
+  const port = parseInt(body?.port?.toString() || process.env.MANTRA_RD_PORT || '11101');
+  const host = process.env.MANTRA_RD_HOST || '127.0.0.1';
   const isDevelopment = process.env.NODE_ENV === 'development';
 
   try {
-    // In development mode, return mock response if RDService is not available
-    if (isDevelopment) {
-      console.log('Development mode: Using mock device info response for mantra device');
-      const parsedResult = parseXmlResponse(MOCK_DEVICE_INFO_RESPONSE);
-      return NextResponse.json({
-        ok: true,
-        port,
-        method: 'DEVICEINFO',
-        result: {
-          statusCode: 200,
-          headers: { 'content-type': 'text/xml' },
-          body: MOCK_DEVICE_INFO_RESPONSE,
-          parsed: parsedResult
-        },
-        mock: true,
-        message: 'Development mode - mock device info response'
-      });
-    }
-
-    // Production mode: try to connect to actual RDService
+    // Always try to connect to actual RDService first
+    console.log(`Attempting to get device info from Mantra RDService at ${host}:${port}`);
     const result = await callRd(port, 'DEVICEINFO', '/rd/info', null, 5000);
     const parsedResult = parseXmlResponse(result.body);
+
+    console.log('Successfully got device info from Mantra RDService');
     return NextResponse.json({
       ok: true,
       port,
@@ -99,8 +84,10 @@ export async function POST(request: NextRequest) {
   } catch (err) {
     const errorMessage = String(err);
 
-    // Handle connection errors gracefully in development
-    if (isDevelopment && errorMessage.includes('ECONNREFUSED')) {
+    // Only use mock response as last resort in development if explicitly enabled
+    const useMockFallback = process.env.MANTRA_USE_MOCK === 'true';
+
+    if (isDevelopment && useMockFallback && errorMessage.includes('ECONNREFUSED')) {
       console.log('Development mode: RDService not available, using mock device info response');
       const parsedResult = parseXmlResponse(MOCK_DEVICE_INFO_RESPONSE);
       return NextResponse.json({
@@ -123,7 +110,7 @@ export async function POST(request: NextRequest) {
       port,
       method: 'DEVICEINFO',
       error: errorMessage,
-      suggestion: isDevelopment ? 'Running in development mode with mock service' : 'Please ensure Mantra RDService is installed and running',
+      suggestion: 'Please ensure Mantra RDService is installed and running on port ' + port,
       timestamp: new Date().toISOString()
     }, { status: 502 });
   }

@@ -122,7 +122,8 @@ function callRd(port: number, method: string, path = '/rd/capture', body = '', t
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
-  const port = body?.port ?? 11101;
+  const port = parseInt(body?.port?.toString() || process.env.MANTRA_RD_PORT || '11101');
+  const host = process.env.MANTRA_RD_HOST || '127.0.0.1';
   const pidOptions = body?.pidOptions;
   const isDevelopment = process.env.NODE_ENV === 'development';
 
@@ -131,31 +132,15 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    // In development mode, return mock response if RDService is not available
-    if (isDevelopment) {
-      console.log('Development mode: Using mock capture response for mantra device');
-      const parsedResult = parseXmlResponse(MOCK_CAPTURE_RESPONSE);
-      return NextResponse.json({
-        ok: true,
-        port,
-        method: 'CAPTURE',
-        result: {
-          statusCode: 200,
-          headers: { 'content-type': 'text/xml' },
-          body: MOCK_CAPTURE_RESPONSE,
-          parsed: parsedResult
-        },
-        mock: true,
-        message: 'Development mode - mock capture response',
-        suggestion: 'This is a mock response for development. In production, connect to actual Mantra RDService.'
-      });
-    }
+    // Always try to connect to actual RDService first
+    console.log(`Attempting to capture from Mantra RDService at ${host}:${port}`);
 
-    // Production mode: first try CAPTURE verb
+    // First try CAPTURE verb
     try {
       const cap = await callRd(port, 'CAPTURE', '/rd/capture', pidOptions, 20000);
       if (cap && cap.statusCode === 200) {
         const parsedResult = parseXmlResponse(cap.body);
+        console.log('Successfully captured from Mantra RDService using CAPTURE method');
         return NextResponse.json({
           ok: true,
           port,
@@ -174,6 +159,7 @@ export async function POST(request: NextRequest) {
     // fallback to POST
     const postResp = await callRd(port, 'POST', '/rd/capture', pidOptions, 20000);
     const parsedResult = parseXmlResponse(postResp.body);
+    console.log('Successfully captured from Mantra RDService using POST method');
     return NextResponse.json({
       ok: true,
       port,
@@ -186,8 +172,10 @@ export async function POST(request: NextRequest) {
   } catch (err) {
     const errorMessage = String(err);
 
-    // Handle connection errors gracefully in development
-    if (isDevelopment && errorMessage.includes('ECONNREFUSED')) {
+    // Only use mock response as last resort in development if explicitly enabled
+    const useMockFallback = process.env.MANTRA_USE_MOCK === 'true';
+
+    if (isDevelopment && useMockFallback && errorMessage.includes('ECONNREFUSED')) {
       console.log('Development mode: RDService not available, using mock capture response');
       const parsedResult = parseXmlResponse(MOCK_CAPTURE_RESPONSE);
       return NextResponse.json({
@@ -211,7 +199,7 @@ export async function POST(request: NextRequest) {
       port,
       method: 'CAPTURE',
       error: errorMessage,
-      suggestion: isDevelopment ? 'Running in development mode with mock service' : 'Please ensure Mantra RDService is installed and running',
+      suggestion: 'Please ensure Mantra RDService is installed and running on port ' + port,
       timestamp: new Date().toISOString()
     }, { status: 502 });
   }

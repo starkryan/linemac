@@ -125,7 +125,8 @@ function callRdSingle(port: number, method: string, path = '/', body = null, tim
 }
 
 export async function GET(request: NextRequest) {
-  const port = 11101;
+  const port = parseInt(process.env.MANTRA_RD_PORT || '11101');
+  const host = process.env.MANTRA_RD_HOST || '127.0.0.1';
   const isDevelopment = process.env.NODE_ENV === 'development';
   const method = request.method;
   const url = new URL(request.url);
@@ -142,30 +143,13 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-
-    // In development mode, return mock response if RDService is not available
-    if (isDevelopment) {
-      console.log('Development mode: Using mock RDService response for mantra device');
-      const parsedResult = parseXmlResponse(MOCK_RD_SERVICE_RESPONSE);
-      return NextResponse.json({
-        ok: true,
-        port,
-        method: httpMethod,
-        result: {
-          statusCode: 200,
-          headers: { 'content-type': 'text/xml' },
-          body: MOCK_RD_SERVICE_RESPONSE,
-          parsed: parsedResult
-        },
-        mock: true,
-        message: 'Development mode - mock RDService response'
-      });
-    }
-
-    // Production mode: try to connect to actual RDService with retry logic
+    // Always try to connect to actual RDService first
+    console.log(`Attempting to connect to Mantra RDService at ${host}:${port}`);
     const result = await callRdWithRetry(port, httpMethod, path, null, 5000, 3);
+
     if (result && result.statusCode === 200 && result.body && result.body.includes('<RDService')) {
       const parsedResult = parseXmlResponse(result.body);
+      console.log('Successfully connected to Mantra RDService');
       return NextResponse.json({
         ok: true,
         port,
@@ -177,6 +161,7 @@ export async function GET(request: NextRequest) {
       });
     }
 
+    // If actual device connection failed, provide detailed error
     return NextResponse.json({
       ok: false,
       method: httpMethod,
@@ -186,8 +171,10 @@ export async function GET(request: NextRequest) {
   } catch (err) {
     const errorMessage = String(err);
 
-    // Handle connection errors gracefully in development
-    if (isDevelopment && errorMessage.includes('ECONNREFUSED')) {
+    // Only use mock response as last resort in development if explicitly enabled
+    const useMockFallback = process.env.MANTRA_USE_MOCK === 'true';
+
+    if (isDevelopment && useMockFallback && errorMessage.includes('ECONNREFUSED')) {
       console.log('Development mode: RDService not available, using mock response');
       const parsedResult = parseXmlResponse(MOCK_RD_SERVICE_RESPONSE);
       return NextResponse.json({
@@ -214,8 +201,7 @@ export async function GET(request: NextRequest) {
     } else if (errorMessage.includes('ENOTFOUND')) {
       suggestion = 'Host not found. Check network configuration and DNS settings.';
     } else {
-      suggestion = isDevelopment ? 'Running in development mode with mock service' :
-        'Please ensure Mantra RDService is installed and running on port ' + port;
+      suggestion = 'Please ensure Mantra RDService is installed and running on port ' + port;
     }
 
     return NextResponse.json({
