@@ -200,9 +200,43 @@ export default function NewEnrollPage() {
                           <SelectValue placeholder="Select state" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="mh">Maharashtra</SelectItem>
-                          <SelectItem value="dl">Delhi</SelectItem>
-                          <SelectItem value="ka">Karnataka</SelectItem>
+                    <SelectItem value="ap">Andhra Pradesh</SelectItem>
+<SelectItem value="ar">Arunachal Pradesh</SelectItem>
+<SelectItem value="as">Assam</SelectItem>
+<SelectItem value="br">Bihar</SelectItem>
+<SelectItem value="ct">Chhattisgarh</SelectItem>
+<SelectItem value="ga">Goa</SelectItem>
+<SelectItem value="gj">Gujarat</SelectItem>
+<SelectItem value="hr">Haryana</SelectItem>
+<SelectItem value="hp">Himachal Pradesh</SelectItem>
+<SelectItem value="jh">Jharkhand</SelectItem>
+<SelectItem value="ka">Karnataka</SelectItem>
+<SelectItem value="kl">Kerala</SelectItem>
+<SelectItem value="mp">Madhya Pradesh</SelectItem>
+<SelectItem value="mh">Maharashtra</SelectItem>
+<SelectItem value="mn">Manipur</SelectItem>
+<SelectItem value="ml">Meghalaya</SelectItem>
+<SelectItem value="mz">Mizoram</SelectItem>
+<SelectItem value="nl">Nagaland</SelectItem>
+<SelectItem value="od">Odisha</SelectItem>
+<SelectItem value="pb">Punjab</SelectItem>
+<SelectItem value="rj">Rajasthan</SelectItem>
+<SelectItem value="sk">Sikkim</SelectItem>
+<SelectItem value="tn">Tamil Nadu</SelectItem>
+<SelectItem value="tg">Telangana</SelectItem>
+<SelectItem value="tr">Tripura</SelectItem>
+<SelectItem value="up">Uttar Pradesh</SelectItem>
+<SelectItem value="uk">Uttarakhand</SelectItem>
+<SelectItem value="wb">West Bengal</SelectItem>
+<SelectItem value="an">Andaman and Nicobar Islands</SelectItem>
+<SelectItem value="ch">Chandigarh</SelectItem>
+<SelectItem value="dn">Dadra and Nagar Haveli and Daman and Diu</SelectItem>
+<SelectItem value="dl">Delhi</SelectItem>
+<SelectItem value="jk">Jammu and Kashmir</SelectItem>
+<SelectItem value="la">Ladakh</SelectItem>
+<SelectItem value="ld">Lakshadweep</SelectItem>
+<SelectItem value="py">Puducherry</SelectItem>
+
                         </SelectContent>
                       </Select>
                     </div>
