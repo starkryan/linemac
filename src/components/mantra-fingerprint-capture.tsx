@@ -320,20 +320,10 @@ export function MantraFingerprintCapture({
           )}
         </button>
 
-        {deviceStatus === 'disconnected' && (
-          <button
-            onClick={checkDeviceConnection}
-            className="px-4 py-2 text-blue-600 hover:text-blue-700 text-sm font-medium"
-          >
-            Retry Connection
-          </button>
-        )}
+    
       </div>
 
-      <div className="text-xs text-gray-500 text-center">
-        <p>Ensure Mantra RD Service is running on port 11101 and device is connected</p>
-        <p>Using Next.js API routes for secure RD Service communication</p>
-      </div>
+ 
     </div>
   );
 }

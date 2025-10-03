@@ -98,42 +98,17 @@ export function MorphoFingerprintCapture({
 
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-6 space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
-        <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor()}`}>
-          {getStatusIcon()}
-          <span className="ml-2">
-            {deviceStatus === 'checking' ? 'Checking Device...' :
-             deviceStatus === 'connected' ? 'Device Connected' : 'Device Disconnected'}
-          </span>
-        </div>
-      </div>
-
+      {/* Device status UI removed as requested */}
+      
       {!rdServiceLoaded && (
         <RDServiceLoader onServiceLoaded={setRdServiceLoaded} />
       )}
 
       {rdServiceLoaded && (
         <>
-          {deviceInfo && (
-            <div className="bg-gray-50 rounded-lg p-3 text-sm">
-              <div className="grid grid-cols-2 gap-2 text-gray-600">
-                <div><strong>Device:</strong> {deviceInfo.dpId}</div>
-                <div><strong>RDS ID:</strong> {deviceInfo.rdsId}</div>
-                <div><strong>Version:</strong> {deviceInfo.rdsVer}</div>
-                <div><strong>Model:</strong> {deviceInfo.mc}</div>
-              </div>
-            </div>
-          )}
+          {/* Device info UI removed as requested */}
 
-          {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-              <div className="flex items-center">
-                <AlertCircle className="w-4 h-4 text-red-600 mr-2" />
-                <span className="text-sm text-red-800">{error}</span>
-              </div>
-            </div>
-          )}
+          {/* Error messages UI removed as requested */}
 
           <div className="flex items-center justify-center">
             <div className="relative">
@@ -211,16 +186,7 @@ export function MorphoFingerprintCapture({
             </button>
           </div>
 
-          {deviceStatus === 'disconnected' && (
-            <div className="text-center">
-              <button
-                onClick={initializeDevice}
-                className="text-blue-600 hover:text-blue-700 text-sm font-medium"
-              >
-                Retry Device Connection
-              </button>
-            </div>
-          )}
+          {/* Retry device connection UI removed as requested */}
         </>
       )}
     </div>

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { AadhaarIcon } from "@/components/ui/AadhaarIcon"
-import { RDServiceIntegration, useRDService } from "@/components/rd-service-integration"
+
 import { MorphoFingerprintCapture } from "@/components/morpho-fingerprint-capture"
 import { AadhaarMantraCapture } from "@/components/mantra/AadhaarMantraCapture"
 
@@ -207,34 +207,8 @@ export default function BiometricSection({ onFingerprintCapture, onIrisCapture, 
 
   return (
     <div className="space-y-6">
-      {/* Device selection */}
-      {deviceType === 'both' && (
-        <div className="flex items-center justify-center gap-4 p-4 bg-gray-50 rounded-lg">
-          <span className="text-sm font-medium text-gray-700">Select Device:</span>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setSelectedDevice('morpho')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                selectedDevice === 'morpho'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-              }`}
-            >
-              Morpho
-            </button>
-            <button
-              onClick={() => setSelectedDevice('mantra')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                selectedDevice === 'mantra'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-              }`}
-            >
-              Mantra
-            </button>
-          </div>
-        </div>
-      )}
+      {/* Device selection - Hidden from UI but functionality preserved */}
+      {/* Device selection UI removed as requested, but functionality remains active */}
 
       {/* Biometric capture interface */}
       <div className={simplifiedMode ? "grid grid-cols-1 gap-6" : "grid grid-cols-2 lg:grid-cols-3 gap-6"}>
@@ -245,14 +219,22 @@ export default function BiometricSection({ onFingerprintCapture, onIrisCapture, 
           return (
             <div key={biometricType.id} className="bg-white border border-gray-300 rounded">
               {/* Header */}
-              <div className={`${biometricType.bgColor} px-4 py-2 flex items-center justify-between`}>
+              <div className={`${biometricType.bgColor} px-4 py-2 flex items-center`}>
                 <div className="flex items-center gap-2">
                   <div
                     className="w-5 h-5 flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity"
                     onClick={() => isActive ? setActiveCapture(null) : handleCapture(biometricType)}
                     title={isActive ? "Stop Capture" : "Start Capture"}
                   >
-                    <AadhaarIcon />
+                    {isActive ? (
+                      <img
+                        src="/arrow-pause.png"
+                        alt="Stop Capture"
+                        className="w-5 h-5"
+                      />
+                    ) : (
+                      <AadhaarIcon />
+                    )}
                   </div>
                   <div>
                     <span className="text-sm font-medium text-gray-800 block">
@@ -262,14 +244,6 @@ export default function BiometricSection({ onFingerprintCapture, onIrisCapture, 
                       {biometricType.subtitle}
                     </span>
                   </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-700">Score</span>
-                  <Input
-                    className="bg-white border-gray-400 h-6 w-16 text-center"
-                    value={`${capturedData?.quality || 0}%`}
-                    readOnly
-                  />
                 </div>
               </div>
 
@@ -309,23 +283,35 @@ export default function BiometricSection({ onFingerprintCapture, onIrisCapture, 
                         ) : null}
                       </div>
                     </div>
+                    {/* Progress indicator */}
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-gray-700">Score:</span>
+                      <div className="flex-1 bg-gray-200 rounded-full h-6 relative">
+                        <div 
+                          className="bg-blue-600 h-6 rounded-full flex items-center justify-center text-white text-xs font-medium transition-all duration-300"
+                          style={{ width: `${capturedData?.quality || 0}%` }}
+                        >
+                          {capturedData?.quality || 0}%
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 ) : isActive ? (
                   /* Active capture state */
                   <div className="space-y-4">
-                    <div className="bg-black w-full h-64 border border-gray-400 flex items-center justify-center relative">
-                      <div className="text-center text-white">
-
-                        <p className="text-lg font-medium mb-2">Capturing {biometricType.title}</p>
-                        <p className="text-sm opacity-75">Please position {biometricType.type === 'fingerprint' ? 'fingers' : 'eye'} properly</p>
-                        <div className="mt-4 flex justify-center space-x-2">
-                          <div className="w-2 h-2 bg-white rounded-full animate-bounce"></div>
-                          <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                          <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+          
+                    {/* Progress indicator */}
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-gray-700">Score:</span>
+                      <div className="flex-1 bg-gray-200 rounded-full h-6 relative">
+                        <div 
+                          className="bg-blue-600 h-6 rounded-full flex items-center justify-center text-white text-xs font-medium transition-all duration-300"
+                          style={{ width: `${capturedData?.quality || 0}%` }}
+                        >
+                          {capturedData?.quality || 0}%
                         </div>
                       </div>
                     </div>
-
                   </div>
                 ) : capturedData ? (
                   /* Show captured data with tick image */
@@ -339,17 +325,7 @@ export default function BiometricSection({ onFingerprintCapture, onIrisCapture, 
                           className="w-16 h-16 mx-auto mb-4"
                         />
                         <p className="text-lg font-medium mb-2">{biometricType.title}</p>
-                        <div className="text-center">
-                          <div className="text-3xl font-bold text-green-400 mb-1">
-                            {capturedData.quality}%
-                          </div>
-                          <div className="text-sm text-blue-300 mb-2">
-                            Excellent Quality
-                          </div>
-                          <p className="text-xs opacity-50">
-                            {new Date(capturedData.timestamp).toLocaleTimeString()}
-                          </p>
-                        </div>
+                   
                       </div>
                     </div>
                     <div className="flex gap-2">

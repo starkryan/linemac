@@ -255,115 +255,11 @@ export function AadhaarMantraCapture({
 
   return (
     <div className="space-y-4">
+      {/* Device Info UI removed as requested */}
 
-      {/* Device Info */}
-      {deviceInfo && (
-        <Card className="bg-blue-50 border-blue-200">
-          <CardContent className="pt-4">
-            <div className="text-sm text-blue-800">
-              <div className="font-medium mb-2">📱 Device Status</div>
-              <div className="space-y-2">
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <span className="text-blue-600">Model:</span>
-                    <span className="ml-1 font-medium">{deviceInfo.mi || deviceInfo.info || deviceInfo.dpId || 'Unknown'}</span>
-                  </div>
-                  <div>
-                    <span className="text-blue-600">Status:</span>
-                    <span className="ml-1 font-medium text-green-600">Ready</span>
-                  </div>
-                </div>
-                </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      {/* Error Display UI removed as requested */}
 
-      {/* Capture Success Display */}
-      {captureSuccess && lastResponse && (
-        <Card className="bg-gradient-to-br from-green-50 to-blue-50 border-green-200">
-          <CardContent className="pt-4">
-            <div className="text-center space-y-3">
-              <div className="text-lg font-bold text-green-800">
-                🎉 Fingerprint Captured Successfully!
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-white rounded-lg p-3 border border-green-200">
-                  <div className="text-xs text-gray-600 mb-1">Quality Score</div>
-                  <div className="text-3xl font-bold text-green-600">
-                    {lastResponse.parsed?.pidData?.resp?.qScore || '0'}%
-                  </div>
-                  <div className="text-xs text-green-600 mt-1">Excellent</div>
-                </div>
-                <div className="bg-white rounded-lg p-3 border border-blue-200">
-                  <div className="text-xs text-gray-600 mb-1">Minutiae Points</div>
-                  <div className="text-3xl font-bold text-blue-600">
-                    {lastResponse.parsed?.pidData?.resp?.nmPoints || '0'}
-                  </div>
-                  <div className="text-xs text-blue-600 mt-1">High Detail</div>
-                </div>
-              </div>
-              <div className="text-xs text-gray-600 bg-white/50 rounded p-2">
-                <div className="font-medium mb-1">Capture Details:</div>
-                <div>• Error Code: 0 (Success)</div>
-                <div>• Finger Count: {lastResponse.parsed?.pidData?.resp?.fCount || '1'}</div>
-                <div>• Capture Time: {new Date().toLocaleTimeString()}</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Error Display */}
-      {error && (
-        <Card className="bg-red-50 border-red-200">
-          <CardContent className="pt-4">
-            <div className="text-red-700 text-xs">
-              <div className="font-medium mb-1">⚠️ Error</div>
-              {error}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Status Indicator */}
-      <div className="flex items-center justify-center py-4">
-        {!deviceInfo ? (
-          <div className="text-center">
-            <div className="w-12 h-12 bg-gray-200 rounded-full mx-auto mb-2 flex items-center justify-center">
-              <svg className="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clipRule="evenodd" />
-              </svg>
-            </div>
-            <div className="text-xs text-gray-500">Connect device to begin</div>
-          </div>
-        ) : captureSuccess ? (
-          <div className="text-center">
-            <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-green-600 rounded-full mx-auto mb-2 flex items-center justify-center shadow-lg">
-              <div className="text-center">
-                <div className="text-white text-lg font-bold">
-                  {lastResponse?.parsed?.pidData?.resp?.qScore || '0'}%
-                </div>
-                <div className="text-green-100 text-xs">
-                  {lastResponse?.parsed?.pidData?.resp?.nmPoints || '0'} pts
-                </div>
-              </div>
-            </div>
-            <div className="text-xs text-green-600 font-medium">
-              🎯 Excellent Capture!
-            </div>
-          </div>
-        ) : (
-          <div className="text-center">
-            <div className="w-12 h-12 bg-blue-500 rounded-full mx-auto mb-2 flex items-center justify-center animate-pulse">
-              <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
-              </svg>
-            </div>
-            <div className="text-xs text-blue-600 font-medium">Ready to capture</div>
-          </div>
-        )}
-      </div>
+      {/* Status Indicator UI removed as requested */}
     </div>
   );
 }
