@@ -11,11 +11,14 @@ import Image from "next/image"
 import { AadhaarIcon } from "@/components/ui/AadhaarIcon"
 import { UserPlus, Camera, Fingerprint, FileText } from "lucide-react"
 import AuthenticatedLayout from "@/app/components/AuthenticatedLayout"
+import PhotographSection from "@/components/PhotographSection"
+import BiometricSection from "@/components/BiometricSection"
 
 export default function NewEnrollPage() {
   const [activeStep, setActiveStep] = useState("resident")
   const [residentType, setResidentType] = useState("adult")
   const [completedSteps, setCompletedSteps] = useState<string[]>([])
+  const [photoCounts, setPhotoCounts] = useState({ main: 4, exception: 4 })
 
   const steps = [
     { id: "resident", label: "Resident Type", icon: UserPlus },
@@ -254,79 +257,21 @@ export default function NewEnrollPage() {
         )}
 
         {activeStep === "photo" && (
-          <>
-            {/* Photo Capture */}
-            <div className="mb-6">
-              <div className="bg-gray-200 px-4 py-2 border border-gray-300">
-                <h2 className="text-base font-semibold text-gray-800">Photograph Capture</h2>
-              </div>
-              <div className="bg-white p-4">
-                <div className="grid grid-cols-2 gap-6">
-                  <div className="text-center">
-                    <Label className="text-sm text-gray-700 mb-2 block">Camera Preview</Label>
-                    <div className="bg-black w-full h-96 mb-4 border border-gray-400 flex items-center justify-center">
-                      <Camera className="w-16 h-16 text-gray-500" />
-                    </div>
-                    <Button className="bg-blue-600 text-white px-6">Capture Photo</Button>
-                  </div>
-                  <div>
-                    <Label className="text-sm text-gray-700 mb-2 block">Photo Guidelines</Label>
-                    <div className="bg-gray-50 p-4 text-sm space-y-2">
-                      <div><strong>Requirements:</strong></div>
-                      <div>• Face should be clearly visible</div>
-                      <div>• Plain background required</div>
-                      <div>• No glasses or accessories</div>
-                      <div>• Neutral expression</div>
-                      <div>• Both eyes open</div>
-                      <div className="mt-4"><strong>Quality Check:</strong></div>
-                      <div>• Good lighting conditions</div>
-                      <div>• High resolution image</div>
-                      <div>• File size: 5KB - 100KB</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </>
+          <PhotographSection
+            onPhotoCountChange={(mainCount, exceptionCount) => {
+              setPhotoCounts({ main: mainCount, exception: exceptionCount });
+            }}
+          />
         )}
 
         {activeStep === "biometric" && (
-          <>
-            {/* Biometric Capture */}
-            <div className="mb-6">
-              <div className="bg-gray-200 px-4 py-2 border border-gray-300">
-                <h2 className="text-base font-semibold text-gray-800">Biometric Data Capture</h2>
-              </div>
-              <div className="bg-white p-4">
-                <div className="grid grid-cols-3 gap-6">
-                  <div className="text-center">
-                    <Label className="text-sm text-gray-700 mb-2 block">Left Hand</Label>
-                    <div className="bg-green-100 border border-green-400 p-3 mb-2">
-                      <Fingerprint className="w-16 h-16 text-green-600 mx-auto mb-2" />
-                      <div className="text-sm text-green-700">Ready to scan</div>
-                    </div>
-                    <Button className="bg-blue-600 text-white px-4 text-sm">Scan Left Hand</Button>
-                  </div>
-                  <div className="text-center">
-                    <Label className="text-sm text-gray-700 mb-2 block">Right Hand</Label>
-                    <div className="bg-green-100 border border-green-400 p-3 mb-2">
-                      <Fingerprint className="w-16 h-16 text-green-600 mx-auto mb-2" />
-                      <div className="text-sm text-green-700">Ready to scan</div>
-                    </div>
-                    <Button className="bg-blue-600 text-white px-4 text-sm">Scan Right Hand</Button>
-                  </div>
-                  <div className="text-center">
-                    <Label className="text-sm text-gray-700 mb-2 block">Both Thumbs</Label>
-                    <div className="bg-green-100 border border-green-400 p-3 mb-2">
-                      <Fingerprint className="w-16 h-16 text-green-600 mx-auto mb-2" />
-                      <div className="text-sm text-green-700">Ready to scan</div>
-                    </div>
-                    <Button className="bg-blue-600 text-white px-4 text-sm">Scan Thumbs</Button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </>
+          <BiometricSection
+            mode="fingerprints"
+            deviceType="both"
+            onFingerprintCapture={(type, data) => {
+              console.log("Fingerprint captured:", type, data);
+            }}
+          />
         )}
 
         {activeStep === "review" && (

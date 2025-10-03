@@ -188,13 +188,8 @@ export default function PhotographSection({ onPhotoCountChange }: PhotographSect
               </div>
             ) : mainPhotos.length === 0 ? (
               <div className="space-y-4">
-                {/* Camera preview area - show placeholder when camera is off */}
+                {/* Camera preview area - empty when camera is off */}
                 <div className="bg-black w-full h-64 border border-gray-400 flex items-center justify-center">
-                  <div className="text-white text-center">
-                    <div className="mb-4">📷</div>
-                    <div className="text-sm">Camera is off</div>
-                    <div className="text-xs text-gray-400">Click the camera icon above to start</div>
-                  </div>
                 </div>
               </div>
             ) : (
@@ -283,13 +278,8 @@ export default function PhotographSection({ onPhotoCountChange }: PhotographSect
               </div>
             ) : exceptionPhotos.length === 0 ? (
               <div className="space-y-4">
-                {/* Camera preview area - show placeholder when camera is off */}
+                {/* Camera preview area - empty when camera is off */}
                 <div className="bg-gray-600 w-full h-64 border border-gray-400 flex items-center justify-center">
-                  <div className="text-white text-center">
-                    <div className="mb-4">📷</div>
-                    <div className="text-sm">Camera is off</div>
-                    <div className="text-xs text-gray-400">Click the camera icon above to start</div>
-                  </div>
                 </div>
               </div>
             ) : (

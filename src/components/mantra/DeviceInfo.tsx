@@ -123,10 +123,6 @@ const DeviceInfo: React.FC<DeviceInfoProps> = ({ deviceInfo, onResponse }) => {
         </div>
       )}
 
-      <div className="text-xs text-gray-500">
-        <p><strong>Note:</strong> This retrieves detailed device information and capabilities</p>
-        <p>In development mode, mock device information will be returned</p>
-      </div>
     </div>
   );
 };

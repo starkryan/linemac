@@ -202,46 +202,7 @@ const CameraComponent = forwardRef<CameraComponentRef, CameraComponentProps>(
 
     return (
       <div className="w-full h-full flex flex-col bg-gray-900">
-        {/* Camera Controls */}
-        <div className="p-4 bg-black flex justify-between items-center">
-          <Button
-            onClick={stopCamera}
-            variant="outline"
-            className="bg-red-600 text-white border-red-600 hover:bg-red-700"
-          >
-            Close
-          </Button>
-
-          {!isCameraActive && !capturedPhoto && (
-            <Button
-              onClick={startCamera}
-              className="bg-green-600 text-white hover:bg-green-700"
-            >
-              ▶️ Camera
-            </Button>
-          )}
-
-          {capturedPhoto && (
-            <div className="flex gap-2">
-              <Button
-                onClick={retakePhoto}
-                variant="outline"
-                className="bg-yellow-600 text-white border-yellow-600 hover:bg-yellow-700"
-              >
-               <RotateCcw className="w-4 h-4 mr-2" />
-               Retake
-              </Button>
-              {showCaptureButton && (
-                <Button
-                  onClick={stopCamera}
-                  className="bg-blue-600 text-white hover:bg-blue-700"
-                >
-                  ✓ Use Photo
-                </Button>
-              )}
-            </div>
-          )}
-        </div>
+        {/* Camera Controls Removed */}
 
         {/* Camera Preview / Captured Photo */}
         <div className="flex-1 flex items-center justify-center bg-black relative min-h-[400px]">
